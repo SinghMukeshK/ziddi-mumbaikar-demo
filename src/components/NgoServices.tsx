@@ -75,6 +75,8 @@ export default function NgoServices() {
         phone: '',
         email: '',
         address: '',
+        pickup_address: '',
+        drop_address: '',
         booking_date: '',
         booking_time: '',
         notes: ''
@@ -220,6 +222,8 @@ export default function NgoServices() {
             phone: '',
             email: '',
             address: '',
+            pickup_address: '',
+            drop_address: '',
             booking_date: '',
             booking_time: '',
             notes: ''
@@ -491,7 +495,7 @@ export default function NgoServices() {
                                     </div>
 
                                     <div className="space-y-2 col-span-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Full Address</label>
+                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Service Location Address</label>
                                         <div className="relative">
                                             <textarea
                                                 required
@@ -504,6 +508,38 @@ export default function NgoServices() {
                                             <MapPin className="w-5 h-5 absolute left-4 top-4 text-gray-400" />
                                         </div>
                                     </div>
+
+                                    {(selectedService.slug === 'ambulance-booking' || selectedService.slug === 'deadbody-freezer' || selectedService.slug === 'funeral-service') && (
+                                        <>
+                                            <div className="space-y-2 col-span-2 md:col-span-1">
+                                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Pickup Address</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="From..."
+                                                        className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all pl-11"
+                                                        value={bookingData.pickup_address}
+                                                        onChange={e => setBookingData({ ...bookingData, pickup_address: e.target.value })}
+                                                    />
+                                                    <MapPin className="w-5 h-5 absolute left-4 top-3.5 text-gray-400" />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2 col-span-2 md:col-span-1">
+                                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Drop Address</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="To..."
+                                                        className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all pl-11"
+                                                        value={bookingData.drop_address}
+                                                        onChange={e => setBookingData({ ...bookingData, drop_address: e.target.value })}
+                                                    />
+                                                    <MapPin className="w-5 h-5 absolute left-4 top-3.5 text-gray-400" />
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
 
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Preferred Date</label>

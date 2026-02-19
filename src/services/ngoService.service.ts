@@ -25,6 +25,8 @@ export interface NgoServiceBooking {
     phone: string;
     email?: string;
     address: string;
+    pickup_address?: string;
+    drop_address?: string;
     booking_date: string;
     booking_time?: string;
     notes?: string;
@@ -38,6 +40,8 @@ export interface BookingRequest {
     phone: string;
     email?: string;
     address: string;
+    pickup_address?: string;
+    drop_address?: string;
     booking_date: string;
     booking_time?: string;
     notes?: string;
