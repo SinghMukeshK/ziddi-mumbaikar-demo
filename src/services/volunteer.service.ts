@@ -1,0 +1,48 @@
+import { apiV1 } from '@/lib/api-v1';
+
+export interface ApiResponse<T = any> {
+    success: boolean;
+    data: T;
+    message?: string;
+}
+
+export interface VolunteerCreateRequest {
+    id?: string;
+    first_name: string;
+    last_name?: string;
+    email: string;
+    phone: string;
+    gender?: 'male' | 'female' | 'other';
+    date_of_birth?: string;
+    occupation?: string;
+    skills?: string[];
+    availability?: string;
+    address?: string;
+    city?: string;
+    motivation?: string;
+    preferred_branch_id?: string;
+    id_proof_url?: string;
+    photo_url?: string;
+}
+
+export interface Volunteer {
+    id: string;
+    first_name: string;
+    last_name?: string;
+    email: string;
+    phone: string;
+    status: 'applied' | 'approved' | 'active' | 'inactive' | 'rejected';
+    created_at: string;
+}
+
+class VolunteerService {
+    async applyAsVolunteer(data: VolunteerCreateRequest): Promise<ApiResponse<Volunteer>> {
+        return apiV1.post<ApiResponse<Volunteer>>('/volunteers/apply', data);
+    }
+
+    async getVolunteerStats(id: string): Promise<ApiResponse<{ total_hours: number; activity_count: number }>> {
+        return apiV1.get<ApiResponse<{ total_hours: number; activity_count: number }>>(`/volunteers/${id}/stats`);
+    }
+}
+
+export const volunteerService = new VolunteerService();

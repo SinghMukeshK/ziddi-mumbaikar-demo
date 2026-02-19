@@ -1,0 +1,3963 @@
+openapi: 3.0.0
+info:
+  title: Drista Cloud Solutions ERP - Ziddi Mumbaikar NGO API
+  description: |
+    Multi-tenant SaaS platform API for NGO management with comprehensive features including:
+    - Fundraising campaigns
+    - Donation processing
+    - Zakat & Qurbani management
+    - Volunteer coordination
+    - Beneficiary assistance programs
+    - Content management
+    - Event management
+  version: 1.0.0
+  contact:
+    name: Drista Cloud Solutions
+    email: api@dristasolutions.com
+  license:
+    name: Proprietary
+    url: https://dristasolutions.com/license
+
+servers:
+  - url: https://api.ziddi-mumbaikar.com/v1
+    description: Production server
+  - url: https://staging-api.ziddi-mumbaikar.com/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Tenants
+    description: Tenant/NGO management
+  - name: Users
+    description: User accounts and profiles
+  - name: Fundraisers
+    description: Fundraising campaigns
+  - name: Donors
+    description: Donor management and relationship tracking
+  - name: Donations
+    description: Donation processing and tracking
+  - name: Beneficiaries
+    description: Beneficiary management and assistance programs
+  - name: Volunteers
+    description: Volunteer recruitment and management
+  - name: Programs
+    description: NGO programs and services
+  - name: Events
+    description: Event management
+  - name: Zakat
+    description: Zakat calculations and distributions
+  - name: Qurbani
+    description: Qurbani/Udhiyah bookings
+  - name: Content
+    description: Pages, blog posts, and testimonials
+  - name: Media
+    description: Media library management and file uploads
+  - name: Settings
+    description: Site settings and configuration
+  - name: Audit
+    description: Audit logs and activity tracking
+  - name: NGO Services
+    description: NGO specialized services and booking management
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login endpoint
+
+  headers:
+    X-Tenant-ID:
+      schema:
+        type: string
+        format: uuid
+      description: Tenant ID for multi-tenant operations
+      required: true
+
+  parameters:
+    TenantID:
+      name: tenant-id
+      in: header
+      description: Tenant UUID for multi-tenant isolation
+      required: true
+      schema:
+        type: string
+        format: uuid
+    
+    Page:
+      name: page
+      in: query
+      description: Page number (1-indexed)
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    
+    Limit:
+      name: limit
+      in: query
+      description: Items per page
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+    
+    SortBy:
+      name: sort_by
+      in: query
+      description: Field to sort by
+      schema:
+        type: string
+    
+    SortOrder:
+      name: sort_order
+      in: query
+      description: Sort order (asc/desc)
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+    
+    ResourceID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # ==================== COMMON SCHEMAS ====================
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          example: Invalid input provided
+        details:
+          type: object
+          additionalProperties: true
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 150
+        total_pages:
+          type: integer
+          example: 8
+
+    PaginatedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # ==================== AUTHENTICATION ====================
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIs...
+        refresh_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIs...
+        expires_in:
+          type: integer
+          description: Token expiry in seconds
+          example: 3600
+        user:
+          $ref: '#/components/schemas/User'
+
+    RegisterRequest:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - email
+        - password
+        - password_confirm
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        password_confirm:
+          type: string
+          format: password
+        phone:
+          type: string
+        organization_name:
+          type: string
+
+    # ==================== TENANTS ====================
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        legal_name:
+          type: string
+        subdomain:
+          type: string
+        website:
+          type: string
+        logo_url:
+          type: string
+        business_type:
+          type: string
+          enum: [ngo, charity, foundation, institution]
+        country:
+          type: string
+          default: India
+        city:
+          type: string
+        state:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        pan_number:
+          type: string
+        ngo_80g:
+          type: string
+        ngo_12a:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, trial, suspended, deleted]
+        plan:
+          type: string
+          enum: [starter, professional, enterprise]
+        subscription_status:
+          type: string
+          enum: [active, past_due, cancelled, expired]
+        currency:
+          type: string
+          default: INR
+        timezone:
+          type: string
+          default: Asia/Kolkata
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TenantCreateRequest:
+      type: object
+      required:
+        - name
+        - subdomain
+        - email
+        - business_type
+        - plan_id
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+        legal_name:
+          type: string
+        subdomain:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+          minLength: 3
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        business_type:
+          type: string
+          enum: [ngo, charity, foundation, institution]
+        website:
+          type: string
+          format: uri
+        phone:
+          type: string
+        plan_id:
+          type: string
+          format: uuid
+        country:
+          type: string
+          default: India
+
+    # ==================== USERS ====================
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        avatar_url:
+          type: string
+        role:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        status:
+          type: string
+          enum: [active, inactive, pending, suspended, deleted]
+        email_verified:
+          type: boolean
+        last_login_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UserCreateRequest:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - email
+        - password
+        - role_id
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+        role_id:
+          type: string
+          format: uuid
+        phone:
+          type: string
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          type: string
+        avatar_url:
+          type: string
+        bio:
+          type: string
+
+    # ==================== DONORS ====================
+    Donor:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        pan_number:
+          type: string
+        donor_type:
+          type: string
+          enum: [individual, corporate, institution, trust]
+          default: individual
+        donor_tier:
+          type: string
+          enum: [platinum, gold, silver, bronze, regular]
+          nullable: true
+        is_anonymous:
+          type: boolean
+        lifetime_donation_amount:
+          type: number
+          format: decimal
+        total_donations:
+          type: integer
+        last_donation_date:
+          type: string
+          format: date-time
+          nullable: true
+        first_donation_date:
+          type: string
+          format: date-time
+          nullable: true
+        preferred_donation_type:
+          type: string
+          enum: [zakat, qurbani, sadaqah, general]
+        preferred_fundraiser_category:
+          type: string
+        communication_preference:
+          type: string
+          enum: [email, sms, whatsapp, none]
+          default: email
+        newsletter_subscribed:
+          type: boolean
+        do_not_contact:
+          type: boolean
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+        referred_by:
+          type: string
+          format: uuid
+          nullable: true
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DonorCreateRequest:
+      type: object
+      required:
+        - first_name
+        - email
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        pan_number:
+          type: string
+        donor_type:
+          type: string
+          enum: [individual, corporate, institution, trust]
+        donor_tier:
+          type: string
+          enum: [platinum, gold, silver, bronze, regular]
+        is_anonymous:
+          type: boolean
+        preferred_donation_type:
+          type: string
+          enum: [zakat, qurbani, sadaqah, general]
+        preferred_fundraiser_category:
+          type: string
+        communication_preference:
+          type: string
+          enum: [email, sms, whatsapp, none]
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+        referred_by:
+          type: string
+          format: uuid
+        notes:
+          type: string
+
+    DonorUpdateRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          type: string
+        pan_number:
+          type: string
+        donor_tier:
+          type: string
+          enum: [platinum, gold, silver, bronze, regular]
+        preferred_donation_type:
+          type: string
+          enum: [zakat, qurbani, sadaqah, general]
+        preferred_fundraiser_category:
+          type: string
+        communication_preference:
+          type: string
+          enum: [email, sms, whatsapp, none]
+        newsletter_subscribed:
+          type: boolean
+        do_not_contact:
+          type: boolean
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+        notes:
+          type: string
+
+    # ==================== FUNDRAISERS ====================
+    Fundraiser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        slug:
+          type: string
+        short_description:
+          type: string
+        description:
+          type: string
+        category:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        goal_amount:
+          type: number
+          format: decimal
+        raised_amount:
+          type: number
+          format: decimal
+        donor_count:
+          type: integer
+        completion_percentage:
+          type: number
+          format: float
+        currency:
+          type: string
+          default: INR
+        status:
+          type: string
+          enum: [draft, pending_review, active, paused, completed, cancelled, rejected]
+        is_featured:
+          type: boolean
+        is_urgent:
+          type: boolean
+        is_zakat_eligible:
+          type: boolean
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        beneficiary_name:
+          type: string
+        beneficiary_story:
+          type: string
+        cover_image_url:
+          type: string
+        branch:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        created_by:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    FundraiserCreateRequest:
+      type: object
+      required:
+        - title
+        - description
+        - goal_amount
+        - category_id
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 300
+        slug:
+          type: string
+        short_description:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+          minLength: 20
+        category_id:
+          type: string
+          format: uuid
+        goal_amount:
+          type: number
+          format: decimal
+          minimum: 0.01
+        beneficiary_name:
+          type: string
+        beneficiary_story:
+          type: string
+        cover_image_url:
+          type: string
+        is_zakat_eligible:
+          type: boolean
+          default: false
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        branch_id:
+          type: string
+          format: uuid
+
+    FundraiserUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        short_description:
+          type: string
+        category_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [draft, pending_review, active, paused, completed, cancelled]
+        goal_amount:
+          type: number
+          format: decimal
+        is_featured:
+          type: boolean
+        is_urgent:
+          type: boolean
+
+    # ==================== DONATIONS ====================
+    Donation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        donation_number:
+          type: string
+        donor_id:
+          type: string
+          format: uuid
+          description: Reference to donor from donors table
+        donor:
+          $ref: '#/components/schemas/Donor'
+        fundraiser:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            title:
+              type: string
+        amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        donation_type:
+          type: string
+          enum: [general, zakat, sadaqah, fitrah, qurbani]
+        payment_method:
+          type: string
+          enum: [upi, card, net_banking, wallet, bank_transfer, cash, cheque]
+        status:
+          type: string
+          enum: [pending, completed, failed, refunded, cancelled]
+        is_anonymous:
+          type: boolean
+        transaction_id:
+          type: string
+        is_recurring:
+          type: boolean
+        receipt_sent:
+          type: boolean
+        tax_certificate:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            certificate_number:
+              type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DonationCreateRequest:
+      type: object
+      required:
+        - fundraiser_id
+        - amount
+        - payment_method
+      properties:
+        fundraiser_id:
+          type: string
+          format: uuid
+        donor_id:
+          type: string
+          format: uuid
+          description: Reference to existing donor (optional)
+        amount:
+          type: number
+          format: decimal
+          minimum: 1
+        donation_type:
+          type: string
+          enum: [general, zakat, sadaqah, fitrah, qurbani]
+          default: general
+        payment_method:
+          type: string
+          enum: [upi, card, net_banking, wallet, bank_transfer, cash, cheque]
+        donor_name:
+          type: string
+        donor_email:
+          type: string
+          format: email
+        donor_phone:
+          type: string
+        donor_pan:
+          type: string
+        is_anonymous:
+          type: boolean
+          default: false
+        message:
+          type: string
+        payment_gateway:
+          type: string
+
+    # ==================== BENEFICIARIES ====================
+    Beneficiary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        phone:
+          type: string
+        gender:
+          type: string
+          enum: [male, female, other]
+        date_of_birth:
+          type: string
+          format: date
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        aid_type:
+          type: string
+          enum: [medical, education, food, financial, marriage, business_setup, emergency, clothing, shelter]
+        case_description:
+          type: string
+        branch:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        verification_status:
+          type: string
+          enum: [pending, verified, rejected]
+        is_active:
+          type: boolean
+        total_aid_received:
+          type: number
+          format: decimal
+        aid_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    BeneficiaryCreateRequest:
+      type: object
+      required:
+        - full_name
+        - phone
+        - aid_type
+      properties:
+        full_name:
+          type: string
+          minLength: 2
+        phone:
+          type: string
+        gender:
+          type: string
+          enum: [male, female, other]
+        date_of_birth:
+          type: string
+          format: date
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        aid_type:
+          type: string
+          enum: [medical, education, food, financial, marriage, business_setup, emergency, clothing, shelter]
+        case_description:
+          type: string
+        branch_id:
+          type: string
+          format: uuid
+
+    # ==================== VOLUNTEERS ====================
+    Volunteer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        gender:
+          type: string
+          enum: [male, female, other]
+        date_of_birth:
+          type: string
+          format: date
+        occupation:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        availability:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        motivation:
+          type: string
+        status:
+          type: string
+          enum: [applied, approved, active, inactive, rejected]
+        branch:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        total_hours:
+          type: number
+          format: decimal
+        activity_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    VolunteerCreateRequest:
+      type: object
+      required:
+        - first_name
+        - email
+        - phone
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        gender:
+          type: string
+          enum: [male, female, other]
+        date_of_birth:
+          type: string
+          format: date
+        occupation:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        availability:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        motivation:
+          type: string
+        preferred_branch_id:
+          type: string
+          format: uuid
+
+    # ==================== PROGRAMS ====================
+    Program:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        short_description:
+          type: string
+        description:
+          type: string
+        program_type:
+          type: string
+          enum: [education, medical, social_service, dawah, emergency, food]
+        is_active:
+          type: boolean
+        cover_image_url:
+          type: string
+        icon_url:
+          type: string
+        beneficiary_count:
+          type: integer
+        statistics:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              value:
+                type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ProgramCreateRequest:
+      type: object
+      required:
+        - name
+        - description
+        - program_type
+      properties:
+        name:
+          type: string
+          minLength: 3
+        slug:
+          type: string
+        short_description:
+          type: string
+        description:
+          type: string
+          minLength: 20
+        program_type:
+          type: string
+          enum: [education, medical, social_service, dawah, emergency, food]
+        cover_image_url:
+          type: string
+        icon_url:
+          type: string
+
+    # ==================== EVENTS ====================
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        event_type:
+          type: string
+          enum: [fundraising, distribution, seminar, iftar, qurbani]
+        location:
+          type: string
+        branch:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        start_datetime:
+          type: string
+          format: date-time
+        end_datetime:
+          type: string
+          format: date-time
+        is_online:
+          type: boolean
+        online_link:
+          type: string
+        max_attendees:
+          type: integer
+        registration_required:
+          type: boolean
+        registration_count:
+          type: integer
+        status:
+          type: string
+          enum: [draft, published, archived]
+        cover_image_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    EventCreateRequest:
+      type: object
+      required:
+        - title
+        - start_datetime
+        - event_type
+      properties:
+        title:
+          type: string
+          minLength: 3
+        slug:
+          type: string
+        description:
+          type: string
+        event_type:
+          type: string
+          enum: [fundraising, distribution, seminar, iftar, qurbani]
+        location:
+          type: string
+        branch_id:
+          type: string
+          format: uuid
+        start_datetime:
+          type: string
+          format: date-time
+        end_datetime:
+          type: string
+          format: date-time
+        is_online:
+          type: boolean
+        online_link:
+          type: string
+        max_attendees:
+          type: integer
+        registration_required:
+          type: boolean
+        cover_image_url:
+          type: string
+
+    # ==================== ZAKAT ====================
+    ZakatCalculation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/User'
+        gold_value:
+          type: number
+          format: decimal
+        silver_value:
+          type: number
+          format: decimal
+        cash_in_hand:
+          type: number
+          format: decimal
+        cash_in_bank:
+          type: number
+          format: decimal
+        investments:
+          type: number
+          format: decimal
+        business_assets:
+          type: number
+          format: decimal
+        receivables:
+          type: number
+          format: decimal
+        other_assets:
+          type: number
+          format: decimal
+        total_assets:
+          type: number
+          format: decimal
+        total_liabilities:
+          type: number
+          format: decimal
+        net_zakatable:
+          type: number
+          format: decimal
+        nisab_threshold:
+          type: number
+          format: decimal
+        zakat_amount:
+          type: number
+          format: decimal
+        is_zakat_due:
+          type: boolean
+        calculation_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+
+    ZakatCalculationRequest:
+      type: object
+      required:
+        - total_assets
+        - total_liabilities
+      properties:
+        gold_value:
+          type: number
+          format: decimal
+        silver_value:
+          type: number
+          format: decimal
+        cash_in_hand:
+          type: number
+          format: decimal
+        cash_in_bank:
+          type: number
+          format: decimal
+        investments:
+          type: number
+          format: decimal
+        business_assets:
+          type: number
+          format: decimal
+        receivables:
+          type: number
+          format: decimal
+        other_assets:
+          type: number
+          format: decimal
+        total_assets:
+          type: number
+          format: decimal
+        total_liabilities:
+          type: number
+          format: decimal
+
+    ZakatDisbursement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        category:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+              description: One of 8 Asnaf categories
+        beneficiary:
+          $ref: '#/components/schemas/Beneficiary'
+        amount:
+          type: number
+          format: decimal
+        disbursement_date:
+          type: string
+          format: date
+        branch:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # ==================== QURBANI ====================
+    QurbaniBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        booking_number:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        package:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            animal_type:
+              type: string
+              enum: [goat, sheep, cow, cow_share, camel]
+            price:
+              type: number
+              format: decimal
+            shares_total:
+              type: integer
+        season:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            year:
+              type: integer
+            slaughter_date:
+              type: string
+              format: date
+        quantity:
+          type: integer
+        shares:
+          type: integer
+        total_amount:
+          type: number
+          format: decimal
+        names_for:
+          type: string
+        status:
+          type: string
+          enum: [booked, confirmed, processing, completed, cancelled, refunded]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    QurbaniBookingRequest:
+      type: object
+      required:
+        - package_id
+        - quantity
+      properties:
+        package_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+        shares:
+          type: integer
+        names_for:
+          type: string
+
+    # ==================== BRANCHES ====================
+    Branch:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        name: { type: string }
+        code: { type: string }
+        address: { type: string }
+        city: { type: string }
+        state: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        manager_id: { type: string, format: uuid }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    BranchCreateRequest:
+      type: object
+      required: [name, address]
+      properties:
+        name: { type: string }
+        code: { type: string }
+        address: { type: string }
+        city: { type: string }
+        state: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        manager_id: { type: string, format: uuid }
+        is_active: { type: boolean }
+
+    # ==================== FUNDRAISER EXTENSIONS ====================
+    FundraiserImage:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        image_url: { type: string }
+        alt_text: { type: string }
+        display_order: { type: integer }
+
+    FundraiserUpdate:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        content: { type: string }
+        posted_by: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+
+    FundraiserDocument:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        document_type: { type: string }
+        file_url: { type: string }
+        file_name: { type: string }
+
+    QurbaniPackage:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        animal_type: { type: string, enum: [goat, cow, cow_share, sheep, camel] }
+        breed: { type: string }
+        weight_kg: { type: number }
+        price: { type: number }
+        is_available: { type: boolean }
+        shares_total: { type: integer }
+        shares_booked: { type: integer }
+
+    # ==================== CONTENT ====================
+    BlogPost:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        slug:
+          type: string
+        content:
+          type: string
+        excerpt:
+          type: string
+        cover_image_url:
+          type: string
+        author:
+          $ref: '#/components/schemas/User'
+        status:
+          type: string
+          enum: [draft, published, archived]
+        is_featured:
+          type: boolean
+        view_count:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+        published_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    BlogPostCreateRequest:
+      type: object
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+          minLength: 5
+        slug:
+          type: string
+        content:
+          type: string
+          minLength: 50
+        excerpt:
+          type: string
+        cover_image_url:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    # ==================== MEDIA ====================
+    MediaItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        file_name:
+          type: string
+        file_url:
+          type: string
+        file_type:
+          type: string
+          enum: [image, video, document, audio]
+        mime_type:
+          type: string
+        file_size:
+          type: integer
+        alt_text:
+          type: string
+        caption:
+          type: string
+        folder:
+          type: string
+        width:
+          type: integer
+        height:
+          type: integer
+        uploaded_by:
+          $ref: '#/components/schemas/User'
+        created_at:
+          type: string
+          format: date-time
+
+    # ==================== SETTINGS ====================
+    SiteSetting:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        setting_key:
+          type: string
+        setting_value:
+          type: string
+        setting_type:
+          type: string
+          enum: [text, number, boolean, json, image]
+        group_name:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+
+    # ==================== AUDIT ====================
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/User'
+        action:
+          type: string
+          enum: [create, update, delete, login, logout]
+        entity_type:
+          type: string
+        entity_id:
+          type: string
+          format: uuid
+        old_values:
+          type: object
+          additionalProperties: true
+        new_values:
+          type: object
+          additionalProperties: true
+        ip_address:
+          type: string
+        user_agent:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # ==================== TESTIMONIALS ====================
+    Testimonial:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        author_name: { type: string }
+        role: { type: string }
+        company: { type: string }
+        content: { type: string }
+        image_url: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        is_featured: { type: boolean }
+        display_order: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    TestimonialCreateRequest:
+      type: object
+      required: [author_name, content]
+      properties:
+        author_name: { type: string }
+        role: { type: string }
+        company: { type: string }
+        content: { type: string }
+        image_url: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        is_featured: { type: boolean }
+        display_order: { type: integer }
+
+    # ==================== GALLERY ====================
+    GalleryAlbum:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        cover_image_url: { type: string }
+        event_date: { type: string, format: date }
+        is_featured: { type: boolean }
+        media:
+          type: array
+          items:
+            $ref: '#/components/schemas/MediaItem'
+        created_at: { type: string, format: date-time }
+
+    GalleryAlbumCreateRequest:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string }
+        description: { type: string }
+        cover_image_url: { type: string }
+        event_date: { type: string, format: date }
+        is_featured: { type: boolean }
+
+    # ==================== HOMEPAGE BANNERS ====================
+    HomepageBanner:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        title: { type: string }
+        subtitle: { type: string }
+        image_url: { type: string }
+        cta_text: { type: string }
+        cta_link: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    HomepageBannerCreateRequest:
+      type: object
+      required: [title, image_url]
+      properties:
+        title: { type: string }
+        subtitle: { type: string }
+        image_url: { type: string }
+        cta_text: { type: string }
+        cta_link: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+
+    # ==================== IMPACT COUNTERS ====================
+    ImpactCounter:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        title: { type: string }
+        count_value: { type: number }
+        suffix: { type: string }
+        icon: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    ImpactCounterCreateRequest:
+      type: object
+      required: [title, count_value]
+      properties:
+        title: { type: string }
+        count_value: { type: number }
+        suffix: { type: string }
+        icon: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+
+    # ==================== FAQS ====================
+    FAQ:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        question: { type: string }
+        answer: { type: string }
+        category: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    FAQCreateRequest:
+      type: object
+      required: [question, answer]
+      properties:
+        question: { type: string }
+        answer: { type: string }
+        category: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+
+    # ==================== NGO SERVICES ====================
+    NgoService:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        icon: { type: string }
+        status: { type: string, enum: [active, inactive] }
+        is_free: { type: boolean }
+        display_order: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    NgoServiceCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        icon: { type: string }
+        is_free: { type: boolean }
+        display_order: { type: integer }
+
+    NgoServiceBooking:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        service:
+          $ref: '#/components/schemas/NgoService'
+        user_id: { type: string, format: uuid, nullable: true }
+        name: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        address: { type: string }
+        booking_date: { type: string, format: date }
+        booking_time: { type: string }
+        notes: { type: string }
+        status: { type: string, enum: [pending, confirmed, completed, cancelled] }
+        donation_id: { type: string, format: uuid, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    NgoServiceBookingRequest:
+      type: object
+      required: [service_id, name, phone, address, booking_date]
+      properties:
+        service_id: { type: string, format: uuid }
+        name: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        address: { type: string }
+        booking_date: { type: string, format: date }
+        booking_time: { type: string }
+        notes: { type: string }
+        donation_amount: { type: number }
+
+    NgoServiceBookingStatusUpdateRequest:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [pending, confirmed, completed, cancelled] }
+
+paths:
+  # ==================== AUTHENTICATION ====================
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successfully logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: User registration
+      description: Register new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get new access token using refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successfully logged out
+        '401':
+          description: Unauthorized
+
+  # ==================== TENANTS ====================
+  /tenants:
+    get:
+      tags:
+        - Tenants
+      summary: List all tenants
+      description: Get list of all tenants (admin only)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/SortOrder'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of tenants
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Tenant'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+    post:
+      tags:
+        - Tenants
+      summary: Create new tenant
+      description: Create new NGO tenant account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Tenant created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Subdomain already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tenants/{id}:
+    get:
+      tags:
+        - Tenants
+      summary: Get tenant details
+      parameters:
+        - $ref: '#/components/parameters/ResourceID'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Tenant details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '404':
+          description: Tenant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Tenants
+      summary: Update tenant
+      parameters:
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Tenant updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '404':
+          description: Tenant not found
+
+    delete:
+      tags:
+        - Tenants
+      summary: Delete tenant
+      parameters:
+        - $ref: '#/components/parameters/ResourceID'
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Tenant deleted successfully
+        '404':
+          description: Tenant not found
+
+  # ==================== USERS ====================
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List users
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+
+    post:
+      tags:
+        - Users
+      summary: Create new user
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user details
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+    patch:
+      tags:
+        - Users
+      summary: Update user
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+    delete:
+      tags:
+        - Users
+      summary: Delete user
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: User deleted successfully
+        '404':
+          description: User not found
+
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+
+  # ==================== DONORS ====================
+  /donors:
+    get:
+      tags:
+        - Donors
+      summary: List donors
+      description: Retrieve list of donors with filtering and pagination
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: donor_type
+          in: query
+          schema:
+            type: string
+            enum: [individual, corporate, institution, trust]
+        - name: donor_tier
+          in: query
+          schema:
+            type: string
+            enum: [platinum, gold, silver, bronze, regular]
+        - name: search
+          in: query
+          description: Search by name or email
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of donors
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Donor'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - access denied
+
+    post:
+      tags:
+        - Donors
+      summary: Create new donor
+      description: Add a new donor to the CRM system
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DonorCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Donor created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Donor'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '409':
+          description: Email already exists
+
+  /donors/{id}:
+    get:
+      tags:
+        - Donors
+      summary: Get donor details
+      description: Retrieve detailed information about a specific donor
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Donor details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Donor'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Donor not found
+
+    put:
+      tags:
+        - Donors
+      summary: Update donor
+      description: Update donor information and preferences
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DonorUpdateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Donor updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Donor'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '404':
+          description: Donor not found
+
+    delete:
+      tags:
+        - Donors
+      summary: Delete donor
+      description: Remove a donor from the system
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Donor deleted successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Donor not found
+
+  /donors/{id}/donations:
+    get:
+      tags:
+        - Donors
+      summary: Get donor donation history
+      description: Retrieve all donations made by a specific donor
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Donor's donation history
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Donation'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Donor not found
+
+  # ==================== FUNDRAISERS ====================
+  /fundraisers:
+    get:
+      tags:
+        - Fundraisers
+      summary: List fundraisers
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, active, completed, cancelled]
+        - name: category_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          schema:
+            type: string
+      security: []
+      responses:
+        '200':
+          description: List of fundraisers
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Fundraiser'
+
+    post:
+      tags:
+        - Fundraisers
+      summary: Create fundraiser
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FundraiserCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Fundraiser created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fundraiser'
+        '400':
+          description: Validation error
+
+  /fundraisers/{id}:
+    get:
+      tags:
+        - Fundraisers
+      summary: Get fundraiser details
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      responses:
+        '200':
+          description: Fundraiser details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fundraiser'
+        '404':
+          description: Fundraiser not found
+
+  /fundraisers/stats/{id}:
+    get:
+      tags:
+        - Fundraisers
+      summary: Get fundraiser statistics
+      description: Get real-time aggregated stats for a fundraiser
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      responses:
+        '200':
+          description: Fundraiser stats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_raised:
+                    type: number
+                  total_donations:
+                    type: integer
+                  goal_percentage:
+                    type: number
+
+  /fundraisers/{id}/extensions:
+    get:
+      tags:
+        - Fundraisers
+      summary: Get fundraiser extensions
+      description: Get images, updates, and documents for a fundraiser
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      responses:
+        '200':
+          description: Extensions retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  images:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FundraiserImage'
+                  updates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FundraiserUpdate'
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FundraiserDocument'
+
+  /fundraisers/{id}/images:
+    post:
+      tags:
+        - Fundraisers
+      summary: Add fundraiser image
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [image_url]
+              properties:
+                image_url: { type: string }
+                alt_text: { type: string }
+                display_order: { type: integer }
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Image added successfully
+
+  /fundraisers/{id}/updates:
+    post:
+      tags:
+        - Fundraisers
+      summary: Add fundraiser update
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, content]
+              properties:
+                title: { type: string }
+                content: { type: string }
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Update added successfully
+
+  /fundraisers/{id}/documents:
+    post:
+      tags:
+        - Fundraisers
+      summary: Add fundraiser document
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [document_type, file_url, file_name]
+              properties:
+                document_type: { type: string }
+                file_url: { type: string }
+                file_name: { type: string }
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Document added successfully
+
+    patch:
+      tags:
+        - Fundraisers
+      summary: Update fundraiser
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FundraiserUpdateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Fundraiser updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fundraiser'
+
+    delete:
+      tags:
+        - Fundraisers
+      summary: Delete fundraiser
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Fundraiser deleted successfully
+
+  # ==================== DONATIONS ====================
+  /donations:
+    get:
+      tags:
+        - Donations
+      summary: List donations
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, completed, failed, refunded]
+        - name: fundraiser_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of donations
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Donation'
+
+    post:
+      tags:
+        - Donations
+      summary: Create donation
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DonationCreateRequest'
+      responses:
+        '201':
+          description: Donation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Donation'
+
+  /donations/{id}:
+    get:
+      tags:
+        - Donations
+      summary: Get donation details
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Donation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Donation'
+
+  /donations/{id}/verify:
+    post:
+      tags:
+        - Donations
+      summary: Verify donation payment
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - razorpay_payment_id
+                - razorpay_order_id
+                - razorpay_signature
+              properties:
+                razorpay_payment_id:
+                  type: string
+                razorpay_order_id:
+                  type: string
+                razorpay_signature:
+                  type: string
+      responses:
+        '200':
+          description: Donation verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Donation'
+
+  # ==================== BENEFICIARIES ====================
+  /beneficiaries:
+    get:
+      tags:
+        - Beneficiaries
+      summary: List beneficiaries
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: aid_type
+          in: query
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of beneficiaries
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Beneficiary'
+
+    post:
+      tags:
+        - Beneficiaries
+      summary: Create beneficiary
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BeneficiaryCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Beneficiary created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Beneficiary'
+
+  /beneficiaries/{id}:
+    get:
+      tags:
+        - Beneficiaries
+      summary: Get beneficiary details
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      responses:
+        '200':
+          description: Beneficiary details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Beneficiary'
+
+  # ==================== VOLUNTEERS ====================
+  /volunteers:
+    get:
+      tags:
+        - Volunteers
+      summary: List volunteers
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [applied, approved, active, inactive, rejected]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of volunteers
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Volunteer'
+
+  /volunteers/apply:
+    post:
+      tags:
+        - Volunteers
+      summary: Apply as volunteer
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerCreateRequest'
+      responses:
+        '201':
+          description: Volunteer application submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Volunteer'
+
+  /volunteers/activities:
+    post:
+      tags:
+        - Volunteers
+      summary: Log volunteer activity
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [volunteer_id, activity_type, hours_served, activity_date, branch_id]
+              properties:
+                volunteer_id: { type: string, format: uuid }
+                activity_type: { type: string }
+                description: { type: string }
+                hours_served: { type: number, format: decimal }
+                activity_date: { type: string, format: date }
+                branch_id: { type: string, format: uuid }
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Activity logged successfully
+
+  /volunteers/{id}/stats:
+    get:
+      tags:
+        - Volunteers
+      summary: Get volunteer stats
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      responses:
+        '200':
+          description: Volunteer statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_hours: { type: number }
+                  activity_count: { type: integer }
+
+  # ==================== PROGRAMS ====================
+  /programs:
+    get:
+      tags:
+        - Programs
+      summary: List programs
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: List of programs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Program'
+
+    post:
+      tags:
+        - Programs
+      summary: Create program
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgramCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Program created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Program'
+
+  /programs/{id}:
+    get:
+      tags:
+        - Programs
+      summary: Get program details
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      responses:
+        '200':
+          description: Program details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Program'
+
+  # ==================== EVENTS ====================
+  /events:
+    get:
+      tags:
+        - Events
+      summary: List events
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Event'
+
+    post:
+      tags:
+        - Events
+      summary: Create event
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+
+  /events/{id}:
+    get:
+      tags:
+        - Events
+      summary: Get event details
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      responses:
+        '200':
+          description: Event details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+
+  /events/{id}/register:
+    post:
+      tags:
+        - Events
+      summary: Register for event
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+      responses:
+        '201':
+          description: Registered successfully
+
+  # ==================== ZAKAT ====================
+  /zakat/calculate:
+    post:
+      tags:
+        - Zakat
+      summary: Calculate zakat
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZakatCalculationRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Zakat calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZakatCalculation'
+
+  /zakat/distributions:
+    get:
+      tags:
+        - Zakat
+      summary: List zakat distributions
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of zakat distributions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ZakatDisbursement'
+
+  /zakat/categories:
+    get:
+      tags:
+        - Zakat
+      summary: List zakat categories
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        name: { type: string }
+                        description: { type: string }
+
+  /zakat/disburse:
+    post:
+      tags:
+        - Zakat
+      summary: Disburse zakat
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [category_id, beneficiary_id, amount]
+              properties:
+                category_id: { type: string, format: uuid }
+                beneficiary_id: { type: string, format: uuid }
+                amount: { type: number }
+                notes: { type: string }
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Disbursement created successfully
+
+  # ==================== QURBANI ====================
+  /qurbani/seasons:
+    get:
+      tags:
+        - Qurbani
+      summary: List qurbani seasons
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      responses:
+        '200':
+          description: List of qurbani seasons
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        year: { type: integer }
+                        title: { type: string }
+                        booking_start: { type: string, format: date-time }
+                        booking_end: { type: string, format: date-time }
+                        slaughter_date: { type: string, format: date }
+
+  /qurbani/packages:
+    get:
+      tags:
+        - Qurbani
+      summary: List qurbani packages
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: season_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: List of packages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QurbaniPackage'
+
+  /qurbani/bookings:
+    get:
+      tags:
+        - Qurbani
+      summary: List qurbani bookings
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/QurbaniBooking'
+
+    post:
+      tags:
+        - Qurbani
+      summary: Create qurbani booking
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QurbaniBookingRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QurbaniBooking'
+
+  # ==================== CONTENT ====================
+  /blog/posts:
+    get:
+      tags:
+        - Content
+      summary: List blog posts
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published, archived]
+      responses:
+        '200':
+          description: List of blog posts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BlogPost'
+
+    post:
+      tags:
+        - Content
+      summary: Create blog post
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlogPostCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Blog post created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlogPost'
+
+  /blog/posts/{id}:
+    get:
+      tags:
+        - Content
+      summary: Get blog post
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      responses:
+        '200':
+          description: Blog post details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlogPost'
+
+  # ==================== MEDIA ====================
+  /media:
+    get:
+      tags:
+        - Media
+      summary: List media files
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: file_type
+          in: query
+          schema:
+            type: string
+            enum: [image, video, document, audio]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of media files
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MediaItem'
+
+    post:
+      tags:
+        - Media
+      summary: Upload media file
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                alt_text:
+                  type: string
+                caption:
+                  type: string
+                folder:
+                  type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaItem'
+
+  # ==================== SETTINGS ====================
+  /settings:
+    get:
+      tags:
+        - Settings
+      summary: Get site settings
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Site settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SiteSetting'
+
+    patch:
+      tags:
+        - Settings
+      summary: Update site settings
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Settings updated successfully
+
+  # ==================== AUDIT ====================
+  /audit-logs:
+    get:
+      tags:
+        - Audit
+      summary: Get audit logs
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: entity_type
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+            enum: [create, update, delete, login, logout]
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AuditLog'
+
+  # ==================== HEALTH CHECK ====================
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                    example: 1.0.0
+
+  # ==================== TESTIMONIALS ====================
+  /testimonials:
+    get:
+      tags:
+        - Content
+      summary: List testimonials
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      responses:
+        '200':
+          description: List of testimonials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Testimonial'
+    post:
+      tags:
+        - Content
+      summary: Create testimonial
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestimonialCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Testimonial created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Testimonial'
+
+  # ==================== GALLERY ====================
+  /gallery/albums:
+    get:
+      tags:
+        - Media
+      summary: List gallery albums
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      responses:
+        '200':
+          description: List of albums
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GalleryAlbum'
+    post:
+      tags:
+        - Media
+      summary: Create gallery album
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GalleryAlbumCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Album created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GalleryAlbum'
+
+  # ==================== BANNERS ====================
+  /banners:
+    get:
+      tags:
+        - Settings
+      summary: List homepage banners
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      responses:
+        '200':
+          description: List of banners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HomepageBanner'
+    post:
+      tags:
+        - Settings
+      summary: Create homepage banner
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HomepageBannerCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Banner created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomepageBanner'
+
+  # ==================== IMPACT ====================
+  /impact:
+    get:
+      tags:
+        - Settings
+      summary: List impact counters
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      responses:
+        '200':
+          description: List of impact counters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImpactCounter'
+    post:
+      tags:
+        - Settings
+      summary: Create impact counter
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImpactCounterCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Impact counter created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactCounter'
+
+  # ==================== FAQS ====================
+  /faqs:
+    get:
+      tags:
+        - Content
+      summary: List FAQs
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      responses:
+        '200':
+          description: List of FAQs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FAQ'
+    post:
+      tags:
+        - Content
+      summary: Create FAQ
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FAQCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: FAQ created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FAQ'
+
+  # ==================== NGO SERVICES ====================
+  /services:
+    get:
+      tags:
+        - NGO Services
+      summary: List all active NGO services
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      responses:
+        '200':
+          description: List of NGO services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NgoService'
+    post:
+      tags:
+        - NGO Services
+      summary: Create new service category
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NgoServiceCreateRequest'
+      responses:
+        '201':
+          description: Service created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NgoService'
+
+  /services/book:
+    post:
+      tags:
+        - NGO Services
+      summary: Submit a booking request for a service
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NgoServiceBookingRequest'
+      responses:
+        '201':
+          description: Booking submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NgoServiceBooking'
+
+  /services/bookings:
+    get:
+      tags:
+        - NGO Services
+      summary: List all booking requests (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, completed, cancelled]
+      responses:
+        '200':
+          description: List of service bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+
+  /services/bookings/{id}/status:
+    patch:
+      tags:
+        - NGO Services
+      summary: Update booking status (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NgoServiceBookingStatusUpdateRequest'
+      responses:
+        '200':
+          description: Booking status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NgoServiceBooking'
+  # ==================== UPLOAD ====================
+  /upload/{module}:
+    post:
+      tags:
+        - Media
+      summary: Upload a file
+      description: Upload a file to a specific module folder (e.g. fundraisers, volunteers)
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: module
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [fundraisers, volunteers, donors, programs, events, common]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      url: { type: string }
+                  message: { type: string }
+
+  /upload/{module}/{id}:
+    post:
+      tags:
+        - Media
+      summary: Upload a file for a specific resource
+      description: Upload a file to a resource-specific subfolder
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: module
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [fundraisers, volunteers, donors, programs, events, common]
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      url: { type: string }
+                  message: { type: string }
+
+  /upload/delete:
+    post:
+      tags:
+        - Media
+      summary: Delete a file
+      description: Remove a file from storage using its path
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [path]
+              properties:
+                path:
+                  type: string
+                  description: The full path or URL of the file to delete
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: File deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
