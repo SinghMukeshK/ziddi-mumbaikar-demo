@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import Footer from '@/components/Footer'
 import { fundraiserService, Fundraiser } from '@/services/fundraiser.service'
 import { useAuth } from '@/contexts/AuthContext'
-import { Ban, Search, Filter, Menu, X, ArrowRight, Heart, Share2, Info, Clock, CheckCircle2, ChevronRight, Target, Users, MapPin, Calendar, FileText, AlertCircle, PlusCircle } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Info, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import FundraiserCard from '@/components/FundraiserCard'
+
+const PAGE_LIMIT = 9
 
 function FundraisersList() {
   const searchParams = useSearchParams()
@@ -17,17 +18,66 @@ function FundraisersList() {
 
   const [fundraisers, setFundraisers] = useState<Fundraiser[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [isCancelling, setIsCancelling] = useState<string | null>(null)
   const [isCompleting, setIsCompleting] = useState<string | null>(null)
   const { user } = useAuth()
 
+  // Mutable pagination refs — always up-to-date inside the scroll handler
+  const loadingMoreRef = useRef(false)
+  const hasMoreRef = useRef(true)
+  const currentPageRef = useRef(1)
+
+  // Stable fetch function — reads from refs so it never goes stale
+  const fetchNextPage = useCallback(async () => {
+    if (loadingMoreRef.current || !hasMoreRef.current) return
+    loadingMoreRef.current = true
+    setLoadingMore(true)
+    try {
+      const nextPage = currentPageRef.current + 1
+      const response = await fundraiserService.getFundraisers({
+        limit: PAGE_LIMIT,
+        page: nextPage,
+      }) as any
+      const newRecords = response.data || []
+      setFundraisers(prev => [...prev, ...newRecords])
+      currentPageRef.current = nextPage
+      setCurrentPage(nextPage)
+      const more = response.pagination?.has_more ?? newRecords.length === PAGE_LIMIT
+      hasMoreRef.current = more
+      setHasMore(more)
+    } catch (err: any) {
+      console.error('Failed to load more fundraisers:', err)
+    } finally {
+      loadingMoreRef.current = false
+      setLoadingMore(false)
+    }
+  }, [])
+
+  // Scroll-based infinite load — fires when user is within 400px of the page bottom
+  useEffect(() => {
+    const handleScroll = () => {
+      const distanceFromBottom =
+        document.documentElement.scrollHeight - window.innerHeight - window.scrollY
+      if (distanceFromBottom < 400) {
+        fetchNextPage()
+      }
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [fetchNextPage])
+
   const [categories, setCategories] = useState<string[]>(['All'])
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedEligibility, setSelectedEligibility] = useState<string[]>([])
   const [showSuccessfulOnly, setShowSuccessfulOnly] = useState(false)
   const [showSuccess, setShowSuccess] = useState(showCreatedMessage)
+
+  // Pagination display state (refs above drive the logic; these drive the UI)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
 
   const eligibilityOptions = ['Urgent', 'Featured', 'Sadaqah', 'Zakat', 'Lillah', 'Bank Interest']
 
@@ -46,12 +96,19 @@ function FundraisersList() {
     fetchCategories();
   }, []);
 
+  // Initial load
   useEffect(() => {
     const fetchFundraisers = async () => {
       try {
         setLoading(true)
-        const response = await fundraiserService.getFundraisers()
-        setFundraisers(response.data || [])
+        currentPageRef.current = 1
+        setCurrentPage(1)
+        const response = await fundraiserService.getFundraisers({ limit: PAGE_LIMIT, page: 1 }) as any
+        const records = response.data || []
+        setFundraisers(records)
+        const more = response.pagination?.has_more ?? records.length === PAGE_LIMIT
+        hasMoreRef.current = more
+        setHasMore(more)
       } catch (err: any) {
         console.error('Failed to fetch fundraisers:', err)
         setError('Failed to load fundraisers. Please try again later.')
@@ -65,22 +122,19 @@ function FundraisersList() {
 
   useEffect(() => {
     if (showCreatedMessage) {
-      // Auto-hide success message after 10 seconds
       const timer = setTimeout(() => setShowSuccess(false), 10000)
       return () => clearTimeout(timer)
     }
   }, [showCreatedMessage])
 
+
   // Filter fundraisers
   const filteredFundraisers = fundraisers.filter((fundraiser) => {
-    // Search filter
     const matchesSearch = fundraiser.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       fundraiser.description.toLowerCase().includes(searchQuery.toLowerCase())
 
-    // Category filter
     const matchesCategory = selectedCategory === 'All' || fundraiser.category?.name === selectedCategory
 
-    // Eligibility filter
     const matchesEligibility = selectedEligibility.length === 0 ||
       (selectedEligibility.includes('Urgent') && fundraiser.is_urgent) ||
       (selectedEligibility.includes('Featured') && fundraiser.is_featured) ||
@@ -89,7 +143,6 @@ function FundraisersList() {
       (selectedEligibility.includes('Lillah') && fundraiser.is_lillah_eligible) ||
       (selectedEligibility.includes('Bank Interest') && fundraiser.is_interest_eligible)
 
-    // Status filter
     const matchesStatus = !showSuccessfulOnly ||
       (fundraiser.status === 'completed' || fundraiser.raised_amount >= fundraiser.goal_amount)
 
@@ -297,33 +350,84 @@ function FundraisersList() {
             <div className="mb-4">
               <p className="text-gray-600">
                 Showing <span className="font-semibold">{filteredFundraisers.length}</span> fundraiser{filteredFundraisers.length !== 1 ? 's' : ''}
+                {hasMore && <span className="text-gray-400 text-sm"> — more available</span>}
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredFundraisers.map((fundraiser, index) => (
-                <FundraiserCard
-                  key={fundraiser.id}
-                  fundraiser={fundraiser}
-                  index={index}
-                  onCancel={handleCancelFundraiser}
-                  isCancelling={isCancelling === fundraiser.id}
-                  onComplete={handleCompleteFundraiser}
-                  isCompleting={isCompleting === fundraiser.id}
-                  isAdmin={user?.role === 'admin' || user?.role === 'super_admin'}
-                />
-              ))}
-            </div>
-
-            {/* No Results */}
-            {filteredFundraisers.length === 0 && (
-              <div className="text-center py-12">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No fundraisers found</h3>
-                <p className="text-gray-600">Try adjusting your search or filters</p>
+            {/* Loading Skeleton */}
+            {loading ? (
+              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {Array.from({ length: PAGE_LIMIT }).map((_, i) => (
+                  <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-md animate-pulse">
+                    <div className="h-48 bg-gray-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-3/4" />
+                      <div className="h-3 bg-gray-100 rounded w-full" />
+                      <div className="h-3 bg-gray-100 rounded w-5/6" />
+                      <div className="h-2 bg-gray-100 rounded-full w-full mt-4" />
+                      <div className="h-9 bg-gray-200 rounded-xl mt-2" />
+                    </div>
+                  </div>
+                ))}
               </div>
+            ) : (
+              <>
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <AnimatePresence mode="popLayout">
+                    {filteredFundraisers.map((fundraiser, index) => (
+                      <motion.div
+                        key={fundraiser.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3, delay: index < PAGE_LIMIT ? 0 : (index % PAGE_LIMIT) * 0.05 }}
+                      >
+                        <FundraiserCard
+                          fundraiser={fundraiser}
+                          index={index}
+                          onCancel={handleCancelFundraiser}
+                          isCancelling={isCancelling === fundraiser.id}
+                          onComplete={handleCompleteFundraiser}
+                          isCompleting={isCompleting === fundraiser.id}
+                          isAdmin={user?.role === 'admin' || user?.role === 'super_admin'}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+
+                {/* No Results */}
+                {filteredFundraisers.length === 0 && !loading && (
+                  <div className="text-center py-12">
+                    <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No fundraisers found</h3>
+                    <p className="text-gray-600">Try adjusting your search or filters</p>
+                  </div>
+                )}
+
+                {/* Scroll-based loading indicator */}
+                <div className="mt-8">
+                  {loadingMore && (
+                    <div className="flex flex-col items-center gap-3 py-6">
+                      <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+                      <p className="text-sm text-gray-400 font-medium">Loading more fundraisers...</p>
+                    </div>
+                  )}
+
+                  {/* All Loaded Indicator */}
+                  {!hasMore && fundraisers.length >= PAGE_LIMIT && (
+                    <div className="flex items-center gap-4 py-6">
+                      <div className="flex-1 h-px bg-gray-200" />
+                      <p className="text-sm text-gray-400 font-medium whitespace-nowrap">
+                        All {fundraisers.length} fundraisers loaded
+                      </p>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -342,5 +446,3 @@ export default function FundraisersPage() {
     </Suspense>
   )
 }
-
-

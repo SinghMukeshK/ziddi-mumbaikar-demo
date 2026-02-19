@@ -57,6 +57,9 @@ function StartFundraiserContent() {
   const [images, setImages] = useState<File[]>([])
   const [documents, setDocuments] = useState<File[]>([])
   const [error, setError] = useState('')
+  const [step2Errors, setStep2Errors] = useState<Record<string, string>>({})
+  const [step3Errors, setStep3Errors] = useState<Record<string, string>>({})
+  const [step4Errors, setStep4Errors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [apiCategories, setApiCategories] = useState<FundraiserCategory[]>([])
   // Image editor state
@@ -207,30 +210,105 @@ function StartFundraiserContent() {
   }
 
   const validateStep2 = () => {
-    if (!formData.title || formData.title.length < 10) {
-      setError('Title must be at least 10 characters long')
+    const errors: Record<string, string> = {}
+
+    // Title
+    if (!formData.title.trim()) {
+      errors.title = 'Fundraiser title is required'
+    } else if (formData.title.trim().length < 10) {
+      errors.title = 'Title must be at least 10 characters'
+    } else if (formData.title.trim().length > 100) {
+      errors.title = 'Title must not exceed 100 characters'
+    }
+
+    // Target Amount
+    const amount = parseInt(formData.targetAmount)
+    if (!formData.targetAmount) {
+      errors.targetAmount = 'Target amount is required'
+    } else if (isNaN(amount) || amount < 1000) {
+      errors.targetAmount = 'Minimum target amount is ₹1,000'
+    } else if (amount > 10000000) {
+      errors.targetAmount = 'Maximum target amount is ₹1,00,00,000'
+    }
+
+    // Required By Date (optional, but if entered must be in the future)
+    if (formData.requiredBy) {
+      const today = new Date().toISOString().split('T')[0]
+      if (formData.requiredBy < today) {
+        errors.requiredBy = 'Date must be in the future'
+      }
+    }
+
+    // Beneficiary Name
+    if (!formData.beneficiaryName.trim()) {
+      errors.beneficiaryName = 'Beneficiary name is required'
+    } else if (formData.beneficiaryName.trim().length < 2) {
+      errors.beneficiaryName = 'Enter a valid beneficiary name'
+    }
+
+    // Beneficiary Phone (optional, but validate format if entered)
+    if (formData.beneficiaryPhone) {
+      if (!/^[6-9]\d{9}$/.test(formData.beneficiaryPhone.replace(/\s/g, ''))) {
+        errors.beneficiaryPhone = 'Enter a valid 10-digit Indian mobile number'
+      }
+    }
+
+    // Beneficiary Age (optional, but validate range if entered)
+    if (formData.beneficiaryAge) {
+      const age = parseInt(formData.beneficiaryAge)
+      if (isNaN(age) || age < 1 || age > 120) {
+        errors.beneficiaryAge = 'Enter a valid age (1–120)'
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setStep2Errors(errors)
       return false
     }
-    if (!formData.targetAmount || parseInt(formData.targetAmount) < 1000) {
-      setError('Target amount must be at least ₹1,000')
-      return false
-    }
-    if (!formData.beneficiaryName) {
-      setError('Beneficiary name is required')
-      return false
-    }
+    setStep2Errors({})
     return true
   }
 
   const validateStep3 = () => {
-    if (!formData.shortDescription || formData.shortDescription.length < 50) {
-      setError('Short description must be at least 50 characters')
+    const errors: Record<string, string> = {}
+
+    // Short Description
+    if (!formData.shortDescription.trim()) {
+      errors.shortDescription = 'Short description is required'
+    } else if (formData.shortDescription.trim().length < 50) {
+      errors.shortDescription = `At least 50 characters required (${formData.shortDescription.trim().length}/50)`
+    }
+
+    // Full Story
+    if (!formData.fullStory.trim()) {
+      errors.fullStory = 'Full story is required'
+    } else if (formData.fullStory.trim().length < 200) {
+      errors.fullStory = `At least 200 characters required (${formData.fullStory.trim().length}/200)`
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setStep3Errors(errors)
       return false
     }
-    if (!formData.fullStory || formData.fullStory.length < 200) {
-      setError('Full story must be at least 200 characters')
+    setStep3Errors({})
+    return true
+  }
+
+  const validateStep4 = () => {
+    const errors: Record<string, string> = {}
+
+    if (images.length === 0) {
+      errors.images = 'Please upload at least one image for your fundraiser'
+    }
+    if (documents.length === 0) {
+      errors.documents = 'Please upload at least one supporting document (medical report, ID proof, etc.)'
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setStep4Errors(errors)
       return false
     }
+    setStep4Errors({})
     return true
   }
 
@@ -247,6 +325,9 @@ function StartFundraiserContent() {
         break
       case 3:
         isValid = validateStep3()
+        break
+      case 4:
+        isValid = validateStep4()
         break
       default:
         isValid = true
@@ -517,35 +598,56 @@ function StartFundraiserContent() {
                 {/* Title */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Fundraiser Title *
+                    Fundraiser Title <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     name="title"
                     value={formData.title}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                    onChange={(e) => { handleChange(e); setStep2Errors(prev => ({ ...prev, title: '' })) }}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-primary-500 focus:outline-none transition-colors ${step2Errors.title
+                      ? 'border-red-400 bg-red-50/30 focus:border-red-500'
+                      : 'border-gray-300 focus:border-primary-500'
+                      }`}
                     placeholder="e.g., Help 8-Year-Old Hassan Fight Cancer"
                     maxLength={100}
                   />
-                  <p className="text-xs text-gray-500 mt-1">{formData.title.length}/100 characters</p>
+                  <div className="flex justify-between mt-1">
+                    {step2Errors.title ? (
+                      <p className="text-red-500 text-xs font-semibold flex items-center gap-1">
+                        <span>&#9888;</span> {step2Errors.title}
+                      </p>
+                    ) : (
+                      <span />
+                    )}
+                    <p className={`text-xs ml-auto ${formData.title.length < 10 ? 'text-red-400' : 'text-gray-400'
+                      }`}>{formData.title.length}/100</p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Target Amount */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Target Amount (₹) *
+                      Target Amount (₹) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       name="targetAmount"
                       value={formData.targetAmount}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                      onChange={(e) => { handleChange(e); setStep2Errors(prev => ({ ...prev, targetAmount: '' })) }}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-primary-500 focus:outline-none transition-colors ${step2Errors.targetAmount
+                        ? 'border-red-400 bg-red-50/30 focus:border-red-500'
+                        : 'border-gray-300 focus:border-primary-500'
+                        }`}
                       placeholder="100000"
                       min="1000"
                     />
+                    {step2Errors.targetAmount && (
+                      <p className="text-red-500 text-xs font-semibold mt-1 flex items-center gap-1">
+                        <span>&#9888;</span> {step2Errors.targetAmount}
+                      </p>
+                    )}
                   </div>
 
                   {/* Required By Date */}
@@ -557,10 +659,18 @@ function StartFundraiserContent() {
                       type="date"
                       name="requiredBy"
                       value={formData.requiredBy}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                      onChange={(e) => { handleChange(e); setStep2Errors(prev => ({ ...prev, requiredBy: '' })) }}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-primary-500 focus:outline-none transition-colors ${step2Errors.requiredBy
+                        ? 'border-red-400 bg-red-50/30 focus:border-red-500'
+                        : 'border-gray-300 focus:border-primary-500'
+                        }`}
                       min={new Date().toISOString().split('T')[0]}
                     />
+                    {step2Errors.requiredBy && (
+                      <p className="text-red-500 text-xs font-semibold mt-1 flex items-center gap-1">
+                        <span>&#9888;</span> {step2Errors.requiredBy}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -568,16 +678,24 @@ function StartFundraiserContent() {
                   {/* Beneficiary Name */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Beneficiary Name *
+                      Beneficiary Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="beneficiaryName"
                       value={formData.beneficiaryName}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                      onChange={(e) => { handleChange(e); setStep2Errors(prev => ({ ...prev, beneficiaryName: '' })) }}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-primary-500 focus:outline-none transition-colors ${step2Errors.beneficiaryName
+                        ? 'border-red-400 bg-red-50/30 focus:border-red-500'
+                        : 'border-gray-300 focus:border-primary-500'
+                        }`}
                       placeholder="Person/Organization benefiting"
                     />
+                    {step2Errors.beneficiaryName && (
+                      <p className="text-red-500 text-xs font-semibold mt-1 flex items-center gap-1">
+                        <span>&#9888;</span> {step2Errors.beneficiaryName}
+                      </p>
+                    )}
                   </div>
 
                   {/* Relation to Beneficiary */}
@@ -614,11 +732,20 @@ function StartFundraiserContent() {
                       type="number"
                       name="beneficiaryAge"
                       value={formData.beneficiaryAge}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                      onChange={(e) => { handleChange(e); setStep2Errors(prev => ({ ...prev, beneficiaryAge: '' })) }}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-primary-500 focus:outline-none transition-colors ${step2Errors.beneficiaryAge
+                        ? 'border-red-400 bg-red-50/30 focus:border-red-500'
+                        : 'border-gray-300 focus:border-primary-500'
+                        }`}
                       placeholder="Age"
                       min="1"
+                      max="120"
                     />
+                    {step2Errors.beneficiaryAge && (
+                      <p className="text-red-500 text-xs font-semibold mt-1 flex items-center gap-1">
+                        <span>&#9888;</span> {step2Errors.beneficiaryAge}
+                      </p>
+                    )}
                   </div>
 
                   {/* Beneficiary Phone */}
@@ -627,14 +754,34 @@ function StartFundraiserContent() {
                       Beneficiary Phone
                     </label>
                     <input
-                      type="tel"
+                      type="text"
+                      inputMode="numeric"
                       name="beneficiaryPhone"
                       value={formData.beneficiaryPhone}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                      onKeyDown={(e) => {
+                        // Allow: Backspace, Delete, Tab, Escape, Enter, arrows, home/end
+                        if (['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return
+                        // Block anything that isn't a digit
+                        if (!/^\d$/.test(e.key)) e.preventDefault()
+                      }}
+                      onChange={(e) => {
+                        // Strip any non-digit that slipped through (e.g. paste)
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
+                        setFormData(prev => ({ ...prev, beneficiaryPhone: digits }))
+                        setStep2Errors(prev => ({ ...prev, beneficiaryPhone: '' }))
+                      }}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-primary-500 focus:outline-none transition-colors ${step2Errors.beneficiaryPhone
+                        ? 'border-red-400 bg-red-50/30 focus:border-red-500'
+                        : 'border-gray-300 focus:border-primary-500'
+                        }`}
                       placeholder="9876543210"
                       maxLength={10}
                     />
+                    {step2Errors.beneficiaryPhone && (
+                      <p className="text-red-500 text-xs font-semibold mt-1 flex items-center gap-1">
+                        <span>&#9888;</span> {step2Errors.beneficiaryPhone}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -648,47 +795,75 @@ function StartFundraiserContent() {
                 {/* Short Description */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Short Description * (Appears in listing)
+                    Short Description <span className="text-red-500">*</span>
+                    <span className="ml-1 text-xs font-normal text-gray-400">(Appears in listing)</span>
                   </label>
                   <textarea
                     name="shortDescription"
                     value={formData.shortDescription}
-                    onChange={handleChange}
+                    onChange={(e) => { handleChange(e); setStep3Errors(prev => ({ ...prev, shortDescription: '' })) }}
                     rows={2}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none transition-colors resize-none ${step3Errors.shortDescription
+                      ? 'border-red-400 bg-red-50/30 focus:border-red-500'
+                      : 'border-gray-300 focus:border-primary-500'
+                      }`}
                     placeholder="A brief overview of your fundraiser..."
                     maxLength={200}
                   />
-                  <p className="text-xs text-gray-500 mt-1">{formData.shortDescription.length}/200 characters</p>
+                  <div className="flex justify-between mt-1">
+                    {step3Errors.shortDescription ? (
+                      <p className="text-red-500 text-xs font-semibold flex items-center gap-1">
+                        <span>&#9888;</span> {step3Errors.shortDescription}
+                      </p>
+                    ) : (
+                      <span />
+                    )}
+                    <p className={`text-xs ml-auto ${formData.shortDescription.length < 50 ? 'text-red-400 font-semibold' : 'text-gray-400'
+                      }`}>{formData.shortDescription.length}/200</p>
+                  </div>
                 </div>
 
                 {/* Full Story */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Full Story *
+                    Full Story <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     name="fullStory"
                     value={formData.fullStory}
-                    onChange={handleChange}
+                    onChange={(e) => { handleChange(e); setStep3Errors(prev => ({ ...prev, fullStory: '' })) }}
                     rows={6}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none transition-colors resize-none ${step3Errors.fullStory
+                      ? 'border-red-400 bg-red-50/30 focus:border-red-500'
+                      : 'border-gray-300 focus:border-primary-500'
+                      }`}
                     placeholder="Tell the complete story - who is the beneficiary, what happened, why help is needed..."
                   />
-                  <p className="text-xs text-gray-500 mt-1">{formData.fullStory.length} characters</p>
+                  <div className="flex justify-between mt-1">
+                    {step3Errors.fullStory ? (
+                      <p className="text-red-500 text-xs font-semibold flex items-center gap-1">
+                        <span>&#9888;</span> {step3Errors.fullStory}
+                      </p>
+                    ) : (
+                      <span />
+                    )}
+                    <p className={`text-xs ml-auto ${formData.fullStory.length < 200 ? 'text-red-400 font-semibold' : 'text-gray-400'
+                      }`}>{formData.fullStory.length} chars</p>
+                  </div>
                 </div>
 
                 {/* Current Situation */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     Current Situation
+                    <span className="ml-1 text-xs font-normal text-gray-400">(Optional)</span>
                   </label>
                   <textarea
                     name="currentSituation"
                     value={formData.currentSituation}
                     onChange={handleChange}
                     rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none transition-colors resize-none"
                     placeholder="Describe the current medical condition, financial situation, or circumstances..."
                   />
                 </div>
@@ -697,13 +872,14 @@ function StartFundraiserContent() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     How Will The Funds Help?
+                    <span className="ml-1 text-xs font-normal text-gray-400">(Optional)</span>
                   </label>
                   <textarea
                     name="howFundsWillHelp"
                     value={formData.howFundsWillHelp}
                     onChange={handleChange}
                     rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none transition-colors resize-none"
                     placeholder="Explain how the raised funds will be used - treatment costs, surgery, medicines, etc..."
                   />
                 </div>
@@ -719,7 +895,7 @@ function StartFundraiserContent() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <label className="block text-sm font-semibold text-gray-700">
-                      Upload Images
+                      Upload Images <span className="text-red-500">*</span>
                       <span className="ml-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{images.length}/5</span>
                     </label>
                     <span className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">First image = Cover Photo</span>
@@ -727,18 +903,22 @@ function StartFundraiserContent() {
 
                   {/* Upload Drop Zone */}
                   {images.length < 5 && (
-                    <div className="border-2 border-dashed border-primary-200 bg-primary-50/30 rounded-2xl p-8 text-center hover:border-primary-400 hover:bg-primary-50 transition-all group cursor-pointer">
+                    <div className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all group cursor-pointer ${step4Errors.images
+                      ? 'border-red-400 bg-red-50/40 hover:border-red-500'
+                      : 'border-primary-200 bg-primary-50/30 hover:border-primary-400 hover:bg-primary-50'
+                      }`}>
                       <input
                         type="file"
                         accept="image/*"
                         multiple
-                        onChange={handleImageUpload}
+                        onChange={(e) => { handleImageUpload(e); setStep4Errors(prev => ({ ...prev, images: '' })) }}
                         className="hidden"
                         id="image-upload"
                       />
                       <label htmlFor="image-upload" className="cursor-pointer block">
-                        <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-primary-200 transition-colors">
-                          <svg className="w-7 h-7 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 transition-colors ${step4Errors.images ? 'bg-red-100 group-hover:bg-red-200' : 'bg-primary-100 group-hover:bg-primary-200'
+                          }`}>
+                          <svg className={`w-7 h-7 ${step4Errors.images ? 'text-red-500' : 'text-primary-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                         </div>
@@ -746,6 +926,11 @@ function StartFundraiserContent() {
                         <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB · Each image opens in editor</p>
                       </label>
                     </div>
+                  )}
+                  {step4Errors.images && (
+                    <p className="text-red-500 text-xs font-semibold mt-2 flex items-center gap-1">
+                      <span>&#9888;</span> {step4Errors.images}
+                    </p>
                   )}
 
                   {/* Image Previews Grid */}
@@ -807,21 +992,25 @@ function StartFundraiserContent() {
                 {/* Documents */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Upload Supporting Documents (Max 10)
+                    Upload Supporting Documents <span className="text-red-500">*</span>
+                    <span className="ml-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Max 10</span>
                   </label>
                   <p className="text-sm text-gray-600 mb-2">Medical reports, bills, prescriptions, ID proof, etc.</p>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-all ${step4Errors.documents
+                    ? 'border-red-400 bg-red-50/40'
+                    : 'border-gray-300 hover:border-primary-400'
+                    }`}>
                     <input
                       type="file"
                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                       multiple
-                      onChange={handleDocumentUpload}
+                      onChange={(e) => { handleDocumentUpload(e); setStep4Errors(prev => ({ ...prev, documents: '' })) }}
                       className="hidden"
                       id="document-upload"
                     />
                     <label htmlFor="document-upload" className="cursor-pointer">
                       <div className="text-gray-600">
-                        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className={`mx-auto h-12 w-12 ${step4Errors.documents ? 'text-red-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <p className="mt-1">Click to upload documents</p>
@@ -829,6 +1018,11 @@ function StartFundraiserContent() {
                       </div>
                     </label>
                   </div>
+                  {step4Errors.documents && (
+                    <p className="text-red-500 text-xs font-semibold mt-2 flex items-center gap-1">
+                      <span>&#9888;</span> {step4Errors.documents}
+                    </p>
+                  )}
 
                   {/* Document List */}
                   {documents.length > 0 && (
@@ -914,36 +1108,178 @@ function StartFundraiserContent() {
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Review Your Fundraiser</h2>
 
-                <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Category</h3>
-                    <p className="text-gray-700">{apiCategories.find(c => c.id === formData.category)?.name}</p>
+                {/* Section 1: Fundraiser Details */}
+                <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="bg-white border-b border-gray-200 px-5 py-3">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-primary-600">Fundraiser Details</h3>
                   </div>
-
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Title</h3>
-                    <p className="text-gray-700">{formData.title}</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <h3 className="font-semibold text-gray-900">Target Amount</h3>
-                      <p className="text-gray-700">₹{parseInt(formData.targetAmount || '0').toLocaleString()}</p>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Category</p>
+                      <p className="text-sm font-semibold text-gray-800">{apiCategories.find(c => c.id === formData.category)?.name || '—'}</p>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Beneficiary</h3>
-                      <p className="text-gray-700">{formData.beneficiaryName}</p>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Target Amount</p>
+                      <p className="text-sm font-semibold text-gray-800">₹{parseInt(formData.targetAmount || '0').toLocaleString()}</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Title</p>
+                      <p className="text-sm font-semibold text-gray-800">{formData.title || '—'}</p>
+                    </div>
+                    {formData.requiredBy && (
+                      <div>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Required By</p>
+                        <p className="text-sm font-semibold text-gray-800">{new Date(formData.requiredBy).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section 2: Beneficiary Info */}
+                <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="bg-white border-b border-gray-200 px-5 py-3">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-primary-600">Beneficiary Information</h3>
+                  </div>
+                  <div className="px-5 py-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Name</p>
+                      <p className="text-sm font-semibold text-gray-800">{formData.beneficiaryName || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Relation</p>
+                      <p className="text-sm font-semibold text-gray-800 capitalize">{formData.beneficiaryRelation || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Age</p>
+                      <p className="text-sm font-semibold text-gray-800">{formData.beneficiaryAge || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Phone</p>
+                      <p className="text-sm font-semibold text-gray-800">{formData.beneficiaryPhone || '—'}</p>
                     </div>
                   </div>
+                </div>
 
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Story</h3>
-                    <p className="text-gray-700 line-clamp-3">{formData.fullStory}</p>
+                {/* Section 3: Story & Description */}
+                <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="bg-white border-b border-gray-200 px-5 py-3">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-primary-600">Story &amp; Description</h3>
                   </div>
+                  <div className="px-5 py-4 space-y-4">
+                    <div>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Short Description</p>
+                      <p className="text-sm text-gray-700 leading-relaxed">{formData.shortDescription || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Full Story</p>
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{formData.fullStory || '—'}</p>
+                    </div>
+                    {formData.currentSituation && (
+                      <div>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Current Situation</p>
+                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{formData.currentSituation}</p>
+                      </div>
+                    )}
+                    {formData.howFundsWillHelp && (
+                      <div>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">How Funds Will Help</p>
+                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{formData.howFundsWillHelp}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Images & Documents</h3>
-                    <p className="text-gray-700">{images.length} images, {documents.length} documents uploaded</p>
+                {/* Section 4: Location */}
+                {(formData.locality || formData.pincode || formData.contactName || formData.contactPhone) && (
+                  <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                    <div className="bg-white border-b border-gray-200 px-5 py-3">
+                      <h3 className="text-xs font-black uppercase tracking-widest text-primary-600">Location &amp; Contact</h3>
+                    </div>
+                    <div className="px-5 py-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {formData.locality && (
+                        <div>
+                          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Locality</p>
+                          <p className="text-sm font-semibold text-gray-800">{formData.locality}</p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">City</p>
+                        <p className="text-sm font-semibold text-gray-800">{formData.city}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">State</p>
+                        <p className="text-sm font-semibold text-gray-800">{formData.state}</p>
+                      </div>
+                      {formData.pincode && (
+                        <div>
+                          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Pincode</p>
+                          <p className="text-sm font-semibold text-gray-800">{formData.pincode}</p>
+                        </div>
+                      )}
+                      {formData.contactName && (
+                        <div>
+                          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Contact Name</p>
+                          <p className="text-sm font-semibold text-gray-800">{formData.contactName}</p>
+                        </div>
+                      )}
+                      {formData.contactPhone && (
+                        <div>
+                          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Contact Phone</p>
+                          <p className="text-sm font-semibold text-gray-800">{formData.contactPhone}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 5: Images */}
+                <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-primary-600">Images</h3>
+                    <span className="text-[11px] font-bold text-gray-400">{images.length} uploaded</span>
+                  </div>
+                  <div className="px-5 py-4">
+                    {images.length > 0 ? (
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                        {images.map((img, i) => (
+                          <div key={i} className="relative rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                            <img src={URL.createObjectURL(img)} alt={`Image ${i + 1}`} className="w-full h-20 object-cover" />
+                            {i === 0 && (
+                              <div className="absolute top-1 left-1 bg-amber-500 text-white text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                <Star className="w-2 h-2 fill-white" /> Cover
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">No images uploaded</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section 6: Documents */}
+                <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-primary-600">Documents</h3>
+                    <span className="text-[11px] font-bold text-gray-400">{documents.length} uploaded</span>
+                  </div>
+                  <div className="px-5 py-4">
+                    {documents.length > 0 ? (
+                      <ul className="space-y-2">
+                        {documents.map((doc, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2">
+                            <svg className="w-4 h-4 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span className="truncate font-medium">{doc.name}</span>
+                            <span className="ml-auto text-[10px] text-gray-400 flex-shrink-0">{(doc.size / 1024).toFixed(0)} KB</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">No documents uploaded</p>
+                    )}
                   </div>
                 </div>
 

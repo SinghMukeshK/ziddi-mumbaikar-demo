@@ -60,7 +60,18 @@ export default function SignInModal({ isOpen, onClose, onSignIn }: SignInModalPr
       if (redirect) {
         router.push(redirect)
       } else {
-        router.push('/profile')
+        // Redirect admins to dashboard, others to profile
+        const storedUser = localStorage.getItem('user')
+        if (storedUser) {
+          const userData = JSON.parse(storedUser)
+          if (userData.role === 'admin') {
+            router.push('/dashboard')
+          } else {
+            router.push('/profile')
+          }
+        } else {
+          router.push('/profile')
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed. Please try again.')

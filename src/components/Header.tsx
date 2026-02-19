@@ -25,7 +25,7 @@ export default function Header() {
     }, [searchParams, isLoggedIn])
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md print:hidden">
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
                     {/* Center - Logo */}
@@ -122,7 +122,7 @@ export default function Header() {
 
                                                 <div className="px-2 space-y-1">
                                                     {[
-                                                        { label: 'Dashboard', href: '/dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
+                                                        // { label: 'Dashboard', href: '/dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
                                                         { label: 'My Profile', href: '/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
                                                     ].map((item) => (
                                                         <Link
@@ -161,6 +161,16 @@ export default function Header() {
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                                 </svg>
                                                                 Manage Bookings
+                                                            </Link>
+                                                            <Link
+                                                                href="/admin/volunteers"
+                                                                className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-navy-900 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition-all"
+                                                                onClick={() => setShowUserMenu(false)}
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                </svg>
+                                                                Volunteers
                                                             </Link>
                                                             <Link
                                                                 href="/admin/tenant"
@@ -302,6 +312,15 @@ export default function Header() {
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
                                             Pending Approvals
+                                        </Link>
+                                    )}
+                                    {user?.role === 'admin' && (
+                                        <Link
+                                            href="/admin/volunteers"
+                                            className="text-primary-600 hover:text-primary-700 font-semibold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            Volunteers
                                         </Link>
                                     )}
                                     {user?.role === 'admin' && (

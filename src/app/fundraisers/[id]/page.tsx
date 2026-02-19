@@ -58,6 +58,7 @@ export default function FundraiserDetailPage() {
   const [donorPan, setDonorPan] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [paymentStep, setPaymentStep] = useState<'form' | 'processing' | 'success'>('form')
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
   const { openRazorpay } = useRazorpay()
 
@@ -107,6 +108,8 @@ export default function FundraiserDetailPage() {
   const handleDonateClick = () => {
     setShowDonationModal(true)
     setError('')
+    setFormErrors({})
+    setPaymentStep('form')
   }
 
   const handleAmountSelect = (amount: number) => {
@@ -128,15 +131,51 @@ export default function FundraiserDetailPage() {
   const handleDonationSubmit = async () => {
     setError('')
     const finalAmount = getFinalAmount()
-    if (!finalAmount || finalAmount < 100) {
-      setError('Minimum donation amount is ₹100')
+    const errors: Record<string, string> = {}
+
+    // Amount validation
+    if (!finalAmount || isNaN(finalAmount)) {
+      errors.amount = 'Please select or enter a donation amount'
+    } else if (finalAmount < 100) {
+      errors.amount = 'Minimum donation amount is ₹100'
+    } else if (finalAmount > 1000000) {
+      errors.amount = 'Maximum donation amount is ₹10,00,000'
+    }
+
+    if (!isAnonymous) {
+      // Name
+      if (!donorName.trim()) {
+        errors.name = 'Full name is required'
+      } else if (donorName.trim().length < 2) {
+        errors.name = 'Please enter your full name'
+      }
+
+      // Email
+      if (!donorEmail.trim()) {
+        errors.email = 'Email address is required'
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(donorEmail.trim())) {
+        errors.email = 'Please enter a valid email address'
+      }
+
+      // Phone
+      if (!donorPhone.trim()) {
+        errors.phone = 'Phone number is required'
+      } else if (!/^[6-9]\d{9}$/.test(donorPhone.replace(/\s/g, ''))) {
+        errors.phone = 'Enter a valid 10-digit Indian mobile number'
+      }
+
+      // PAN (optional but validate format if entered)
+      if (donorPan.trim() && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(donorPan.trim())) {
+        errors.pan = 'Invalid PAN format (e.g. ABCDE1234F)'
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
       return
     }
 
-    if (!isAnonymous && (!donorName || !donorEmail || !donorPhone)) {
-      setError('Please fill in all required fields')
-      return
-    }
+    setFormErrors({})
 
     setSubmittingDonation(true)
     setPaymentStep('processing')
@@ -974,10 +1013,12 @@ export default function FundraiserDetailPage() {
                           <button
                             key={amount}
                             type="button"
-                            onClick={() => handleAmountSelect(amount)}
+                            onClick={() => { handleAmountSelect(amount); setFormErrors(e => ({ ...e, amount: '' })) }}
                             className={`py-4 rounded-xl font-black text-sm transition-all border-2 ${donationAmount === amount.toString()
                               ? 'bg-navy-900 border-navy-900 text-white shadow-lg shadow-navy-900/40'
-                              : 'bg-white border-gray-200 text-navy-900 hover:border-primary-500/50 hover:bg-primary-50/10'
+                              : formErrors.amount
+                                ? 'bg-white border-red-300 text-navy-900 hover:border-red-400'
+                                : 'bg-white border-gray-200 text-navy-900 hover:border-primary-500/50 hover:bg-primary-50/10'
                               }`}
                           >
                             ₹{amount.toLocaleString()}
@@ -986,17 +1027,25 @@ export default function FundraiserDetailPage() {
                       </div>
 
                       {/* Custom Amount Field */}
-                      <div className="relative group">
-                        <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-navy-900 group-focus-within:text-primary-600 transition-colors font-black text-base">
-                          ₹
+                      <div className="space-y-1">
+                        <div className="relative group">
+                          <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-navy-900 group-focus-within:text-primary-600 transition-colors font-black text-base">₹</div>
+                          <input
+                            type="number"
+                            value={customAmount}
+                            onChange={(e) => { handleCustomAmountChange(e); setFormErrors(f => ({ ...f, amount: '' })) }}
+                            placeholder="Enter custom amount..."
+                            className={`w-full bg-gray-50 border-2 rounded-2xl py-5 pl-12 pr-6 focus:outline-none focus:bg-white transition-all font-black text-navy-900 placeholder:text-gray-400 text-base ${formErrors.amount
+                              ? 'border-red-400 focus:border-red-500 bg-red-50/30'
+                              : 'border-gray-100 focus:border-primary-500'
+                              }`}
+                          />
                         </div>
-                        <input
-                          type="number"
-                          value={customAmount}
-                          onChange={handleCustomAmountChange}
-                          placeholder="Enter custom amount..."
-                          className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-5 pl-12 pr-6 focus:outline-none focus:border-primary-500 focus:bg-white transition-all font-black text-navy-900 placeholder:text-gray-400 text-base"
-                        />
+                        {formErrors.amount && (
+                          <p className="text-red-500 text-[11px] font-bold flex items-center gap-1 ml-1">
+                            <AlertCircle className="w-3 h-3" />{formErrors.amount}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -1016,45 +1065,83 @@ export default function FundraiserDetailPage() {
 
                       {!isAnonymous && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                          <div className="space-y-2">
-                            <label className="text-[11px] font-black uppercase tracking-widest text-navy-900 ml-1">Full Name</label>
+                          {/* Full Name */}
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-black uppercase tracking-widest text-navy-900 ml-1">
+                              Full Name <span className="text-red-500">*</span>
+                            </label>
                             <input
                               type="text"
                               value={donorName}
-                              onChange={(e) => setDonorName(e.target.value)}
+                              onChange={(e) => { setDonorName(e.target.value); setFormErrors(f => ({ ...f, name: '' })) }}
                               placeholder="Your Name"
-                              className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl py-4 px-5 focus:outline-none focus:border-primary-500 focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400"
+                              className={`w-full bg-gray-50 border-2 rounded-xl py-4 px-5 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400 ${formErrors.name ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
+                                }`}
                             />
+                            {formErrors.name && (
+                              <p className="text-red-500 text-[11px] font-bold flex items-center gap-1 ml-1">
+                                <AlertCircle className="w-3 h-3" />{formErrors.name}
+                              </p>
+                            )}
                           </div>
-                          <div className="space-y-2">
-                            <label className="text-[11px] font-black uppercase tracking-widest text-navy-900 ml-1">Email</label>
+
+                          {/* Email */}
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-black uppercase tracking-widest text-navy-900 ml-1">
+                              Email <span className="text-red-500">*</span>
+                            </label>
                             <input
                               type="email"
                               value={donorEmail}
-                              onChange={(e) => setDonorEmail(e.target.value)}
+                              onChange={(e) => { setDonorEmail(e.target.value); setFormErrors(f => ({ ...f, email: '' })) }}
                               placeholder="email@example.com"
-                              className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl py-4 px-5 focus:outline-none focus:border-primary-500 focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400"
+                              className={`w-full bg-gray-50 border-2 rounded-xl py-4 px-5 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400 ${formErrors.email ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
+                                }`}
                             />
+                            {formErrors.email && (
+                              <p className="text-red-500 text-[11px] font-bold flex items-center gap-1 ml-1">
+                                <AlertCircle className="w-3 h-3" />{formErrors.email}
+                              </p>
+                            )}
                           </div>
-                          <div className="space-y-2">
-                            <label className="text-[11px] font-black uppercase tracking-widest text-navy-900 ml-1">Phone</label>
+
+                          {/* Phone */}
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-black uppercase tracking-widest text-navy-900 ml-1">
+                              Phone <span className="text-red-500">*</span>
+                            </label>
                             <input
                               type="tel"
                               value={donorPhone}
-                              onChange={(e) => setDonorPhone(e.target.value)}
+                              onChange={(e) => { setDonorPhone(e.target.value); setFormErrors(f => ({ ...f, phone: '' })) }}
                               placeholder="Phone Number"
-                              className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl py-4 px-5 focus:outline-none focus:border-primary-500 focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400"
+                              className={`w-full bg-gray-50 border-2 rounded-xl py-4 px-5 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400 ${formErrors.phone ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
+                                }`}
                             />
+                            {formErrors.phone && (
+                              <p className="text-red-500 text-[11px] font-bold flex items-center gap-1 ml-1">
+                                <AlertCircle className="w-3 h-3" />{formErrors.phone}
+                              </p>
+                            )}
                           </div>
-                          <div className="space-y-2">
+
+                          {/* PAN */}
+                          <div className="space-y-1">
                             <label className="text-[11px] font-black uppercase tracking-widest text-navy-900 ml-1">PAN (Optional)</label>
                             <input
                               type="text"
                               value={donorPan}
-                              onChange={(e) => setDonorPan(e.target.value.toUpperCase())}
+                              onChange={(e) => { setDonorPan(e.target.value.toUpperCase()); setFormErrors(f => ({ ...f, pan: '' })) }}
                               placeholder="PAN Number"
-                              className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl py-4 px-5 focus:outline-none focus:border-primary-500 focus:bg-white transition-all font-bold text-navy-900 uppercase text-sm placeholder:text-gray-400"
+                              maxLength={10}
+                              className={`w-full bg-gray-50 border-2 rounded-xl py-4 px-5 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 uppercase text-sm placeholder:text-gray-400 ${formErrors.pan ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
+                                }`}
                             />
+                            {formErrors.pan && (
+                              <p className="text-red-500 text-[11px] font-bold flex items-center gap-1 ml-1">
+                                <AlertCircle className="w-3 h-3" />{formErrors.pan}
+                              </p>
+                            )}
                           </div>
                         </div>
                       )}

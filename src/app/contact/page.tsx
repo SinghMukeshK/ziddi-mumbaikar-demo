@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
+import { contactService } from '@/services/contact.service'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ export default function ContactPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -27,23 +29,34 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setSubmitStatus('idle')
+    setErrorMessage('')
 
-    // TODO: Implement actual form submission
-    setTimeout(() => {
+    try {
+      const response = await contactService.submitInquiry(formData)
+      if (response.success) {
+        setSubmitStatus('success')
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+          inquiryType: 'general'
+        })
+        // Reset success message after 5 seconds
+        setTimeout(() => setSubmitStatus('idle'), 7000)
+      } else {
+        setSubmitStatus('error')
+        setErrorMessage('Failed to send message. Please try again.')
+      }
+    } catch (error: any) {
+      console.error('Contact submission error:', error)
+      setSubmitStatus('error')
+      setErrorMessage(error.message || 'Something went wrong. Please try again later.')
+    } finally {
       setIsSubmitting(false)
-      setSubmitStatus('success')
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
-        inquiryType: 'general'
-      })
-
-      // Reset success message after 5 seconds
-      setTimeout(() => setSubmitStatus('idle'), 5000)
-    }, 1500)
+    }
   }
 
   return (
@@ -212,6 +225,18 @@ export default function ContactPage() {
                   <div>
                     <h4 className="font-bold text-green-900">Message Sent!</h4>
                     <p className="text-sm text-green-700">Thank you for contacting us. We&apos;ll respond within 24 hours.</p>
+                  </div>
+                </div>
+              )}
+
+              {submitStatus === 'error' && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <h4 className="font-bold text-red-900">Error</h4>
+                    <p className="text-sm text-red-700">{errorMessage}</p>
                   </div>
                 </div>
               )}

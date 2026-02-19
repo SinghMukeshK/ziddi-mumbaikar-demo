@@ -31,6 +31,16 @@ export interface Volunteer {
     last_name?: string;
     email: string;
     phone: string;
+    gender?: string;
+    date_of_birth?: string;
+    occupation?: string;
+    skills?: string[];
+    availability?: string;
+    address?: string;
+    city?: string;
+    motivation?: string;
+    photo_url?: string;
+    id_proof_url?: string;
     status: 'applied' | 'approved' | 'active' | 'inactive' | 'rejected';
     created_at: string;
 }
@@ -38,6 +48,14 @@ export interface Volunteer {
 class VolunteerService {
     async applyAsVolunteer(data: VolunteerCreateRequest): Promise<ApiResponse<Volunteer>> {
         return apiV1.post<ApiResponse<Volunteer>>('/volunteers/apply', data);
+    }
+
+    async getVolunteers(params?: { status?: string; search?: string }): Promise<ApiResponse<Volunteer[]>> {
+        return apiV1.get<ApiResponse<Volunteer[]>>('/volunteers', { params });
+    }
+
+    async updateVolunteerStatus(id: string, status: string): Promise<ApiResponse<Volunteer>> {
+        return apiV1.patch<ApiResponse<Volunteer>>(`/volunteers/${id}/status`, { status });
     }
 
     async getVolunteerStats(id: string): Promise<ApiResponse<{ total_hours: number; activity_count: number }>> {
