@@ -11,7 +11,7 @@ export interface VolunteerHelpProps {
 }
 
 export default function VolunteerHelp({ isModal = false }: VolunteerHelpProps) {
-  const [activeTab, setActiveTab] = useState<'volunteer' | 'help'>('volunteer')
+  const [activeTab, setActiveTab] = useState<'volunteer' | 'help'>('help')
 
   // Form States
   const [formData, setFormData] = useState<Partial<VolunteerCreateRequest>>({ skills: [] })
@@ -110,7 +110,7 @@ export default function VolunteerHelp({ isModal = false }: VolunteerHelpProps) {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex justify-center mb-12">
+        {/* <div className="flex justify-center mb-12">
           <div className="bg-white p-1.5 rounded-2xl shadow-xl flex gap-1 border border-gray-100">
             <button
               onClick={() => setActiveTab('volunteer')}
@@ -129,7 +129,7 @@ export default function VolunteerHelp({ isModal = false }: VolunteerHelpProps) {
               I Need Help
             </button>
           </div>
-        </div>
+        </div> */}
 
         <div className="grid lg:grid-cols-12 gap-12 items-start">
           {/* Form Side */}
@@ -229,8 +229,16 @@ export default function VolunteerHelp({ isModal = false }: VolunteerHelpProps) {
                         <label className="text-sm font-black text-navy-900 uppercase tracking-wider ml-1">Help Type *</label>
                         <select name="aid_type" required value={helpFormData.aid_type || ''} onChange={handleInputChange} className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-primary-500 focus:bg-white rounded-2xl outline-none transition-all font-medium appearance-none">
                           <option value="">Select Category</option>
-                          {['Medical Assistance', 'Education Support', 'Food/Ration', 'Financial Aid', 'Emergency/Ambulance'].map(opt => (
-                            <option key={opt} value={opt.toLowerCase()}>{opt}</option>
+                          {[
+                            { label: 'Medical Assistance', value: 'medical' },
+                            { label: 'Education Support', value: 'education' },
+                            { label: 'Food/Ration', value: 'food' },
+                            { label: 'Livelihood/Financial Aid', value: 'livelihood' },
+                            { label: 'Shelter', value: 'shelter' },
+                            { label: 'Emergency/Ambulance', value: 'emergency' },
+                            { label: 'Other Support', value: 'other' }
+                          ].map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
                           ))}
                         </select>
                       </div>

@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import Footer from '@/components/Footer'
 import { fundraiserService, Fundraiser } from '@/services/fundraiser.service'
 import { useAuth } from '@/contexts/AuthContext'
-import { Info, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react'
+import { Info, ArrowRight, CheckCircle2, Loader2, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import FundraiserCard from '@/components/FundraiserCard'
 
@@ -238,14 +238,31 @@ function FundraisersList() {
           {/* Sidebar - Categories */}
           <aside className="lg:w-72 flex-shrink-0">
             <div className="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 p-8 sticky top-24 border border-gray-100">
-              <div className="flex items-center gap-3 mb-8">
+              <div className="flex items-center gap-3 mb-4 lg:mb-8">
                 <div className="w-10 h-10 bg-primary-500/10 rounded-xl flex items-center justify-center text-primary-500">
                   <Info className="w-5 h-5" />
                 </div>
                 <h2 className="text-sm font-black text-navy-900 tracking-widest uppercase">Categories</h2>
               </div>
 
-              <ul className="space-y-2">
+              {/* Mobile Category Dropdown */}
+              <div className="lg:hidden relative">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl py-3 pl-4 pr-10 focus:outline-none focus:border-primary-500 transition-all font-bold text-navy-900 appearance-none shadow-sm"
+                >
+                  {categories.map((category) => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                  <ChevronDown className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Desktop Category List */}
+              <ul className="hidden lg:block space-y-2">
                 {categories.map((category) => (
                   <li key={category}>
                     <button
@@ -267,7 +284,7 @@ function FundraisersList() {
               </ul>
 
               {/* Quick Support Card */}
-              <div className="mt-10 p-6 bg-primary-500 rounded-[1.5rem] text-white relative overflow-hidden group">
+              <div className="hidden lg:block mt-10 p-6 bg-primary-500 rounded-[1.5rem] text-white relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700"></div>
                 <h4 className="font-black text-lg mb-2 relative z-10">Need Help?</h4>
                 <p className="text-primary-100 text-xs mb-4 relative z-10 leading-relaxed">

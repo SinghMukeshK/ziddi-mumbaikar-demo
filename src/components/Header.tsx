@@ -24,6 +24,18 @@ export default function Header() {
         }
     }, [searchParams, isLoggedIn])
 
+    // Prevent body scroll when mobile menu is open
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden'
+        } else {
+            document.body.style.overflow = 'unset'
+        }
+        return () => {
+            document.body.style.overflow = 'unset'
+        }
+    }, [isMobileMenuOpen])
+
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md print:hidden">
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -138,7 +150,7 @@ export default function Header() {
                                                         </Link>
                                                     ))}
 
-                                                    {user?.role === 'admin' && (
+                                                    {(user?.role === 'admin' || user?.role === 'super_admin') && (
                                                         <>
                                                             <div className="h-px bg-gray-50 my-2 mx-3" />
                                                             <p className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary-500">Administration</p>
@@ -245,8 +257,8 @@ export default function Header() {
 
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
-                    <div className="lg:hidden pb-4 border-t border-gray-200 mt-2">
-                        <div className="flex flex-col space-y-3 pt-4">
+                    <div className="lg:hidden pb-6 border-t border-gray-200 mt-2 max-h-[calc(100vh-80px)] overflow-y-auto">
+                        <div className="flex flex-col space-y-3 pt-4 px-2">
                             {/* User Info - Mobile */}
                             {isLoggedIn && (
                                 <div className="px-3 py-2 bg-primary-50 rounded-lg mb-2">
@@ -265,26 +277,25 @@ export default function Header() {
                             )}
 
                             <Link
-                                href="/fundraisers"
-                                className="text-gray-700 hover:text-primary-500 font-medium py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                Browse Fundraisers
-                            </Link>
-                            <Link
-                                href="/fundraise-for"
-                                className="text-gray-700 hover:text-primary-500 font-medium py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                Fundraise For
-                            </Link>
-                            <Link
                                 href="/#services"
                                 className="flex items-center justify-between bg-primary-50 text-primary-700 font-bold py-3 px-4 rounded-xl border border-primary-100 transition-colors"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
-                                <span>Free Services</span>
-                                <span className="bg-primary-500 text-white text-[10px] px-2 py-0.5 rounded-full animate-pulse uppercase">Free</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="flex h-2 w-2 relative">
+                                        <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
+                                    </span>
+                                    <span>Free Services</span>
+                                </div>
+                            </Link>
+
+                            <Link
+                                href="/fundraisers"
+                                className="text-gray-700 hover:text-primary-500 font-medium py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Fundraisers
                             </Link>
                             <Link
                                 href="/contact"
@@ -299,69 +310,53 @@ export default function Header() {
                                 <>
                                     <hr className="my-2" />
                                     <Link
-                                        href="/dashboard"
-                                        className="text-gray-700 hover:text-primary-500 font-medium py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        Dashboard
-                                    </Link>
-                                    {user?.role === 'admin' && (
-                                        <Link
-                                            href="/admin/approvals"
-                                            className="text-primary-600 hover:text-primary-700 font-semibold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            Pending Approvals
-                                        </Link>
-                                    )}
-                                    {user?.role === 'admin' && (
-                                        <Link
-                                            href="/admin/volunteers"
-                                            className="text-primary-600 hover:text-primary-700 font-semibold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            Volunteers
-                                        </Link>
-                                    )}
-                                    {user?.role === 'admin' && (
-                                        <Link
-                                            href="/admin/tenant"
-                                            className="text-primary-600 hover:text-primary-700 font-semibold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            Organization Settings
-                                        </Link>
-                                    )}
-                                    {user?.role === 'admin' && (
-                                        <Link
-                                            href="/donations"
-                                            className="text-primary-600 hover:text-primary-700 font-semibold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            View All Donations
-                                        </Link>
-                                    )}
-                                    <Link
                                         href="/profile"
                                         className="text-gray-700 hover:text-primary-500 font-medium py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
                                         My Profile
                                     </Link>
-                                    <Link
-                                        href="/my-fundraisers"
-                                        className="text-gray-700 hover:text-primary-500 font-medium py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        My Fundraisers
-                                    </Link>
-                                    <Link
-                                        href="/my-donations"
-                                        className="text-gray-700 hover:text-primary-500 font-medium py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        My Donations
-                                    </Link>
+
+                                    {(user?.role === 'admin' || user?.role === 'super_admin') && (
+                                        <>
+                                            <p className="px-3 py-1.5 mt-2 text-[10px] font-black uppercase tracking-widest text-primary-500">Administration</p>
+                                            <Link
+                                                href="/admin/approvals"
+                                                className="text-primary-600 hover:text-primary-700 font-semibold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                                Review Approvals
+                                            </Link>
+                                            <Link
+                                                href="/admin/bookings"
+                                                className="text-primary-600 hover:text-primary-700 font-semibold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                                Manage Bookings
+                                            </Link>
+                                            <Link
+                                                href="/admin/volunteers"
+                                                className="text-primary-600 hover:text-primary-700 font-semibold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                                Volunteers
+                                            </Link>
+                                            <Link
+                                                href="/admin/tenant"
+                                                className="text-primary-600 hover:text-primary-700 font-semibold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                                Organization Settings
+                                            </Link>
+                                            <Link
+                                                href="/donations"
+                                                className="text-primary-600 hover:text-primary-700 font-semibold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                                View All Donations
+                                            </Link>
+                                        </>
+                                    )}
                                     <hr className="my-2" />
                                 </>
                             )}

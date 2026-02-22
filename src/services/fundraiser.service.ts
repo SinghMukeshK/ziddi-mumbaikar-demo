@@ -190,7 +190,7 @@ export const fundraiserService = {
             }
         }
 
-        const response = await apiV1.get<ApiResponse<FundraiserCategory[]>>('/fundraisers/categories');
+        const response = await apiV1.get<ApiResponse<FundraiserCategory[]>>('/public/categories');
         if (response.success && response.data) {
             categoriesCache = response.data;
             if (typeof window !== 'undefined') {

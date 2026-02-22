@@ -438,7 +438,7 @@ export default function FundraiserDetailPage() {
                     ))}
 
                     {/* Visual Badges on Image */}
-                    <div className="absolute top-6 left-6 flex flex-col gap-3 z-20">
+                    <div className="absolute top-4 left-4 md:top-6 md:left-6 right-16 md:right-auto flex flex-wrap md:flex-col items-start gap-2 md:gap-3 z-20">
                       {fundraiser.is_urgent && (
                         <motion.div
                           animate={{ scale: [1, 1.05, 1] }}
@@ -532,7 +532,7 @@ export default function FundraiserDetailPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`relative px-8 py-6 text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id ? 'text-primary-600' : 'text-gray-400 hover:text-navy-900'
+                    className={`relative px-4 sm:px-8 py-4 sm:py-6 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id ? 'text-primary-600' : 'text-gray-400 hover:text-navy-900'
                       }`}
                   >
                     <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary-500' : 'text-gray-300'}`} />
@@ -548,7 +548,7 @@ export default function FundraiserDetailPage() {
               </div>
 
               {/* Tab Content */}
-              <div className="p-10">
+              <div className="p-6 md:p-10">
                 <AnimatePresence mode="wait">
                   {activeTab === 'about' && (
                     <motion.div
@@ -733,7 +733,7 @@ export default function FundraiserDetailPage() {
                           {extensions.updates.map((update: any) => (
                             <div key={update.id} className="relative pl-16">
                               <div className="absolute left-4 top-2 w-4 h-4 rounded-full bg-primary-500 ring-8 ring-primary-50" />
-                              <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                              <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                                 <div className="flex items-center gap-2 text-primary-500 font-bold text-[10px] uppercase tracking-widest mb-4">
                                   <Calendar className="w-3.5 h-3.5" />
                                   {formatDate(update.created_at, {
@@ -774,7 +774,7 @@ export default function FundraiserDetailPage() {
           <div className="lg:col-span-4">
             <div className="sticky top-12 space-y-8">
               {/* Premium Donation Progress Card */}
-              <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 p-8 border border-gray-100 relative overflow-hidden">
+              <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-2xl shadow-gray-200/50 p-6 md:p-8 border border-gray-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-3xl -mr-16 -mt-16" />
 
                 <button
@@ -856,7 +856,7 @@ export default function FundraiserDetailPage() {
               </div>
 
               {/* Supporters Card */}
-              <div className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-100/30 p-8 border border-gray-100">
+              <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-gray-100/30 p-6 md:p-8 border border-gray-100">
                 <div className="flex items-center justify-between mb-8">
                   <h3 className="text-sm font-bold text-navy-900 uppercase tracking-widest flex items-center gap-2">
                     <Users className="w-4 h-4 text-primary-500" />
@@ -930,13 +930,13 @@ export default function FundraiserDetailPage() {
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-100"
+              className="relative w-full max-w-lg bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]"
             >
               {/* Modal Header - Lightweight Version */}
-              <div className="px-8 pt-8 pb-4 relative">
+              <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 relative flex-shrink-0">
                 <button
                   onClick={() => setShowDonationModal(false)}
-                  className="absolute top-8 right-8 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:text-navy-900 hover:bg-gray-200 transition-all border border-gray-200"
+                  className="absolute top-4 sm:top-8 right-4 sm:right-8 w-8 sm:w-10 h-8 sm:h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:text-navy-900 hover:bg-gray-200 transition-all border border-gray-200"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -950,39 +950,29 @@ export default function FundraiserDetailPage() {
               </div>
 
               {/* Modal Body */}
-              <div className="px-8 py-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              <div className="px-6 sm:px-8 py-6 overflow-y-auto custom-scrollbar flex-1">
                 {paymentStep === 'success' ? (
-                  <div className="flex flex-col items-center justify-center py-10">
+                  <div className="flex flex-col items-center justify-center py-4 sm:py-10">
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center shadow-xl shadow-green-500/30 mb-6"
+                      className="w-16 h-16 sm:w-20 sm:h-20 bg-green-500 rounded-full flex items-center justify-center shadow-xl shadow-green-500/30 mb-4 sm:mb-6"
                     >
-                      <CheckCircle2 className="w-10 h-10 text-white" />
+                      <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                     </motion.div>
-                    <div className="text-center max-w-sm px-4">
-                      <h4 className="text-3xl font-black text-navy-900 tracking-tight mb-2">Thank You!</h4>
-                      <div className="bg-green-100 px-6 py-2 rounded-full inline-block mb-6 border border-green-200">
-                        <p className="text-[12px] font-black text-green-900 uppercase tracking-widest">Donation Successful</p>
+                    <div className="text-center w-full px-2 sm:px-4">
+                      <h4 className="text-2xl sm:text-3xl font-black text-navy-900 tracking-tight mb-2">Thank You!</h4>
+                      <div className="bg-green-100 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full inline-block mb-4 sm:mb-6 border border-green-200">
+                        <p className="text-[10px] sm:text-[12px] font-black text-green-900 uppercase tracking-widest">Donation Successful</p>
                       </div>
-                      <p className="text-base text-navy-900 font-bold leading-relaxed">
-                        Your contribution of <span className="text-primary-600 font-black text-lg">₹{getFinalAmount()?.toLocaleString()}</span> has been received.
+                      <p className="text-sm sm:text-base text-navy-900 font-bold leading-relaxed">
+                        Your contribution of <br className="sm:hidden" /><span className="text-primary-600 font-black text-xl sm:text-2xl inline-block mt-1 sm:mt-0">₹{getFinalAmount()?.toLocaleString()}</span> has been received.
                       </p>
-                      {/* <p className="text-sm text-gray-600 font-bold mt-2">
-                        An email confirmation has been sent to your address.
-                      </p> */}
                     </div>
-                    <div className="flex flex-col sm:flex-row items-center gap-3 mt-10 w-full px-4">
-                      {/* <button
-                        onClick={handleDownloadSlip}
-                        className="w-full sm:flex-1 py-4 bg-navy-900 text-white rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-navy-800 transition-all shadow-xl shadow-navy-900/20 flex items-center justify-center gap-2"
-                      >
-                        <FileText className="w-5 h-5" />
-                        Download Slip
-                      </button> */}
+                    <div className="flex flex-col sm:flex-row items-center gap-3 mt-8 sm:mt-10 w-full px-2 sm:px-4">
                       <button
                         onClick={() => setShowDonationModal(false)}
-                        className="w-full sm:flex-1 py-4 bg-gray-100 text-navy-900 rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
+                        className="w-full py-4 bg-gray-100 text-navy-900 rounded-xl sm:rounded-2xl text-[11px] sm:text-[12px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
                       >
                         Close Window
                       </button>
@@ -1163,7 +1153,7 @@ export default function FundraiserDetailPage() {
 
               {/* Modal Footer */}
               {paymentStep !== 'success' && (
-                <div className="px-10 py-10 bg-gray-50 flex items-center justify-between border-t border-gray-200 gap-8 text-left">
+                <div className="px-6 sm:px-10 py-6 sm:py-10 bg-gray-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-t border-gray-200 gap-4 sm:gap-8 text-center sm:text-left flex-shrink-0">
                   <div className="flex-shrink-0">
                     <p className="text-[11px] font-black uppercase tracking-widest text-navy-900/60 mb-1 leading-none">Confirming</p>
                     <p className="text-3xl font-black text-navy-900 leading-none">₹{getFinalAmount() ? getFinalAmount().toLocaleString() : '0'}</p>
@@ -1227,7 +1217,7 @@ export default function FundraiserDetailPage() {
               </div>
 
               {/* Modal Body */}
-              <div className="px-10 py-8 space-y-8">
+              <div className="px-6 sm:px-10 py-8 space-y-8">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-navy-900 ml-1">Update Title</label>
                   <input
@@ -1252,7 +1242,7 @@ export default function FundraiserDetailPage() {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-10 bg-gray-50 flex items-center justify-end border-t border-gray-100">
+              <div className="p-6 sm:p-10 bg-gray-50 flex items-center justify-end border-t border-gray-100">
                 <button
                   onClick={handleUpdateSubmit}
                   disabled={submittingUpdate || !updateTitle || !updateContent}
