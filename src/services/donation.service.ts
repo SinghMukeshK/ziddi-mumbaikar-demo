@@ -34,7 +34,7 @@ export interface DonationCreateRequest {
 }
 
 export interface RazorpayOrderRequest {
-    fundraiser_id: string;
+    fundraiser_id?: string;
     amount: number;
     currency?: string;
     donor_name?: string;
