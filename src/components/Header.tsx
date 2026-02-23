@@ -58,27 +58,27 @@ export default function Header() {
                     </div>
 
                     {/* Right Section - Desktop */}
-                    <div className="hidden lg:flex items-center space-x-4">
-                        <Link href="/#services" className="bg-primary-50 text-primary-600 hover:bg-primary-100 px-4 py-2 rounded-full font-bold text-sm transition-all border border-primary-200 flex items-center gap-2 shadow-sm hover:shadow-md animate-pulse">
-                            <span className="flex h-2 w-2 relative">
+                    <div className="hidden lg:flex items-center gap-2 xl:gap-4">
+                        <Link href="/#services" className="bg-primary-50 text-primary-600 hover:bg-primary-100 px-3 xl:px-4 py-2 rounded-full font-bold text-xs xl:text-sm transition-all border border-primary-200 flex items-center gap-1.5 shadow-sm hover:shadow-md animate-pulse whitespace-nowrap shrink-0">
+                            <span className="flex h-2 w-2 relative shrink-0">
                                 <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
                             </span>
                             Free Services
                         </Link>
-                        <Link href="/fundraisers" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
+                        <Link href="/fundraisers" className="text-gray-700 hover:text-primary-500 font-medium transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0">
                             Fundraisers
                         </Link>
-                        <Link href="/contact" className="text-gray-700 hover:text-primary-500 font-medium transition-colors">
+                        <Link href="/contact" className="text-gray-700 hover:text-primary-500 font-medium transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0">
                             Contact Us
                         </Link>
                         <Link
                             href="/volunteer"
-                            className="bg-primary-500 hover:bg-primary-600 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
+                            className="bg-primary-500 hover:bg-primary-600 text-white px-3 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0"
                         >
                             Become A Volunteer
                         </Link>
-                        <Link href="/fundraiser/start" className="bg-navy-900 hover:bg-navy-800 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors">
+                        <Link href="/fundraiser/start" className="bg-navy-900 hover:bg-navy-800 text-white px-3 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0">
                             Start a Fundraiser
                         </Link>
 

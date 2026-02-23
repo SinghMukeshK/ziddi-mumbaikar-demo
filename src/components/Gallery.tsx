@@ -9,13 +9,13 @@ import { Images, ChevronRight, Loader2 } from 'lucide-react'
 
 // Fallback static items shown while loading or if API returns nothing
 const FALLBACK_ITEMS = [
-  // { id: 'f1', title: 'Beach Cleanup Drive – Juhu', category: 'Cleanliness', image: 'https://images.unsplash.com/photo-1618477471363-92429e7717bc?auto=format&fit=crop&q=80&w=800', description: 'Before & after shots of our massive Juhu beach cleanup' },
-  { id: 'f2', title: 'Community Health Camp', category: 'Health', image: 'https://images.unsplash.com/photo-1583324113626-70df0f4deaab?auto=format&fit=crop&q=80&w=800', description: 'Free health checkups in Dharavi community' },
-  { id: 'f3', title: "Women's Safety Workshop", category: 'Safety', image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800', description: 'Self-defense training for local women' },
-  // { id: 'f4', title: 'Tree Plantation Drive', category: 'Environment', image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb773b09?auto=format&fit=crop&q=80&w=800', description: 'Green Mumbai initiative in Powai' },
+  { id: 'f1', title: 'Blood Donation Campl', category: 'Health', image: '/BloodDonationCamp.webp', description: 'Free health checkups in our local community' },
+  { id: 'f2', title: 'Community Health Camp', category: 'Health', image: '/HelpForEMergency.webp', description: 'We are always ready to help in case of emergency' },
+  { id: 'f3', title: "Women's Safety Workshop", category: 'Safety', image: '/ProvidingFood.webp', description: 'Providing food to the needy' },
+  { id: 'f4', title: 'Free Ambulance Service', category: 'Health', image: '/AmbulanceService.webp', description: 'Providing free ambulance service to the needy' },
   { id: 'f5', title: 'Emergency Response Team', category: 'Emergency', image: '/Ambulance.jpg', description: 'Our ambulance service in action' },
   // { id: 'f6', title: 'Community Festival', category: 'Community', image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&q=80&w=800', description: 'Celebrating diversity in local neighborhoods' },
-  { id: 'f7', title: 'Street Cleaning Campaign', category: 'Cleanliness', image: 'https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&q=80&w=800', description: 'Volunteers cleaning busy market areas' },
+  // { id: 'f7', title: 'Street Cleaning Campaign', category: 'Cleanliness', image: 'https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&q=80&w=800', description: 'Volunteers cleaning busy market areas' },
   // { id: 'f8', title: 'Youth Engagement Program', category: 'Youth', image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800', description: 'Inspiring next generation of change-makers' },
 ]
 
