@@ -58,6 +58,7 @@ export default function FundraiserDetailPage() {
   const [donorPhone, setDonorPhone] = useState('')
   const [donorPan, setDonorPan] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
+  const [isMonthly, setIsMonthly] = useState(false)
   const [paymentStep, setPaymentStep] = useState<'form' | 'processing' | 'success'>('form')
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
@@ -183,52 +184,101 @@ export default function FundraiserDetailPage() {
     setPaymentStep('processing')
 
     try {
-      // Step 1: Create Razorpay order on backend
-      const orderResponse = await donationService.createRazorpayOrder({
-        fundraiser_id: fundraiser!.id,
-        amount: finalAmount,
-        currency: 'INR',
-        donor_name: isAnonymous ? 'Anonymous' : donorName,
-        donor_email: isAnonymous ? '' : donorEmail,
-        donor_phone: isAnonymous ? '' : donorPhone,
-        donor_pan: isAnonymous ? '' : donorPan,
-        is_anonymous: isAnonymous,
-        donation_type: 'general',
-      })
+      if (isMonthly) {
+        // Step 1: Create Razorpay subscription on backend
+        const orderResponse = await donationService.createRazorpaySubscription({
+          fundraiser_id: fundraiser!.id,
+          amount: finalAmount,
+          currency: 'INR',
+          frequency: 'monthly',
+          donor_name: isAnonymous ? 'Anonymous' : donorName,
+          donor_email: isAnonymous ? '' : donorEmail,
+          donor_phone: isAnonymous ? '' : donorPhone,
+          donor_pan: isAnonymous ? '' : donorPan,
+          is_anonymous: isAnonymous,
+          donation_type: 'general',
+        })
 
-      if (!orderResponse.success || !orderResponse.data) {
-        throw new Error('Failed to create payment order. Please try again.')
+        if (!orderResponse.success || !orderResponse.data) {
+          throw new Error('Failed to create subscription order. Please try again.')
+        }
+
+        const { subscription_id, internal_subscription_id, key_id } = orderResponse.data as any
+
+        // Step 2: Open Razorpay checkout popup
+        const paymentResponse = await openRazorpay({
+          key: key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
+          name: 'Ziddi Mumbaikar',
+          description: fundraiser!.title,
+          image: fundraiser!.cover_image_url || undefined,
+          subscription_id: subscription_id,
+          prefill: {
+            name: isAnonymous ? '' : donorName,
+            email: isAnonymous ? '' : donorEmail,
+            contact: isAnonymous ? '' : donorPhone,
+          },
+          theme: { color: '#f0750a' },
+          modal: { confirm_close: true },
+        })
+
+        // Step 3: Verify payment signature on backend
+        await donationService.verifyPayment(internal_subscription_id, {
+          razorpay_payment_id: paymentResponse.razorpay_payment_id,
+          razorpay_order_id: paymentResponse.razorpay_order_id || '',
+          razorpay_subscription_id: subscription_id,
+          razorpay_signature: paymentResponse.razorpay_signature,
+        } as any)
+
+        setPaymentStep('success')
+        setLastDonationId(internal_subscription_id)
+      } else {
+        // Step 1: Create Razorpay order on backend
+        const orderResponse = await donationService.createRazorpayOrder({
+          fundraiser_id: fundraiser!.id,
+          amount: finalAmount,
+          currency: 'INR',
+          donor_name: isAnonymous ? 'Anonymous' : donorName,
+          donor_email: isAnonymous ? '' : donorEmail,
+          donor_phone: isAnonymous ? '' : donorPhone,
+          donor_pan: isAnonymous ? '' : donorPan,
+          is_anonymous: isAnonymous,
+          donation_type: 'general',
+        })
+
+        if (!orderResponse.success || !orderResponse.data) {
+          throw new Error('Failed to create payment order. Please try again.')
+        }
+
+        const { donation_id, razorpay_order_id, amount: orderAmount, currency, key_id } = orderResponse.data
+
+        // Step 2: Open Razorpay checkout popup
+        const paymentResponse = await openRazorpay({
+          key: key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
+          amount: orderAmount,
+          currency,
+          name: 'Ziddi Mumbaikar',
+          description: fundraiser!.title,
+          image: fundraiser!.cover_image_url || undefined,
+          order_id: razorpay_order_id,
+          prefill: {
+            name: isAnonymous ? '' : donorName,
+            email: isAnonymous ? '' : donorEmail,
+            contact: isAnonymous ? '' : donorPhone,
+          },
+          theme: { color: '#f0750a' },
+          modal: { confirm_close: true },
+        })
+
+        // Step 3: Verify payment signature on backend
+        await donationService.verifyPayment(donation_id, {
+          razorpay_payment_id: paymentResponse.razorpay_payment_id,
+          razorpay_order_id: paymentResponse.razorpay_order_id,
+          razorpay_signature: paymentResponse.razorpay_signature,
+        })
+
+        setPaymentStep('success')
+        setLastDonationId(donation_id)
       }
-
-      const { donation_id, razorpay_order_id, amount: orderAmount, currency, key_id } = orderResponse.data
-
-      // Step 2: Open Razorpay checkout popup
-      const paymentResponse = await openRazorpay({
-        key: key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
-        amount: orderAmount,
-        currency,
-        name: 'Ziddi Mumbaikar',
-        description: fundraiser!.title,
-        image: fundraiser!.cover_image_url || undefined,
-        order_id: razorpay_order_id,
-        prefill: {
-          name: isAnonymous ? '' : donorName,
-          email: isAnonymous ? '' : donorEmail,
-          contact: isAnonymous ? '' : donorPhone,
-        },
-        theme: { color: '#f0750a' },
-        modal: { confirm_close: true },
-      })
-
-      // Step 3: Verify payment signature on backend
-      await donationService.verifyPayment(donation_id, {
-        razorpay_payment_id: paymentResponse.razorpay_payment_id,
-        razorpay_order_id: paymentResponse.razorpay_order_id,
-        razorpay_signature: paymentResponse.razorpay_signature,
-      })
-
-      setPaymentStep('success')
-      setLastDonationId(donation_id)
 
       // Fetch the donation to get the official receipt number (donation_number)
       try {
@@ -1156,6 +1206,29 @@ export default function FundraiserDetailPage() {
                         )}
                       </div>
 
+                      {/* Subscription Option */}
+                      <div className="mt-6 flex flex-col p-5 bg-gradient-to-r from-primary-50 to-orange-50 rounded-2xl border border-primary-100/50 cursor-pointer overflow-hidden relative group"
+                        onClick={() => setIsMonthly(!isMonthly)}>
+                        <div className="flex items-center gap-4 relative z-10">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors flex-shrink-0 ${isMonthly ? 'border-primary-600 bg-primary-600' : 'border-primary-300 bg-white'}`}>
+                            {isMonthly && <CheckCircle2 className="w-4 h-4 text-white" />}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-navy-900 group-hover:text-primary-700 transition-colors">Make this a monthly donation</p>
+                            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Support this cause consistently</p>
+                          </div>
+                        </div>
+                        {isMonthly && (
+                          <div className="mt-3 pt-3 border-t border-primary-100/50 text-[11px] font-bold text-primary-700 w-full relative z-10 flex items-center gap-2">
+                            <Heart className="w-3 h-3 fill-primary-600" />
+                            Your card will be charged monthly. You can cancel anytime.
+                          </div>
+                        )}
+                        <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                          <Heart className="w-24 h-24 text-primary-500" />
+                        </div>
+                      </div>
+
                       {/* Tax Benefits Info */}
                       {fundraiser.is_zakat_eligible && (
                         <div className="mt-8 p-6 bg-navy-900 rounded-[2rem] shadow-xl shadow-navy-100/50 flex items-start gap-4">
@@ -1174,8 +1247,11 @@ export default function FundraiserDetailPage() {
                 {paymentStep !== 'success' && (
                   <div className="px-6 sm:px-10 py-6 sm:py-10 bg-gray-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-t border-gray-200 gap-4 sm:gap-8 text-center sm:text-left flex-shrink-0">
                     <div className="flex-shrink-0">
-                      <p className="text-[11px] font-black uppercase tracking-widest text-navy-900/60 mb-1 leading-none">Confirming</p>
-                      <p className="text-3xl font-black text-navy-900 leading-none">₹{getFinalAmount() ? getFinalAmount().toLocaleString() : '0'}</p>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-navy-900/60 mb-1 leading-none">{isMonthly ? 'Monthly' : 'Confirming'}</p>
+                      <p className="text-3xl font-black text-navy-900 leading-none">
+                        ₹{getFinalAmount() ? getFinalAmount().toLocaleString() : '0'}
+                        {isMonthly && <span className="text-base font-bold text-gray-400 ml-1 tracking-normal">/mo</span>}
+                      </p>
                     </div>
                     <button
                       onClick={handleDonationSubmit}

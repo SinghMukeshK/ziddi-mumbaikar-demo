@@ -37,6 +37,9 @@ export interface Fundraiser {
     created_at: string;
     updated_at: string;
     donations?: any[];
+    name?: string; // Campaigns use name instead of title
+    campaign_code?: string;
+    project_id?: string;
 }
 
 export interface FundraiserImage {
@@ -109,46 +112,86 @@ export interface FundraiserCategory {
 
 let categoriesCache: FundraiserCategory[] | null = null;
 
+const mapCampaignToFundraiser = (campaign: any): Fundraiser => {
+    if (!campaign) return campaign;
+    return {
+        ...campaign,
+        title: campaign.name || campaign.title,
+        short_description: campaign.short_description || '',
+        description: campaign.description || '',
+        completion_percentage: campaign.completion_percentage || (campaign.goal_amount > 0 ? (campaign.raised_amount / campaign.goal_amount) * 100 : 0),
+        category: campaign.category || { id: 'general', name: 'General' },
+    };
+};
+
 export const fundraiserService = {
     getFundraisers: async (params?: any) => {
-        return apiV1.get<ApiResponse<Fundraiser[]>>('/fundraisers', { params });
+        // Try public endpoint first to avoid 401 for non-logged in users
+        const response = await apiV1.get<ApiResponse<any[]>>('/public/campaigns', { params });
+        if (response.success && Array.isArray(response.data)) {
+            response.data = response.data.map(mapCampaignToFundraiser);
+        }
+        return response as ApiResponse<Fundraiser[]>;
     },
 
     getFundraiserById: async (id: string) => {
-        return apiV1.get<ApiResponse<Fundraiser>>(`/fundraisers/${id}`);
+        // Try public campaign endpoint first
+        try {
+            const response = await apiV1.get<ApiResponse<any>>(`/public/campaigns/${id}`);
+            if (response.success && response.data) {
+                response.data = mapCampaignToFundraiser(response.data);
+                return response as ApiResponse<Fundraiser>;
+            }
+        } catch (err) {
+            // If campaign not found, fall back to fundraiser
+            console.log(`Campaign ${id} not found, trying fundraiser`);
+        }
+
+        return apiV1.get<ApiResponse<Fundraiser>>(`/public/fundraisers/${id}`);
     },
 
     createFundraiser: async (data: FundraiserCreateRequest) => {
-        return apiV1.post<ApiResponse<Fundraiser>>('/fundraisers', data);
+        // Map FundraiserCreateRequest to CampaignCreateRequest if needed
+        const campaignData = {
+            ...data,
+            name: data.title,
+            // Campaigns require project_id and campaign_code which might be missing from FundraiserCreateRequest
+            // We should ideally have these in the form, but for now we'll pass whatever we have
+        };
+        return apiV1.post<ApiResponse<any>>('/campaigns', campaignData);
     },
 
     updateFundraiser: async (id: string, data: Partial<FundraiserCreateRequest>) => {
-        return apiV1.patch<ApiResponse<Fundraiser>>(`/fundraisers/${id}`, data);
+        const campaignData = {
+            ...data,
+            name: data.title,
+        };
+        return apiV1.patch<ApiResponse<any>>(`/campaigns/${id}`, campaignData);
     },
 
     deleteFundraiser: async (id: string) => {
-        return apiV1.delete<ApiResponse<any>>(`/fundraisers/${id}`);
+        return apiV1.delete<ApiResponse<any>>(`/campaigns/${id}`);
     },
 
-
     addFundraiserImages: async (fundraiserId: string, data: { image_url: string; alt_text?: string; display_order?: number }) => {
-        return apiV1.post<ApiResponse<any>>(`/fundraisers/${fundraiserId}/images`, data);
+        return apiV1.post<ApiResponse<any>>(`/campaigns/${fundraiserId}/images`, data);
     },
 
     addFundraiserDocuments: async (fundraiserId: string, data: { document_type: string; file_url: string; file_name: string }) => {
-        return apiV1.post<ApiResponse<any>>(`/fundraisers/${fundraiserId}/documents`, data);
+        return apiV1.post<ApiResponse<any>>(`/campaigns/${fundraiserId}/documents`, data);
     },
 
     deleteFundraiserImage: async (fundraiserId: string, imageId: string) => {
-        return apiV1.delete<ApiResponse<any>>(`/fundraisers/${fundraiserId}/images/${imageId}`);
+        return apiV1.delete<ApiResponse<any>>(`/campaigns/${fundraiserId}/images/${imageId}`);
     },
 
     deleteFundraiserDocument: async (fundraiserId: string, documentId: string) => {
-        return apiV1.delete<ApiResponse<any>>(`/fundraisers/${fundraiserId}/documents/${documentId}`);
+        return apiV1.delete<ApiResponse<any>>(`/campaigns/${fundraiserId}/documents/${documentId}`);
     },
 
+    // Note: Updates might be different for campaigns, checking if they exist
     addFundraiserUpdate: async (fundraiserId: string, update: { title: string, content: string }) => {
-        return apiV1.post<ApiResponse<any>>(`/fundraisers/${fundraiserId}/updates`, update);
+        return apiV1.post<ApiResponse<any>>(`/campaigns/${fundraiserId}/updates`, update);
     },
 
     uploadMedia: async (file: File, module: string = 'common', id?: string) => {
@@ -159,11 +202,24 @@ export const fundraiserService = {
     },
 
     getFundraiserStats: async (id: string) => {
-        return apiV1.get<ApiResponse<FundraiserStats>>(`/fundraisers/stats/${id}`);
+        try {
+            const response = await apiV1.get<ApiResponse<FundraiserStats>>(`/public/campaigns/${id}/stats`);
+            if (response.success) return response;
+        } catch (err) {
+            // Fallback
+        }
+        return apiV1.get<ApiResponse<FundraiserStats>>(`/public/fundraisers/${id}/stats`).catch(() =>
+            apiV1.get<ApiResponse<FundraiserStats>>(`/fundraisers/stats/${id}`));
     },
 
     getFundraiserExtensions: async (id: string) => {
-        return apiV1.get<ApiResponse<FundraiserExtensions>>(`/fundraisers/${id}/extensions`);
+        try {
+            const response = await apiV1.get<ApiResponse<FundraiserExtensions>>(`/public/campaigns/${id}/extensions`);
+            if (response.success) return response;
+        } catch (err) {
+            // Fallback
+        }
+        return apiV1.get<ApiResponse<FundraiserExtensions>>(`/public/fundraisers/${id}/extensions`);
     },
 
     getCategories: async (): Promise<ApiResponse<FundraiserCategory[]>> => {
@@ -203,18 +259,23 @@ export const fundraiserService = {
     },
 
     getPendingFundraisers: async () => {
-        return apiV1.get<ApiResponse<Fundraiser[]>>('/fundraisers', { params: { status: 'pending' } });
+        const response = await apiV1.get<ApiResponse<any[]>>('/campaigns', { params: { status: 'pending_approval' } });
+        if (response.success && Array.isArray(response.data)) {
+            response.data = response.data.map(mapCampaignToFundraiser);
+        }
+        return response as ApiResponse<Fundraiser[]>;
     },
 
-    verifyFundraiser: async (id: string, status: 'verified' | 'rejected', rejectionReason?: string) => {
-        return apiV1.post<ApiResponse<Fundraiser>>(`/fundraisers/${id}/verify`, {
-            verification_status: status,
+    verifyFundraiser: async (id: string, status: 'active' | 'rejected', rejectionReason?: string) => {
+        // Since campaigns don't have a separate verify endpoint/status, we update the status directly
+        return apiV1.patch<ApiResponse<any>>(`/campaigns/${id}`, {
+            status: status,
             rejection_reason: rejectionReason
         });
     },
 
     cancelFundraiser: async (id: string) => {
-        return apiV1.patch<ApiResponse<Fundraiser>>(`/fundraisers/${id}`, { status: 'cancelled' });
+        return apiV1.patch<ApiResponse<any>>(`/campaigns/${id}`, { status: 'cancelled' });
     },
 
 

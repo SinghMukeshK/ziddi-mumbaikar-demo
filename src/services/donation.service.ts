@@ -46,6 +46,29 @@ export interface RazorpayOrderRequest {
     message?: string;
 }
 
+export interface RazorpaySubscriptionRequest {
+    fundraiser_id?: string;
+    project_id?: string;
+    amount: number;
+    currency?: string;
+    frequency: 'monthly' | 'weekly' | 'yearly' | 'daily';
+    donor_name?: string;
+    donor_email?: string;
+    donor_phone?: string;
+    donor_pan?: string;
+    is_anonymous?: boolean;
+    message?: string;
+    callback_url?: string;
+}
+
+export interface RazorpaySubscriptionResponse {
+    subscription_id: string;
+    short_url: string;
+    amount: number;
+    currency: string;
+    key_id: string;
+}
+
 export interface RazorpayOrderResponse {
     donation_id: string;
     razorpay_order_id: string;
@@ -56,7 +79,8 @@ export interface RazorpayOrderResponse {
 
 export interface PaymentVerificationRequest {
     razorpay_payment_id: string;
-    razorpay_order_id: string;
+    razorpay_order_id?: string;
+    razorpay_subscription_id?: string;
     razorpay_signature: string;
 }
 
@@ -91,5 +115,15 @@ export const donationService = {
      */
     verifyPayment: async (donationId: string, data: PaymentVerificationRequest) => {
         return apiV1.post<any>(`/donations/${donationId}/verify`, data);
+    },
+
+    /**
+     * Create a Razorpay subscription for recurring donations.
+     */
+    createRazorpaySubscription: async (data: RazorpaySubscriptionRequest) => {
+        return apiV1.post<{ success: boolean; data: RazorpaySubscriptionResponse }>(
+            '/donations/razorpay/create-subscription',
+            data
+        );
     },
 };

@@ -47,6 +47,7 @@ export default function EditFundraiserPage() {
     const [uploadingDocs, setUploadingDocs] = useState(false)
     const [deletingImageId, setDeletingImageId] = useState<string | null>(null)
     const [deletingDocId, setDeletingDocId] = useState<string | null>(null)
+    const [directUploadFile, setDirectUploadFile] = useState<File | null>(null)
 
     const imageInputRef = useRef<HTMLInputElement>(null)
     const docInputRef = useRef<HTMLInputElement>(null)
@@ -160,7 +161,11 @@ export default function EditFundraiserPage() {
     const handleImageFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return
         const files = Array.from(e.target.files)
-        setNewImages(prev => [...prev, ...files].slice(0, 10))
+        if (files.length === 1) {
+            setDirectUploadFile(files[0])
+        } else if (files.length > 1) {
+            setNewImages(prev => [...prev, ...files].slice(0, 10))
+        }
         e.target.value = ''
     }
 
@@ -174,21 +179,20 @@ export default function EditFundraiserPage() {
         setNewImages(prev => prev.filter((_, i) => i !== index))
     }
 
-    const handleUploadImages = async () => {
-        if (!fundraiser || newImages.length === 0) return
+    const uploadImagesToServer = async (files: File[]) => {
+        if (!fundraiser || files.length === 0) return
         setUploadingImages(true)
         setError('')
         let uploaded = 0
         const updatedExisting = [...existingImages]
 
-        for (let i = 0; i < newImages.length; i++) {
+        for (let i = 0; i < files.length; i++) {
             try {
-                const uploadRes = await fundraiserService.uploadMedia(newImages[i], 'fundraisers', fundraiser.id)
+                const uploadRes = await fundraiserService.uploadMedia(files[i], 'fundraisers', fundraiser.id)
                 if (uploadRes.success && uploadRes.data?.url) {
                     const url = uploadRes.data.url
                     const isFirst = existingImages.length === 0 && i === 0
 
-                    // If no cover image yet, set this as cover
                     if (isFirst) {
                         await fundraiserService.updateFundraiser(fundraiser.id, { cover_image_url: url })
                     }
@@ -206,15 +210,25 @@ export default function EditFundraiserPage() {
             }
         }
 
-        // Refresh extensions
+        setExistingImages(updatedExisting)
+
         try {
             const extRes = await fundraiserService.getFundraiserExtensions(fundraiser.id)
             if (extRes.data) setExistingImages(extRes.data.images || [])
         } catch { }
 
-        setNewImages([])
         setUploadingImages(false)
-        showSuccess(`${uploaded} image(s) uploaded successfully!`)
+        if (uploaded > 0) showSuccess(`${uploaded} image(s) uploaded successfully!`)
+    }
+
+    const handleUploadImages = async () => {
+        await uploadImagesToServer(newImages)
+        setNewImages([])
+    }
+
+    const handleDirectUploadSave = async (editedFile: File) => {
+        setDirectUploadFile(null)
+        setNewImages(prev => [...prev, editedFile])
     }
 
     const handleDeleteImage = async (img: FundraiserImage) => {
@@ -370,7 +384,17 @@ export default function EditFundraiserPage() {
                     file={newImages[editingImageIndex]}
                     onSave={handleImageEdited}
                     onCancel={() => setEditingImageIndex(null)}
-                    aspectRatio={16 / 9}
+                    aspectRatio={undefined}
+                />
+            )}
+
+            {/* Direct Upload ImageEditor modal */}
+            {directUploadFile && (
+                <ImageEditor
+                    file={directUploadFile}
+                    onSave={handleDirectUploadSave}
+                    onCancel={() => setDirectUploadFile(null)}
+                    aspectRatio={undefined}
                 />
             )}
 
@@ -577,7 +601,7 @@ export default function EditFundraiserPage() {
                                     onClick={() => imageInputRef.current?.click()}
                                     className="border-2 border-dashed border-primary-200 bg-primary-50/30 rounded-2xl p-8 text-center hover:border-primary-400 hover:bg-primary-50 transition-all cursor-pointer group mb-5"
                                 >
-                                    <input ref={imageInputRef} type="file" accept="image/*" multiple onChange={handleImageFilePick} className="hidden" />
+                                    <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageFilePick} className="hidden" />
                                     <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-primary-200 transition-colors">
                                         <ImageIcon className="w-7 h-7 text-primary-500" />
                                     </div>

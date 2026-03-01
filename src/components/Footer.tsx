@@ -6,9 +6,9 @@ export default function Footer() {
     <footer className="bg-navy-900 text-white">
       <div className="max-w-6xl mx-auto px-4">
         {/* Main Footer Content */}
-        <div className="py-16 grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Logo & Mission */}
-          <div className="lg:col-span-2">
+          <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-6">
               <Image
                 src="/logo.webp"
@@ -79,11 +79,11 @@ export default function Footer() {
               </div>
               <div>
                 <p className="text-gray-300 text-sm">General Enquiries</p>
-                <p className="font-semibold">ziddimumbaikarngo@gmail.com</p>
+                <p className="font-semibold break-all">ziddimumbaikarngo@gmail.com</p>
               </div>
               <div>
                 <p className="text-gray-300 text-sm">Volunteer Coordination</p>
-                <p className="font-semibold">support@ziddimumbaikarngo.com</p>
+                <p className="font-semibold break-all">support@ziddimumbaikarngo.com</p>
               </div>
               <div>
                 <p className="text-gray-300 text-sm">Office Address</p>
@@ -96,12 +96,12 @@ export default function Footer() {
 
         {/* Bottom Footer */}
         <div className="border-t border-gray-700 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-sm text-gray-400">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
+            <div className="text-sm text-gray-400 text-center md:text-left">
               © {new Date().getFullYear()} Ziddi Mumbaikar. All rights reserved.
             </div>
 
-            <div className="flex flex-wrap justify-center md:justify-end space-x-6 text-sm">
+            <div className="flex flex-wrap justify-center md:justify-end gap-4 md:gap-6 text-sm">
               <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">Privacy Policy</a>
               <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">Terms of Service</a>
               <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">Transparency</a>

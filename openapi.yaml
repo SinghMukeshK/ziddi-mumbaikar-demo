@@ -2,14 +2,18 @@ openapi: 3.0.0
 info:
   title: Drista Cloud Solutions ERP - Ziddi Mumbaikar NGO API
   description: |
-    Multi-tenant SaaS platform API for NGO management with comprehensive features including:
-    - Fundraising campaigns
+    Multi-tenant SaaS platform API for NGO & CSR management with comprehensive features including:
+    - Program & Project management (NGO + CSR dual-mode)
+    - Campaign management & fundraising
+    - Project fund tracking & utilization
+    - Activity management & expense tracking
     - Donation processing
     - Zakat & Qurbani management
     - Volunteer coordination
     - Beneficiary assistance programs
     - Content management
     - Event management
+    - FCRA & CSR Schedule VII compliance
   version: 1.0.0
   contact:
     name: Drista Cloud Solutions
@@ -44,7 +48,17 @@ tags:
   - name: Volunteers
     description: Volunteer recruitment and management
   - name: Programs
-    description: NGO programs and services
+    description: NGO/CSR programs and services - top-level thematic areas
+  - name: Projects
+    description: Time-bound, budget-bound initiatives under programs
+  - name: Campaigns
+    description: Fundraising campaigns linked to projects
+  - name: ProjectFunds
+    description: Fund allocations, receipts, and utilizations for projects
+  - name: Activities
+    description: Measurable work items under projects
+  - name: ActivityExpenses
+    description: Actual expenses incurred during activities
   - name: Events
     description: Event management
   - name: Zakat
@@ -61,6 +75,8 @@ tags:
     description: Audit logs and activity tracking
   - name: NGO Services
     description: NGO specialized services and booking management
+  - name: Finance
+    description: Chart of Accounts, Double Entry Journal, and Ledger
 
 components:
   securitySchemes:
@@ -236,99 +252,211 @@ components:
     Tenant:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        legal_name:
-          type: string
-        subdomain:
-          type: string
-        website:
-          type: string
-        logo_url:
-          type: string
-        business_type:
-          type: string
-          enum: [ngo, charity, foundation, institution]
-        country:
-          type: string
-          default: India
-        city:
-          type: string
-        state:
-          type: string
-        phone:
-          type: string
-        email:
-          type: string
-          format: email
-        pan_number:
-          type: string
-        ngo_80g:
-          type: string
-        ngo_12a:
-          type: string
-        status:
-          type: string
-          enum: [active, inactive, trial, suspended, deleted]
-        plan:
-          type: string
-          enum: [starter, professional, enterprise]
-        subscription_status:
-          type: string
-          enum: [active, past_due, cancelled, expired]
-        currency:
-          type: string
-          default: INR
-        timezone:
-          type: string
-          default: Asia/Kolkata
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
+        id: { type: string, format: uuid }
+        name: { type: string }
+        legal_name: { type: string }
+        subdomain: { type: string }
+        website: { type: string }
+        logo_url: { type: string }
+        business_type: { type: string }
+        industry: { type: string }
+        year_founded: { type: integer }
+        company_size: { type: string }
+        phone: { type: string }
+        email: { type: string, format: email }
+        street_address: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postal_code: { type: string }
+        country: { type: string, default: India }
+        country_code: { type: string }
+        registration_number: { type: string }
+        tax_id: { type: string }
+        vat_number: { type: string }
+        ngo_80g: { type: string }
+        ngo_12a: { type: string }
+        pan_number: { type: string }
+        billing_contact_name: { type: string }
+        billing_contact_email: { type: string, format: email }
+        billing_contact_phone: { type: string }
+        technical_contact_name: { type: string }
+        technical_contact_email: { type: string, format: email }
+        technical_contact_phone: { type: string }
+        status: { $ref: '#/components/schemas/TenantStatus' }
+        subscription_status: { $ref: '#/components/schemas/TenantSubscriptionStatus' }
+        plan: { $ref: '#/components/schemas/TenantPlan' }
+        timezone: { type: string, default: Asia/Kolkata }
+        locale: { type: string, default: en-IN }
+        currency: { type: string, default: INR }
+        date_format: { type: string, default: DD/MM/YYYY }
+        number_format: { type: string, default: '#,##,###.##' }
+        settings: { type: object }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    TenantStatus:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+
+    TenantPlan:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        monthly_price: { type: number }
+        annual_price: { type: number }
+        currency: { type: string }
+        features: { type: object }
+        max_users: { type: integer }
+        max_beneficiaries: { type: integer }
+        max_fundraisers: { type: integer }
+
+    TenantSubscriptionStatus:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+
+    TenantTaxDetail:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        state_code: { type: string }
+        gst_number: { type: string }
+        pan_number: { type: string }
+        tan_number: { type: string }
+        msme_number: { type: string }
+        is_primary: { type: boolean }
+        address_line1: { type: string }
+        address_line2: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postal_code: { type: string }
+
+    TenantAddress:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        address_type: { type: string }
+        address_line1: { type: string }
+        address_line2: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postal_code: { type: string }
+        country: { type: string }
+        is_primary: { type: boolean }
+
+    TenantBankAccount:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        bank_name: { type: string }
+        account_number: { type: string }
+        ifsc_code: { type: string }
+        bank_branch: { type: string }
+        account_type: { type: string }
+        is_primary: { type: boolean }
+
+    TenantLicense:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        license_type: { type: string }
+        license_number: { type: string }
+        expiry_date: { type: string, format: date }
+        file_url: { type: string }
 
     TenantCreateRequest:
       type: object
-      required:
-        - name
-        - subdomain
-        - email
-        - business_type
-        - plan_id
+      required: [name, subdomain, email, plan_id]
       properties:
-        name:
-          type: string
-          minLength: 3
-          maxLength: 255
-        legal_name:
-          type: string
-        subdomain:
-          type: string
-          pattern: '^[a-z0-9-]+$'
-          minLength: 3
-          maxLength: 100
-        email:
-          type: string
-          format: email
-        business_type:
-          type: string
-          enum: [ngo, charity, foundation, institution]
-        website:
-          type: string
-          format: uri
-        phone:
-          type: string
-        plan_id:
-          type: string
-          format: uuid
-        country:
-          type: string
-          default: India
+        name: { type: string, minLength: 3, maxLength: 255 }
+        legal_name: { type: string }
+        subdomain: { type: string, pattern: '^[a-z0-9-]+$', minLength: 3, maxLength: 100 }
+        email: { type: string, format: email }
+        owner_email: { type: string, format: email }
+        business_type: { type: string }
+        industry: { type: string }
+        website: { type: string, format: uri }
+        phone: { type: string }
+        plan_id: { type: string, format: uuid }
+        street_address: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postal_code: { type: string }
+        country: { type: string, default: India }
+
+    TenantUpdateRequest:
+      type: object
+      properties:
+        name: { type: string }
+        legal_name: { type: string }
+        website: { type: string }
+        logo_url: { type: string }
+        business_type: { type: string }
+        industry: { type: string }
+        year_founded: { type: integer }
+        company_size: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        street_address: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postal_code: { type: string }
+        registration_number: { type: string }
+        tax_id: { type: string }
+        vat_number: { type: string }
+        ngo_80g: { type: string }
+        ngo_12a: { type: string }
+        pan_number: { type: string }
+        billing_contact_name: { type: string }
+        billing_contact_email: { type: string }
+        billing_contact_phone: { type: string }
+        technical_contact_name: { type: string }
+        technical_contact_email: { type: string }
+        technical_contact_phone: { type: string }
+        timezone: { type: string }
+        locale: { type: string }
+        currency: { type: string }
+        date_format: { type: string }
+        number_format: { type: string }
+        settings: { type: object }
+
+    # ==================== ROLES ====================
+    UserRole:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        permissions: { type: object }
+        is_system: { type: boolean }
+        display_order: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    UserRoleCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        permissions: { type: object }
+        display_order: { type: integer }
+
+    UserRoleUpdateRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        permissions: { type: object }
+        display_order: { type: integer }
 
     # ==================== USERS ====================
     User:
@@ -936,6 +1064,83 @@ components:
           type: string
           format: uuid
 
+    MapBeneficiaryToProjectRequest:
+      type: object
+      required:
+        - project_id
+      properties:
+        project_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [active, inactive, completed, dropped]
+        notes:
+          type: string
+
+    MapBeneficiaryToCampaignRequest:
+      type: object
+      required:
+        - campaign_id
+      properties:
+        campaign_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [active, inactive, completed, dropped]
+        notes:
+          type: string
+
+    AddBeneficiaryAddressRequest:
+      type: object
+      required:
+        - address_line_1
+        - city
+        - state
+        - postal_code
+        - country
+        - address_type
+      properties:
+        address_line_1:
+          type: string
+        address_line_2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+        address_type:
+          type: string
+          enum: [permanent, current, office, other]
+        is_primary:
+          type: boolean
+
+    AddBeneficiaryBankAccountRequest:
+      type: object
+      required:
+        - bank_name
+        - account_holder_name
+        - account_number
+        - ifsc_code
+      properties:
+        bank_name:
+          type: string
+        account_holder_name:
+          type: string
+        account_number:
+          type: string
+        ifsc_code:
+          type: string
+        branch_name:
+          type: string
+        is_primary:
+          type: boolean
+
     # ==================== VOLUNTEERS ====================
     Volunteer:
       type: object
@@ -1041,75 +1246,953 @@ components:
           type: string
           format: uuid
 
-    # ==================== PROGRAMS ====================
+    VolunteerActivity:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        volunteer_id: { type: string, format: uuid }
+        activity_type: { type: string }
+        description: { type: string }
+        hours_served: { type: number, format: decimal }
+        activity_date: { type: string, format: date-time }
+        event_id: { type: string, format: uuid, nullable: true }
+        branch_id: { type: string, format: uuid }
+        verified_by: { type: string, format: uuid, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    # ==================== PROGRAMS (Enhanced for NGO + CSR) ====================
     Program:
       type: object
       properties:
-        id:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        short_description: { type: string }
+        description: { type: string }
+        program_type: { type: string }
+        context:
           type: string
-          format: uuid
-        tenant_id:
+          enum: [ngo, csr, hybrid]
+          description: Whether this is an NGO program, CSR initiative, or hybrid
+        sector: { type: string }
+        sub_sector: { type: string }
+        csr_schedule_vii_item: { type: string }
+        csr_schedule_vii_description: { type: string }
+        sdg_goals:
+          type: array
+          items: { type: integer }
+          description: UN Sustainable Development Goal numbers
+        geographical_scope:
           type: string
-          format: uuid
-        name:
-          type: string
-        slug:
-          type: string
-        short_description:
-          type: string
-        description:
-          type: string
-        program_type:
-          type: string
-          enum: [education, medical, social_service, dawah, emergency, food]
-        is_active:
-          type: boolean
-        cover_image_url:
-          type: string
-        icon_url:
-          type: string
-        beneficiary_count:
-          type: integer
+          enum: [local, state, national, international]
+        target_locations:
+          type: array
+          items: { type: string }
+        focus_areas:
+          type: array
+          items: { type: string }
+        target_beneficiary_groups:
+          type: array
+          items: { type: string }
+        total_budget: { type: number, format: decimal }
+        total_spent: { type: number, format: decimal }
+        currency: { type: string, default: INR }
+        fcra_applicable: { type: boolean }
+        fcra_registration_number: { type: string }
+        niti_aayog_id: { type: string }
+        program_director:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        department: { type: string }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        is_active: { type: boolean }
+        cover_image_url: { type: string }
+        icon_url: { type: string }
+        display_order: { type: integer }
         statistics:
           type: array
           items:
             type: object
             properties:
-              label:
-                type: string
-              value:
-                type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
+              label: { type: string }
+              value: { type: string }
+        project_count: { type: integer, description: Number of projects under this program }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
 
     ProgramCreateRequest:
       type: object
-      required:
-        - name
-        - description
-        - program_type
+      required: [name, description]
       properties:
-        name:
+        name: { type: string, minLength: 3 }
+        slug: { type: string }
+        short_description: { type: string }
+        description: { type: string, minLength: 20 }
+        program_type: { type: string }
+        context: { type: string, enum: [ngo, csr, hybrid], default: ngo }
+        sector: { type: string }
+        sub_sector: { type: string }
+        csr_schedule_vii_item: { type: string }
+        csr_schedule_vii_description: { type: string }
+        sdg_goals:
+          type: array
+          items: { type: integer }
+        geographical_scope: { type: string, enum: [local, state, national, international] }
+        target_locations:
+          type: array
+          items: { type: string }
+        focus_areas:
+          type: array
+          items: { type: string }
+        target_beneficiary_groups:
+          type: array
+          items: { type: string }
+        total_budget: { type: number, format: decimal }
+        currency: { type: string, default: INR }
+        fcra_applicable: { type: boolean }
+        fcra_registration_number: { type: string }
+        niti_aayog_id: { type: string }
+        program_director_id: { type: string, format: uuid }
+        department: { type: string }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        cover_image_url: { type: string }
+        icon_url: { type: string }
+        display_order: { type: integer }
+
+    ProgramUpdateRequest:
+      type: object
+      properties:
+        name: { type: string }
+        short_description: { type: string }
+        description: { type: string }
+        program_type: { type: string }
+        context: { type: string, enum: [ngo, csr, hybrid] }
+        sector: { type: string }
+        sub_sector: { type: string }
+        csr_schedule_vii_item: { type: string }
+        sdg_goals:
+          type: array
+          items: { type: integer }
+        geographical_scope: { type: string, enum: [local, state, national, international] }
+        total_budget: { type: number, format: decimal }
+        fcra_applicable: { type: boolean }
+        program_director_id: { type: string, format: uuid }
+        department: { type: string }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        is_active: { type: boolean }
+        cover_image_url: { type: string }
+        icon_url: { type: string }
+
+    # ==================== PROJECTS ====================
+    Project:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        program_id: { type: string, format: uuid }
+        program:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        project_code: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        short_description: { type: string }
+        description: { type: string }
+        cover_image_url: { type: string }
+        context:
           type: string
-          minLength: 3
-        slug:
+          enum: [ngo, csr, hybrid]
+        project_type: { type: string }
+        sector: { type: string }
+        sub_sector: { type: string }
+        csr_schedule_vii_item: { type: string }
+        csr_company_id: { type: string, format: uuid }
+        csr_fiscal_year: { type: string }
+        csr_prescribed_amount: { type: number, format: decimal }
+        is_ongoing_csr_project: { type: boolean }
+        sdg_goals:
+          type: array
+          items: { type: integer }
+        geographical_scope: { type: string }
+        implementation_locations: { type: array, items: { type: object } }
+        total_budget: { type: number, format: decimal }
+        sanctioned_budget: { type: number, format: decimal }
+        total_funds_received: { type: number, format: decimal }
+        total_spent: { type: number, format: decimal }
+        currency: { type: string, default: INR }
+        target_beneficiaries: { type: integer }
+        actual_beneficiaries: { type: integer }
+        target_outcomes: { type: object }
+        actual_outcomes: { type: object }
+        status:
           type: string
-        short_description:
+          enum: [draft, proposed, approved, in_progress, on_hold, completed, closed, cancelled]
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        actual_start_date: { type: string, format: date }
+        actual_end_date: { type: string, format: date }
+        project_manager:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        branch:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        fcra_applicable: { type: boolean }
+        fcra_project_number: { type: string }
+        is_audited: { type: boolean }
+        tags:
+          type: array
+          items: { type: string }
+        campaign_count: { type: integer }
+        activity_count: { type: integer }
+        fund_source_count: { type: integer }
+        budget_utilization_pct: { type: number, format: float }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ProjectCreateRequest:
+      type: object
+      required: [program_id, project_code, name]
+      properties:
+        program_id: { type: string, format: uuid }
+        project_code: { type: string, minLength: 2, maxLength: 50 }
+        name: { type: string, minLength: 3, maxLength: 300 }
+        slug: { type: string }
+        short_description: { type: string }
+        description: { type: string }
+        cover_image_url: { type: string }
+        context: { type: string, enum: [ngo, csr, hybrid], default: ngo }
+        project_type: { type: string }
+        sector: { type: string }
+        sub_sector: { type: string }
+        csr_schedule_vii_item: { type: string }
+        csr_company_id: { type: string, format: uuid }
+        csr_fiscal_year: { type: string }
+        csr_prescribed_amount: { type: number, format: decimal }
+        is_ongoing_csr_project: { type: boolean }
+        sdg_goals:
+          type: array
+          items: { type: integer }
+        geographical_scope: { type: string, enum: [local, state, national, international] }
+        implementation_locations:
+          type: array
+          items: { type: object }
+        total_budget: { type: number, format: decimal }
+        sanctioned_budget: { type: number, format: decimal }
+        currency: { type: string, default: INR }
+        target_beneficiaries: { type: integer }
+        target_outcomes: { type: object }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        project_manager_id: { type: string, format: uuid }
+        branch_id: { type: string, format: uuid }
+        fcra_applicable: { type: boolean }
+        fcra_project_number: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+
+    ProjectUpdateRequest:
+      type: object
+      properties:
+        name: { type: string }
+        short_description: { type: string }
+        description: { type: string }
+        cover_image_url: { type: string }
+        context: { type: string, enum: [ngo, csr, hybrid] }
+        project_type: { type: string }
+        sector: { type: string }
+        csr_schedule_vii_item: { type: string }
+        csr_fiscal_year: { type: string }
+        sdg_goals:
+          type: array
+          items: { type: integer }
+        total_budget: { type: number, format: decimal }
+        sanctioned_budget: { type: number, format: decimal }
+        target_beneficiaries: { type: integer }
+        actual_beneficiaries: { type: integer }
+        target_outcomes: { type: object }
+        actual_outcomes: { type: object }
+        status: { type: string, enum: [draft, proposed, approved, in_progress, on_hold, completed, closed, cancelled] }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        actual_start_date: { type: string, format: date }
+        actual_end_date: { type: string, format: date }
+        project_manager_id: { type: string, format: uuid }
+        branch_id: { type: string, format: uuid }
+        fcra_applicable: { type: boolean }
+        tags:
+          type: array
+          items: { type: string }
+
+    ProjectTeamMember:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        user_id: { type: string, format: uuid }
+        user:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            first_name: { type: string }
+            last_name: { type: string }
+            email: { type: string }
+        role: { type: string }
+        designation: { type: string }
+        is_primary_contact: { type: boolean }
+        joined_at: { type: string, format: date }
+        left_at: { type: string, format: date, nullable: true }
+        is_active: { type: boolean }
+
+    ProjectTeamMemberRequest:
+      type: object
+      required: [user_id, role]
+      properties:
+        user_id: { type: string, format: uuid }
+        role: { type: string }
+        designation: { type: string }
+        is_primary_contact: { type: boolean }
+
+    ProjectMilestone:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        target_date: { type: string, format: date }
+        completion_date: { type: string, format: date, nullable: true }
+        status: { type: string, enum: [pending, in_progress, completed, delayed, cancelled] }
+        completion_percentage: { type: number, format: float }
+        deliverables:
+          type: array
+          items: { type: string }
+        display_order: { type: integer }
+
+    ProjectMilestoneRequest:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string }
+        description: { type: string }
+        target_date: { type: string, format: date }
+        status: { type: string, enum: [pending, in_progress, completed, delayed, cancelled] }
+        completion_percentage: { type: number, format: float }
+        deliverables:
+          type: array
+          items: { type: string }
+        display_order: { type: integer }
+
+    ProjectDocument:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        document_type: { type: string }
+        title: { type: string }
+        file_url: { type: string }
+        file_name: { type: string }
+        file_size: { type: integer }
+        description: { type: string }
+        version: { type: string }
+        is_public: { type: boolean }
+        uploaded_by:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        created_at: { type: string, format: date-time }
+
+    ProjectDocumentRequest:
+      type: object
+      required: [document_type, title, file_url]
+      properties:
+        document_type: { type: string, enum: [mou, agreement, proposal, report, uc, audit_report, compliance] }
+        title: { type: string }
+        file_url: { type: string }
+        file_name: { type: string }
+        file_size: { type: integer }
+        description: { type: string }
+        version: { type: string }
+        is_public: { type: boolean }
+
+    # ==================== CAMPAIGNS ====================
+    Campaign:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        project:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+            project_code: { type: string }
+        campaign_code: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        short_description: { type: string }
+        description: { type: string }
+        cover_image_url: { type: string }
+        campaign_type:
           type: string
-        description:
+          enum: [fundraising, crowdfunding, corporate_csr, grant, government_scheme, internal, matching_fund, endowment]
+        context: { type: string, enum: [ngo, csr, hybrid] }
+        goal_amount: { type: number, format: decimal }
+        minimum_amount: { type: number, format: decimal }
+        raised_amount: { type: number, format: decimal }
+        donor_count: { type: integer }
+        completion_pct: { type: number, format: float }
+        currency: { type: string, default: INR }
+        csr_company_id: { type: string, format: uuid, nullable: true }
+        csr_fiscal_year: { type: string, nullable: true }
+        is_zakat_eligible: { type: boolean }
+        is_sadaqah_eligible: { type: boolean }
+        is_lillah_eligible: { type: boolean }
+        is_interest_eligible: { type: boolean }
+        is_tax_deductible: { type: boolean }
+        tax_exemption_percentage: { type: number }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        status:
           type: string
-          minLength: 20
-        program_type:
+          enum: [draft, pending_approval, active, paused, target_reached, completed, cancelled]
+        is_featured: { type: boolean }
+        is_urgent: { type: boolean }
+        is_recurring: { type: boolean }
+        is_public: { type: boolean }
+        visibility_scope: { type: string, enum: [public, registered_users, donors_only, internal] }
+        fundraiser_id: { type: string, format: uuid, nullable: true }
+        managed_by:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        branch:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        meta_title: { type: string }
+        meta_description: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    CampaignCreateRequest:
+      type: object
+      required: [project_id, campaign_code, name, goal_amount]
+      properties:
+        project_id: { type: string, format: uuid }
+        campaign_code: { type: string }
+        name: { type: string, minLength: 3 }
+        slug: { type: string }
+        short_description: { type: string }
+        description: { type: string }
+        cover_image_url: { type: string }
+        campaign_type: { type: string, enum: [fundraising, crowdfunding, corporate_csr, grant, government_scheme, internal, matching_fund, endowment] }
+        context: { type: string, enum: [ngo, csr, hybrid], default: ngo }
+        goal_amount: { type: number, format: decimal, minimum: 1 }
+        minimum_amount: { type: number, format: decimal }
+        currency: { type: string, default: INR }
+        csr_company_id: { type: string, format: uuid }
+        csr_fiscal_year: { type: string }
+        csr_contribution_type: { type: string }
+        is_zakat_eligible: { type: boolean }
+        is_sadaqah_eligible: { type: boolean }
+        is_lillah_eligible: { type: boolean }
+        is_interest_eligible: { type: boolean }
+        is_tax_deductible: { type: boolean }
+        tax_exemption_percentage: { type: number }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        is_featured: { type: boolean }
+        is_urgent: { type: boolean }
+        is_recurring: { type: boolean }
+        is_public: { type: boolean, default: true }
+        visibility_scope: { type: string, enum: [public, registered_users, donors_only, internal] }
+        fundraiser_id: { type: string, format: uuid }
+        managed_by_id: { type: string, format: uuid }
+        branch_id: { type: string, format: uuid }
+        tags:
+          type: array
+          items: { type: string }
+        meta_title: { type: string }
+        meta_description: { type: string }
+
+    CampaignUpdateRequest:
+      type: object
+      properties:
+        name: { type: string }
+        short_description: { type: string }
+        description: { type: string }
+        cover_image_url: { type: string }
+        campaign_type: { type: string, enum: [fundraising, crowdfunding, corporate_csr, grant, government_scheme, internal, matching_fund, endowment] }
+        goal_amount: { type: number, format: decimal }
+        is_zakat_eligible: { type: boolean }
+        is_sadaqah_eligible: { type: boolean }
+        is_tax_deductible: { type: boolean }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        status: { type: string, enum: [draft, pending_approval, active, paused, target_reached, completed, cancelled] }
+        is_featured: { type: boolean }
+        is_urgent: { type: boolean }
+        is_public: { type: boolean }
+        tags:
+          type: array
+          items: { type: string }
+
+    CampaignContribution:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        campaign_id: { type: string, format: uuid }
+        donation_id: { type: string, format: uuid, nullable: true }
+        donor_id: { type: string, format: uuid, nullable: true }
+        amount: { type: number, format: decimal }
+        currency: { type: string }
+        contribution_type: { type: string, enum: [monetary, in_kind, services] }
+        donation_type: { type: string }
+        in_kind_description: { type: string, nullable: true }
+        in_kind_estimated_value: { type: number, format: decimal, nullable: true }
+        csr_company_name: { type: string, nullable: true }
+        status: { type: string, enum: [pending, completed, failed, refunded] }
+        is_anonymous: { type: boolean }
+        receipt_number: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    CampaignContributionRequest:
+      type: object
+      required: [amount]
+      properties:
+        donation_id: { type: string, format: uuid }
+        donor_id: { type: string, format: uuid }
+        amount: { type: number, format: decimal, minimum: 1 }
+        contribution_type: { type: string, enum: [monetary, in_kind, services], default: monetary }
+        donation_type: { type: string }
+        in_kind_description: { type: string }
+        in_kind_estimated_value: { type: number, format: decimal }
+        csr_company_name: { type: string }
+        csr_fiscal_year: { type: string }
+        is_anonymous: { type: boolean }
+        notes: { type: string }
+
+    # ==================== PROJECT FUNDS ====================
+    ProjectFund:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        fund_reference: { type: string }
+        description: { type: string }
+        source_type:
           type: string
-          enum: [education, medical, social_service, dawah, emergency, food]
-        cover_image_url:
+          enum: [donation, csr_contribution, grant, government, corporate_sponsorship, internal_transfer, interest_income, fundraiser_collection, endowment_yield, foreign_contribution, in_kind, other]
+        source_entity_type: { type: string }
+        source_name: { type: string }
+        csr_company_id: { type: string, format: uuid, nullable: true }
+        csr_fiscal_year: { type: string, nullable: true }
+        is_foreign_contribution: { type: boolean }
+        fcra_reference: { type: string, nullable: true }
+        campaign_id: { type: string, format: uuid, nullable: true }
+        sanctioned_amount: { type: number, format: decimal }
+        received_amount: { type: number, format: decimal }
+        utilized_amount: { type: number, format: decimal }
+        balance_amount: { type: number, format: decimal }
+        currency: { type: string }
+        total_installments: { type: integer }
+        installments_received: { type: integer }
+        status:
           type: string
-        icon_url:
+          enum: [proposed, approved, partially_utilized, fully_utilized, returned, cancelled]
+        sanctioned_date: { type: string, format: date }
+        received_date: { type: string, format: date }
+        utilization_start_date: { type: string, format: date }
+        utilization_end_date: { type: string, format: date }
+        utilization_certificate_required: { type: boolean }
+        utilization_certificate_submitted: { type: boolean }
+        utilization_certificate_url: { type: string }
+        utilization_pct: { type: number, format: float }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ProjectFundCreateRequest:
+      type: object
+      required: [fund_reference, source_type, sanctioned_amount]
+      properties:
+        fund_reference: { type: string }
+        description: { type: string }
+        source_type: { type: string, enum: [donation, csr_contribution, grant, government, corporate_sponsorship, internal_transfer, interest_income, fundraiser_collection, endowment_yield, foreign_contribution, in_kind, other] }
+        source_entity_id: { type: string, format: uuid }
+        source_entity_type: { type: string }
+        source_name: { type: string }
+        csr_company_id: { type: string, format: uuid }
+        csr_fiscal_year: { type: string }
+        is_foreign_contribution: { type: boolean }
+        fcra_reference: { type: string }
+        campaign_id: { type: string, format: uuid }
+        sanctioned_amount: { type: number, format: decimal, minimum: 0.01 }
+        received_amount: { type: number, format: decimal }
+        currency: { type: string, default: INR }
+        total_installments: { type: integer }
+        sanctioned_date: { type: string, format: date }
+        utilization_start_date: { type: string, format: date }
+        utilization_end_date: { type: string, format: date }
+        utilization_certificate_required: { type: boolean }
+        notes: { type: string }
+
+    ProjectFundUpdateRequest:
+      type: object
+      properties:
+        description: { type: string }
+        sanctioned_amount: { type: number, format: decimal }
+        received_amount: { type: number, format: decimal }
+        status: { type: string, enum: [proposed, approved, partially_utilized, fully_utilized, returned, cancelled] }
+        utilization_certificate_submitted: { type: boolean }
+        utilization_certificate_url: { type: string }
+        notes: { type: string }
+
+    ProjectFundInstallment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        project_fund_id: { type: string, format: uuid }
+        installment_number: { type: integer }
+        amount: { type: number, format: decimal }
+        expected_date: { type: string, format: date }
+        received_date: { type: string, format: date, nullable: true }
+        status: { type: string, enum: [pending, received, delayed, cancelled] }
+        payment_reference: { type: string }
+        bank_reference: { type: string }
+
+    ProjectFundInstallmentRequest:
+      type: object
+      required: [installment_number, amount]
+      properties:
+        installment_number: { type: integer }
+        amount: { type: number, format: decimal, minimum: 0.01 }
+        expected_date: { type: string, format: date }
+        received_date: { type: string, format: date }
+        status: { type: string, enum: [pending, received, delayed, cancelled] }
+        payment_reference: { type: string }
+        bank_reference: { type: string }
+
+    ProjectBudgetHead:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        head_code: { type: string }
+        head_name: { type: string }
+        parent_head_id: { type: string, format: uuid, nullable: true }
+        description: { type: string }
+        budgeted_amount: { type: number, format: decimal }
+        revised_amount: { type: number, format: decimal, nullable: true }
+        spent_amount: { type: number, format: decimal }
+        committed_amount: { type: number, format: decimal }
+        display_order: { type: integer }
+        is_active: { type: boolean }
+
+    ProjectBudgetHeadRequest:
+      type: object
+      required: [head_code, head_name, budgeted_amount]
+      properties:
+        head_code: { type: string }
+        head_name: { type: string }
+        parent_head_id: { type: string, format: uuid }
+        description: { type: string }
+        budgeted_amount: { type: number, format: decimal, minimum: 0 }
+        revised_amount: { type: number, format: decimal }
+        display_order: { type: integer }
+
+    # ==================== ACTIVITIES ====================
+    Activity:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        project:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+            project_code: { type: string }
+        activity_code: { type: string }
+        name: { type: string }
+        description: { type: string }
+        activity_type: { type: string }
+        category: { type: string }
+        budget_head:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            head_name: { type: string }
+        estimated_cost: { type: number, format: decimal }
+        actual_cost: { type: number, format: decimal }
+        currency: { type: string }
+        target_beneficiaries: { type: integer }
+        actual_beneficiaries: { type: integer }
+        target_quantity: { type: number }
+        actual_quantity: { type: number }
+        unit_of_measure: { type: string }
+        outcome_description: { type: string }
+        outcome_data: { type: object }
+        planned_start_date: { type: string, format: date }
+        planned_end_date: { type: string, format: date }
+        actual_start_date: { type: string, format: date, nullable: true }
+        actual_end_date: { type: string, format: date, nullable: true }
+        status:
           type: string
+          enum: [planned, in_progress, completed, on_hold, cancelled, deferred]
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+        completion_percentage: { type: number, format: float }
+        location: { type: string }
+        location_details: { type: object }
+        branch:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        assigned_to:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        supervised_by:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        milestone:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            title: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        expense_count: { type: integer }
+        total_expenses: { type: number, format: decimal }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ActivityCreateRequest:
+      type: object
+      required: [project_id, activity_code, name]
+      properties:
+        project_id: { type: string, format: uuid }
+        activity_code: { type: string }
+        name: { type: string, minLength: 3 }
+        description: { type: string }
+        activity_type: { type: string }
+        category: { type: string }
+        budget_head_id: { type: string, format: uuid }
+        estimated_cost: { type: number, format: decimal }
+        currency: { type: string, default: INR }
+        target_beneficiaries: { type: integer }
+        target_quantity: { type: number }
+        unit_of_measure: { type: string }
+        planned_start_date: { type: string, format: date }
+        planned_end_date: { type: string, format: date }
+        priority: { type: string, enum: [critical, high, medium, low], default: medium }
+        location: { type: string }
+        location_details: { type: object }
+        branch_id: { type: string, format: uuid }
+        assigned_to_id: { type: string, format: uuid }
+        supervised_by_id: { type: string, format: uuid }
+        milestone_id: { type: string, format: uuid }
+        tags:
+          type: array
+          items: { type: string }
+
+    ActivityUpdateRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        activity_type: { type: string }
+        budget_head_id: { type: string, format: uuid }
+        estimated_cost: { type: number, format: decimal }
+        actual_beneficiaries: { type: integer }
+        actual_quantity: { type: number }
+        outcome_description: { type: string }
+        outcome_data: { type: object }
+        actual_start_date: { type: string, format: date }
+        actual_end_date: { type: string, format: date }
+        status: { type: string, enum: [planned, in_progress, completed, on_hold, cancelled, deferred] }
+        priority: { type: string, enum: [critical, high, medium, low] }
+        completion_percentage: { type: number, format: float, minimum: 0, maximum: 100 }
+        location: { type: string }
+        assigned_to_id: { type: string, format: uuid }
+        supervised_by_id: { type: string, format: uuid }
+        milestone_id: { type: string, format: uuid }
+        tags:
+          type: array
+          items: { type: string }
+
+    # ==================== ACTIVITY EXPENSES ====================
+    ActivityExpense:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        activity_id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        expense_code: { type: string }
+        description: { type: string }
+        amount: { type: number, format: decimal }
+        tax_amount: { type: number, format: decimal }
+        total_amount: { type: number, format: decimal }
+        currency: { type: string }
+        budget_head:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            head_name: { type: string }
+        project_fund:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            fund_reference: { type: string }
+        payee_name: { type: string }
+        payee_type: { type: string, enum: [vendor, employee, volunteer, beneficiary, other] }
+        payment_mode:
+          type: string
+          enum: [bank_transfer, cheque, cash, upi, card, dd, adjustment, in_kind]
+        payment_reference: { type: string }
+        payment_date: { type: string, format: date }
+        bank_reference: { type: string }
+        cheque_number: { type: string }
+        invoice_number: { type: string }
+        invoice_date: { type: string, format: date }
+        invoice_url: { type: string }
+        status:
+          type: string
+          enum: [draft, submitted, approved, rejected, paid, partially_paid, void]
+        submitted_by:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        approved_by:
+          type: object
+          nullable: true
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        approved_at: { type: string, format: date-time, nullable: true }
+        rejected_reason: { type: string, nullable: true }
+        gst_applicable: { type: boolean }
+        gst_rate: { type: number }
+        tds_applicable: { type: boolean }
+        tds_rate: { type: number }
+        tds_amount: { type: number, format: decimal }
+        is_fcra_expense: { type: boolean }
+        receipt_url: { type: string }
+        supporting_documents:
+          type: array
+          items:
+            type: object
+            properties:
+              file_url: { type: string }
+              file_name: { type: string }
+              doc_type: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        notes: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ActivityExpenseCreateRequest:
+      type: object
+      required: [activity_id, expense_code, description, amount, total_amount]
+      properties:
+        activity_id: { type: string, format: uuid }
+        expense_code: { type: string }
+        description: { type: string, minLength: 5 }
+        amount: { type: number, format: decimal, minimum: 0.01 }
+        tax_amount: { type: number, format: decimal }
+        total_amount: { type: number, format: decimal, minimum: 0.01 }
+        currency: { type: string, default: INR }
+        budget_head_id: { type: string, format: uuid }
+        project_fund_id: { type: string, format: uuid }
+        payee_name: { type: string }
+        payee_type: { type: string, enum: [vendor, employee, volunteer, beneficiary, other] }
+        payment_mode: { type: string, enum: [bank_transfer, cheque, cash, upi, card, dd, adjustment, in_kind] }
+        payment_reference: { type: string }
+        payment_date: { type: string, format: date }
+        bank_reference: { type: string }
+        cheque_number: { type: string }
+        invoice_number: { type: string }
+        invoice_date: { type: string, format: date }
+        invoice_url: { type: string }
+        gst_applicable: { type: boolean }
+        gst_rate: { type: number }
+        tds_applicable: { type: boolean }
+        tds_rate: { type: number }
+        tds_amount: { type: number, format: decimal }
+        hsn_sac_code: { type: string }
+        is_fcra_expense: { type: boolean }
+        fcra_purpose: { type: string }
+        receipt_url: { type: string }
+        supporting_documents:
+          type: array
+          items:
+            type: object
+            properties:
+              file_url: { type: string }
+              file_name: { type: string }
+              doc_type: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        notes: { type: string }
+
+    ActivityExpenseUpdateRequest:
+      type: object
+      properties:
+        description: { type: string }
+        amount: { type: number, format: decimal }
+        tax_amount: { type: number, format: decimal }
+        total_amount: { type: number, format: decimal }
+        budget_head_id: { type: string, format: uuid }
+        project_fund_id: { type: string, format: uuid }
+        payee_name: { type: string }
+        payee_type: { type: string, enum: [vendor, employee, volunteer, beneficiary, other] }
+        payment_mode: { type: string, enum: [bank_transfer, cheque, cash, upi, card, dd, adjustment, in_kind] }
+        payment_reference: { type: string }
+        payment_date: { type: string, format: date }
+        invoice_number: { type: string }
+        invoice_date: { type: string, format: date }
+        invoice_url: { type: string }
+        status: { type: string, enum: [draft, submitted, approved, rejected, paid, partially_paid, void] }
+        rejected_reason: { type: string }
+        gst_applicable: { type: boolean }
+        tds_applicable: { type: boolean }
+        is_fcra_expense: { type: boolean }
+        receipt_url: { type: string }
+        notes: { type: string }
 
     # ==================== EVENTS ====================
     Event:
@@ -1156,6 +2239,9 @@ components:
           type: boolean
         registration_count:
           type: integer
+        is_only_volunteers:
+          type: boolean
+          default: false
         status:
           type: string
           enum: [draft, published, archived]
@@ -1204,6 +2290,9 @@ components:
           type: integer
         registration_required:
           type: boolean
+        is_only_volunteers:
+          type: boolean
+          default: false
         cover_image_url:
           type: string
 
@@ -1827,6 +2916,8 @@ components:
         booking_time: { type: string }
         notes: { type: string }
         status: { type: string, enum: [pending, confirmed, completed, cancelled] }
+        pickup_address: { type: string, nullable: true }
+        drop_address: { type: string, nullable: true }
         donation_id: { type: string, format: uuid, nullable: true }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
@@ -1843,6 +2934,8 @@ components:
         booking_date: { type: string, format: date }
         booking_time: { type: string }
         notes: { type: string }
+        pickup_address: { type: string }
+        drop_address: { type: string }
         donation_amount: { type: number }
 
     NgoServiceBookingStatusUpdateRequest:
@@ -1851,14 +2944,477 @@ components:
       properties:
         status: { type: string, enum: [pending, confirmed, completed, cancelled] }
 
+    # ==================== NOTIFICATIONS ====================
+    NotificationChannel:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        channel_type: { type: string, enum: [email, sms, whatsapp, push] }
+        provider_name: { type: string }
+        config_name: { type: string }
+        is_active: { type: boolean }
+        is_default: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    NotificationTemplate:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        slug: { type: string }
+        name: { type: string }
+        channel_type: { type: string }
+        subject: { type: string }
+        content: { type: string }
+        language: { type: string }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        recipient: { type: string }
+        template_id: { type: string, format: uuid }
+        status: { type: string }
+        priority: { type: integer }
+        scheduled_at: { type: string, format: date-time }
+        sent_at: { type: string, format: date-time }
+        retry_count: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    NotificationLog:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        notification_id: { type: string, format: uuid }
+        status: { type: string }
+        recorded_at: { type: string, format: date-time }
+
+    # ==================== BILLING ====================
+    Subscription:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        plan_id: { type: string, format: uuid }
+        billing_cycle: { type: string, enum: [monthly, annually] }
+        status: { type: string, enum: [active, past_due, cancelled, trialing] }
+        current_period_start: { type: string, format: date-time }
+        current_period_end: { type: string, format: date-time }
+        cancel_at_period_end: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    Invoice:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        invoice_number: { type: string }
+        status: { type: string, enum: [draft, open, paid, uncollectible, void] }
+        currency: { type: string }
+        total: { type: number }
+        amount_remaining: { type: number }
+        due_date: { type: string, format: date }
+        customer_id: { type: string, format: uuid }
+        subscription_id: { type: string, format: uuid }
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceItem'
+
+    InvoiceItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        description: { type: string }
+        quantity: { type: integer }
+        unit_amount: { type: number }
+        amount: { type: number }
+
+    BillingPlan:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        monthly_price: { type: number }
+        currency: { type: string }
+        features: { type: object }
+
+    HsnMaster:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        hsn_code: { type: string }
+        hsn_type: { type: string, enum: [service, goods, nil, exempted, no-gst] }
+        description: { type: string }
+        cgst_rate: { type: number }
+        sgst_rate: { type: number }
+        igst_rate: { type: number }
+        cess_rate: { type: number }
+        total_gst_rate: { type: number }
+        is_nil_rated: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    UomMaster:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        code: { type: string }
+        name: { type: string }
+        created_at: { type: string, format: date-time }
+
+    Customer:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        gstin: { type: string }
+        billing_address: { type: string }
+        city: { type: string }
+        state: { type: string }
+        pincode: { type: string }
+        country: { type: string }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    ItemType:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+
+    ItemMaster:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        item_type_id: { type: string, format: uuid }
+        uom_id: { type: string, format: uuid }
+        name: { type: string }
+        sku: { type: string }
+        description: { type: string }
+        base_price: { type: number }
+        is_active: { type: boolean }
+        revenue_head_id: { type: string, format: uuid }
+
+    RevenueHead:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        calculation_basis: { type: string }
+        uom_id: { type: string, format: uuid }
+        frequency: { type: string }
+        amount: { type: number }
+        custom_amount: { type: number }
+        is_active: { type: boolean }
+        account_mapping:
+          $ref: '#/components/schemas/RevenueHeadAccount'
+    AccountType:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        normal_balance: { type: string, enum: [debit, credit] }
+
+    AddressMaster:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        city_district: { type: string }
+        state: { type: string }
+        countryCode: { type: string }
+        country: { type: string }
+        state_gst_code: { type: string }
+        is_union_territory: { type: boolean }
+        is_active: { type: boolean }
+
+    ChartOfAccount:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        account_code: { type: string }
+        name: { type: string }
+        account_type_id: { type: string, format: uuid }
+        parent_account_id: { type: string, format: uuid }
+        description: { type: string }
+        is_active: { type: boolean }
+        is_system_account: { type: boolean }
+
+    RevenueHeadAccount:
+      type: object
+      properties:
+        tenant_id: { type: string, format: uuid }
+        revenue_head_id: { type: string, format: uuid }
+        revenue_account_id: { type: string, format: uuid }
+        receivable_account_id: { type: string, format: uuid }
+
+    LedgerEntry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        journal_entry_id: { type: string, format: uuid }
+        account_id: { type: string, format: uuid }
+        party_type: { type: string }
+        party_id: { type: string, format: uuid }
+        debit_amount: { type: number, format: float }
+        credit_amount: { type: number, format: float }
+        created_at: { type: string, format: date-time }
+
+    JournalEntry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        entry_date: { type: string, format: date }
+        description: { type: string }
+        reference_type: { type: string }
+        reference_id: { type: string, format: uuid }
+        status: { type: string, enum: [draft, posted, void] }
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
+
+    Ledger:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        coa_id: { type: string, format: uuid }
+        parent_ledger_id: { type: string, format: uuid }
+        name: { type: string }
+        account_code: { type: string }
+        description: { type: string }
+        ledger_type: { type: string, enum: [GL, Bank, Cash, Control Ledger, Sub-Ledger] }
+        control_ledger_type: { type: string, enum: [vendor, customer, normal, employee] }
+        contact_person: { type: string }
+        contact_phone: { type: string }
+        contact_email: { type: string }
+        is_active: { type: boolean }
+        tax_details:
+          type: array
+          items: { $ref: '#/components/schemas/LedgerTaxDetail' }
+        bank_accounts:
+          type: array
+          items: { $ref: '#/components/schemas/LedgerBankAccount' }
+        licenses:
+          type: array
+          items: { $ref: '#/components/schemas/LedgerLicense' }
+
+    LedgerTaxDetail:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        state_code: { type: string }
+        gst_number: { type: string }
+        pan_number: { type: string }
+        tan_number: { type: string }
+        msme_number: { type: string }
+        is_primary: { type: boolean }
+        address_line1: { type: string }
+        address_line2: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postal_code: { type: string }
+
+    LedgerBankAccount:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        bank_name: { type: string }
+        account_number: { type: string }
+        ifsc_code: { type: string }
+        bank_branch: { type: string }
+        account_type: { type: string }
+        is_primary: { type: boolean }
+
+    LedgerLicense:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        license_type: { type: string }
+        license_number: { type: string }
+        expiry_date: { type: string, format: date }
+        file_url: { type: string, format: uri }
+
+    # ==================== CONTACT INQUIRY ====================
+    ContactInquiry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        subject: { type: string }
+        message: { type: string }
+        inquiry_type: { type: string }
+        status: { type: string, enum: [pending, reviewed, responded, closed] }
+        notes: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ContactInquiryCreateRequest:
+      type: object
+      required: [name, email, subject, message]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        subject: { type: string }
+        message: { type: string }
+        inquiryType: { type: string }
+
+    ContactInquiryUpdateRequest:
+      type: object
+      properties:
+        status: { type: string, enum: [pending, reviewed, responded, closed] }
+        notes: { type: string }
+
 paths:
+  # ==================== CONTACT INQUIRIES ====================
+  /contact/submit:
+    post:
+      tags:
+        - Content
+      summary: Submit a contact inquiry
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInquiryCreateRequest'
+      responses:
+        '201':
+          description: Inquiry submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactInquiry'
+
+  /contact/inquiries:
+    get:
+      tags:
+        - Content
+      summary: List all contact inquiries
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, reviewed, responded, closed]
+      responses:
+        '200':
+          description: List of inquiries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+
+  /contact/inquiries/{id}:
+    patch:
+      tags:
+        - Content
+      summary: Update a contact inquiry status
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInquiryUpdateRequest'
+      responses:
+        '200':
+          description: Inquiry updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactInquiry'
+
+  # ==================== PUBLIC ====================
+  /public/fundraisers:
+    get:
+      tags:
+        - Public
+      summary: List fundraisers publicly
+      parameters:
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of fundraisers
+
+  /public/fundraisers/{id}:
+    get:
+      tags:
+        - Public
+      summary: Get fundraiser details publicly
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Fundraiser details
+
+  /public/categories:
+    get:
+      tags:
+        - Public
+      summary: List fundraiser categories publicly
+      responses:
+        '200':
+          description: List of categories
+
+  /public/donations/create-order:
+    post:
+      tags:
+        - Public
+      summary: Create a donation order
+      responses:
+        '200':
+          description: Order created
+
   # ==================== AUTHENTICATION ====================
-  /auth/login:
+  /auth/admin/login:
     post:
       tags:
         - Authentication
-      summary: User login
-      description: Authenticate user and return access token
+      summary: Admin login
+      description: Authenticate administrative user and return access token
       requestBody:
         required: true
         content:
@@ -1874,23 +3430,15 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           description: Invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '400':
           description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
 
-  /auth/register:
+  /auth/admin/register:
     post:
       tags:
         - Authentication
-      summary: User registration
-      description: Register new user account
+      summary: Admin registration
+      description: Register new administrative user account
       requestBody:
         required: true
         content:
@@ -1900,27 +3448,10 @@ paths:
       responses:
         '201':
           description: User created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
         '400':
           description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: Email already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
 
-  /auth/refresh:
+  /auth/admin/refresh-token:
     post:
       tags:
         - Authentication
@@ -1946,10 +3477,63 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           description: Invalid refresh token
+
+  /auth/donor/request-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Request donor OTP
+      description: Request an OTP for donor login/registration
+      responses:
+        '200':
+          description: OTP requested successfully
+
+  /auth/donor/verify-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Verify donor OTP
+      description: Verify the OTP sent to the donor
+      responses:
+        '200':
+          description: OTP verified successfully
+
+  /auth/volunteer/request-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Request volunteer OTP
+      description: Request an OTP for volunteer login/registration
+      responses:
+        '200':
+          description: OTP requested successfully
+
+  /auth/volunteer/verify-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Verify volunteer OTP
+      description: Verify the OTP sent to the volunteer
+      responses:
+        '200':
+          description: OTP verified successfully
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
 
   /auth/logout:
     post:
@@ -2030,6 +3614,347 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /tenants/me:
+    get:
+      tags:
+        - Tenants
+      summary: Get current tenant details
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current tenant details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+
+  /tenants/me/tax-details:
+    post:
+      tags:
+        - Tenants
+      summary: Add tax detail to current tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantTaxDetail'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Tax detail added
+        '400':
+          description: Invalid request
+
+  /tenants/me/tax-details/{id}:
+    patch:
+      tags:
+        - Tenants
+      summary: Update tax detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantTaxDetail'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+        - Tenants
+      summary: Delete tax detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Deleted
+
+  /tenants/me/addresses:
+    post:
+      tags:
+        - Tenants
+      summary: Add address to current tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantAddress'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Address added
+
+  /tenants/me/addresses/{id}:
+    patch:
+      tags:
+        - Tenants
+      summary: Update address
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantAddress'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+        - Tenants
+      summary: Delete address
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Deleted
+
+  /tenants/me/bank-accounts:
+    post:
+      tags:
+        - Tenants
+      summary: Add bank account to current tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantBankAccount'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Bank account added
+
+  /tenants/me/bank-accounts/{id}:
+    patch:
+      tags:
+        - Tenants
+      summary: Update bank account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantBankAccount'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+        - Tenants
+      summary: Delete bank account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Deleted
+
+  /tenants/me/licenses:
+    post:
+      tags:
+        - Tenants
+      summary: Add license to current tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantLicense'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: License added
+
+  /tenants/me/licenses/{id}:
+    patch:
+      tags:
+        - Tenants
+      summary: Update license
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantLicense'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+        - Tenants
+      summary: Delete license
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Deleted
+
+  /tenants/me/roles:
+    get:
+      tags:
+        - Tenants
+      summary: List all roles for current tenant
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserRole'
+    post:
+      tags:
+        - Tenants
+      summary: Create new role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRoleCreateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Role created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRole'
+
+  /tenants/me/roles/{id}:
+    get:
+      tags:
+        - Tenants
+      summary: Get role details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Role details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRole'
+    patch:
+      tags:
+        - Tenants
+      summary: Update role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRoleUpdateRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags:
+        - Tenants
+      summary: Delete role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Deleted
+
   /tenants/{id}:
     get:
       tags:
@@ -2064,7 +3989,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TenantCreateRequest'
+              $ref: '#/components/schemas/TenantUpdateRequest'
       security:
         - BearerAuth: []
       responses:
@@ -2226,6 +4151,470 @@ paths:
                 $ref: '#/components/schemas/User'
         '401':
           description: Unauthorized
+
+  # ==================== BILLING ====================
+  /billing/customers:
+    get:
+      tags: [Billing]
+      summary: List Customers
+      parameters:
+        - name: search
+          in: query
+          description: Search by name
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Customer' }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+    post:
+      tags: [Billing]
+      summary: Create Customer
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                email: { type: string }
+                phone: { type: string }
+                gstin: { type: string }
+                billing_address: { type: string }
+                city: { type: string }
+                state: { type: string }
+                pincode: { type: string }
+                country: { type: string }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+  /billing/customers/{id}:
+    get:
+      tags: [Billing]
+      summary: Get Customer Details
+      parameters:
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+    put:
+      tags: [Billing]
+      summary: Update Customer
+      parameters:
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string }
+                phone: { type: string }
+                gstin: { type: string }
+                billing_address: { type: string }
+                city: { type: string }
+                state: { type: string }
+                pincode: { type: string }
+                country: { type: string }
+                is_active: { type: boolean }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+    delete:
+      tags: [Billing]
+      summary: Delete Customer
+      parameters:
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204':
+          description: Deleted
+
+  /billing/hsn:
+    get:
+      tags: [Billing]
+      summary: List HSN Masters
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: List of HSN Masters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HsnMaster'
+    post:
+      tags: [Billing]
+      summary: Create HSN Master
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hsn_code]
+              properties:
+                hsn_code: { type: string }
+                hsn_type: { type: string, enum: [service, goods, nil, exempted, no-gst] }
+                description: { type: string }
+                cgst_rate: { type: number, format: float }
+                sgst_rate: { type: number, format: float }
+                igst_rate: { type: number, format: float }
+                is_nil_rated: { type: boolean }
+      responses:
+        '201':
+          description: Created HSN Master
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HsnMaster'
+
+  /billing/items:
+    get:
+      tags: [Billing]
+      summary: List Items
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Success }
+    post:
+      tags: [Billing]
+      summary: Create Item
+      security: [{ BearerAuth: [] }]
+      responses:
+        '201': { description: Created }
+
+  /billing/revenue-heads:
+    get:
+      tags: [Billing]
+      summary: List Revenue Heads
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: List of Revenue Heads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RevenueHead'
+    post:
+      tags: [Billing]
+      summary: Create Revenue Head
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                calculation_basis: { type: string }
+                uom_id: { type: string, format: uuid }
+                frequency: { type: string }
+                amount: { type: number }
+                revenue_account_id: { type: string, format: uuid }
+                receivable_account_id: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueHead'
+
+  /billing/revenue-heads/{id}:
+    put:
+      tags: [Billing]
+      summary: Update Revenue Head
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                calculation_basis: { type: string }
+                amount: { type: number }
+                is_active: { type: boolean }
+                revenue_account_id: { type: string, format: uuid }
+                receivable_account_id: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueHead'
+        '404':
+          description: Not Found
+
+  /billing/plans:
+    get:
+      tags:
+        - Billing
+      summary: List billing plans
+      responses:
+        '200':
+          description: List of plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BillingPlan'
+
+  /billing/subscription:
+    get:
+      tags:
+        - Billing
+      summary: Get current subscription
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current subscription details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+    post:
+      tags:
+        - Billing
+      summary: Create subscription
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - plan_id
+              properties:
+                plan_id: { type: string, format: uuid }
+                billing_cycle: { type: string, enum: [monthly, annually], default: monthly }
+      responses:
+        '201':
+          description: Subscription created
+        '400':
+          description: Subscription already exists
+    put:
+      tags:
+        - Billing
+      summary: Update subscription
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plan_id: { type: string, format: uuid }
+                billing_cycle: { type: string, enum: [monthly, annually] }
+                status: { type: string }
+                auto_renew: { type: boolean }
+      responses:
+        '200':
+          description: Subscription updated
+        '404':
+          description: Subscription not found
+
+  /billing/invoices:
+    get:
+      tags:
+        - Billing
+      summary: List billing invoices
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Invoice'
+
+  /billing/invoices/{id}:
+    get:
+      tags:
+        - Billing
+      summary: Get invoice details
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Invoice details with line items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+  /billing/invoices/{id}/pay:
+    post:
+      tags:
+        - Billing
+      summary: Record payment for invoice
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - transaction_id
+              properties:
+                payment_method: { type: string }
+                transaction_id: { type: string }
+                amount: { type: number, format: float }
+                currency: { type: string, default: INR }
+                status: { type: string, default: succeeded }
+      responses:
+        '201':
+          description: Payment recorded
+        '404':
+          description: Invoice not found
+
+  /billing/usage:
+    get:
+      tags:
+        - Billing
+      summary: List billing usage logs
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of usage logs
+    post:
+      tags:
+        - Billing
+      summary: Log usage metric
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - metric_name
+                - metric_value
+              properties:
+                metric_name: { type: string }
+                metric_value: { type: number }
+      responses:
+        '201':
+          description: Usage logged
+
+  # ==================== PLATFORM ====================
+  /platform/billing/tenants:
+    get:
+      tags:
+        - Platform
+      summary: List all tenants billing (Admin)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of tenants billing
+
+  /platform/billing/invoices:
+    get:
+      tags:
+        - Platform
+      summary: List all invoices across platform (Admin)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all invoices
 
   # ==================== DONORS ====================
   /donors:
@@ -2591,6 +4980,40 @@ paths:
         '201':
           description: Update added successfully
 
+  /fundraisers/{id}/status:
+    patch:
+      tags:
+        - Fundraisers
+      summary: Update fundraiser status
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Status updated
+
+  /fundraisers/{id}/pause:
+    post:
+      tags:
+        - Fundraisers
+      summary: Pause fundraiser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Fundraiser paused
+
+  /fundraisers/{id}/verify:
+    post:
+      tags:
+        - Fundraisers
+      summary: Verify fundraiser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Fundraiser verified
+
+
   /fundraisers/{id}/documents:
     post:
       tags:
@@ -2760,6 +5183,119 @@ paths:
               schema:
                 $ref: '#/components/schemas/Donation'
 
+  /donations/razorpay/create-order:
+    post:
+      tags:
+        - Donations
+      summary: Create Razorpay order
+      description: Dedicated endpoint for the frontend Razorpay checkout flow. Creates a donation record + Razorpay order.
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                fundraiser_id: { type: string }
+                amount: { type: number }
+                currency: { type: string, default: INR }
+                donor_name: { type: string }
+                donor_email: { type: string }
+                donor_phone: { type: string }
+                is_anonymous: { type: boolean }
+                donation_type: { type: string }
+                message: { type: string }
+      responses:
+        '201':
+          description: Razorpay order created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  donation_id: { type: string, format: uuid }
+                  razorpay_order_id: { type: string }
+                  amount: { type: integer, description: Amount in paise }
+                  currency: { type: string }
+                  key_id: { type: string }
+
+  /donations/razorpay/create-subscription:
+    post:
+      tags:
+        - Donations
+      summary: Create recurring donation subscription
+      description: Initiates a recurring donation using Razorpay Subscriptions.
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, frequency]
+              properties:
+                fundraiser_id: { type: string }
+                project_id: { type: string }
+                amount: { type: number }
+                currency: { type: string, default: INR }
+                frequency: { type: string, enum: [daily, weekly, monthly, quarterly, yearly] }
+                donor_name: { type: string }
+                donor_email: { type: string }
+                donor_phone: { type: string }
+                is_anonymous: { type: boolean }
+                message: { type: string }
+      responses:
+        '201':
+          description: Subscription initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subscription_id: { type: string, format: uuid }
+                  gateway_subscription_id: { type: string }
+                  short_url: { type: string }
+                  key_id: { type: string }
+
+  /donations/subscriptions:
+    get:
+      tags:
+        - Donations
+      summary: List recurring subscriptions
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of subscriptions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id: { type: string, format: uuid }
+                            donor: { type: object }
+                            fundraiser: { type: object }
+                            project: { type: object }
+                            amount: { type: number }
+                            frequency: { type: string }
+                            status: { type: string }
+                            next_billing_at: { type: string, format: date-time }
+
   # ==================== BENEFICIARIES ====================
   /beneficiaries:
     get:
@@ -2828,6 +5364,112 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Beneficiary'
+
+  /beneficiaries/{id}/projects:
+    post:
+      tags:
+        - Beneficiaries
+      summary: Map beneficiary to a project
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MapBeneficiaryToProjectRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Beneficiary successfully mapped to project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  status: { type: string }
+
+  /beneficiaries/{id}/campaigns:
+    post:
+      tags:
+        - Beneficiaries
+      summary: Map beneficiary to a campaign
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MapBeneficiaryToCampaignRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Beneficiary successfully mapped to campaign
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  status: { type: string }
+
+  /beneficiaries/{id}/addresses:
+    post:
+      tags:
+        - Beneficiaries
+      summary: Add an address for beneficiary
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddBeneficiaryAddressRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Address successfully added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+
+  /beneficiaries/{id}/bank-accounts:
+    post:
+      tags:
+        - Beneficiaries
+      summary: Add a bank account for beneficiary
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddBeneficiaryBankAccountRequest'
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Bank account successfully added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
 
   # ==================== VOLUNTEERS ====================
   /volunteers:
@@ -2903,6 +5545,7 @@ paths:
                 hours_served: { type: number, format: decimal }
                 activity_date: { type: string, format: date }
                 branch_id: { type: string, format: uuid }
+                event_id: { type: string, format: uuid }
       security:
         - BearerAuth: []
       responses:
@@ -2928,68 +5571,40 @@ paths:
                   total_hours: { type: number }
                   activity_count: { type: integer }
 
-  # ==================== PROGRAMS ====================
-  /programs:
+  # ==================== PERSONAL VOLUNTEER PROFILE ====================
+  /volunteer/me:
     get:
       tags:
-        - Programs
-      summary: List programs
-      parameters:
-        - $ref: '#/components/parameters/TenantID'
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Limit'
-      responses:
-        '200':
-          description: List of programs
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/PaginatedResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/Program'
-
-    post:
-      tags:
-        - Programs
-      summary: Create program
-      parameters:
-        - $ref: '#/components/parameters/TenantID'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProgramCreateRequest'
+        - Volunteers
+      summary: Get my volunteer profile
       security:
         - BearerAuth: []
       responses:
-        '201':
-          description: Program created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Program'
+        '200':
+          description: Profile retrieved
 
-  /programs/{id}:
+  /volunteer/events:
     get:
       tags:
-        - Programs
-      summary: Get program details
-      parameters:
-        - $ref: '#/components/parameters/TenantID'
-        - $ref: '#/components/parameters/ResourceID'
+        - Volunteers
+      summary: Get my volunteer events
+      security:
+        - BearerAuth: []
       responses:
         '200':
-          description: Program details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Program'
+          description: Events retrieved
+
+  /volunteer/attendance:
+    get:
+      tags:
+        - Volunteers
+      summary: Get my volunteer attendance
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Attendance retrieved
+
 
   # ==================== EVENTS ====================
   /events:
@@ -3092,6 +5707,28 @@ paths:
       responses:
         '201':
           description: Registered successfully
+
+  /events/registrations/{registrationId}/attendance:
+    patch:
+      tags:
+        - Events
+      summary: Mark attendance for an event registration
+      description: Mark attendance and auto-log volunteer activity if applicable.
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Attendance marked successfully
+        '404':
+          description: Registration not found
 
   # ==================== ZAKAT ====================
   /zakat/calculate:
@@ -3846,6 +6483,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NgoServiceBooking'
+
+  /services/bookings/{id}/donation:
+    patch:
+      tags:
+        - NGO Services
+      summary: Update booking donation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Donation updated
+
   # ==================== UPLOAD ====================
   /upload/{module}:
     post:
@@ -3961,3 +6614,1867 @@ paths:
                 properties:
                   success: { type: boolean }
                   message: { type: string }
+
+  # ==================== NOTIFICATIONS ====================
+  /notifications:
+    get:
+      tags:
+        - Notifications
+      summary: List notifications
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [queued, processing, sent, failed, cancelled]
+        - name: recipient
+          in: query
+          description: Filter by recipient email or phone
+          schema:
+            type: string
+
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Notification'
+
+    post:
+      tags:
+        - Notifications
+      summary: Send a notification
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recipient, template_slug]
+              properties:
+                recipient: { type: string }
+                template_slug: { type: string }
+                vars: { type: object }
+                channel_id: { type: string, format: uuid }
+                priority: { type: integer, default: 0 }
+                scheduled_at: { type: string, format: date-time }
+
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Notification queued
+
+  /notifications/templates:
+    get:
+      tags:
+        - Notifications
+      summary: List notification templates
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationTemplate'
+
+    post:
+      tags:
+        - Notifications
+      summary: Create a notification template
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug, name, channel_type, content]
+              properties:
+                slug: { type: string }
+                name: { type: string }
+                channel_type: { type: string }
+                subject: { type: string }
+                content: { type: string }
+                language: { type: string, default: en }
+                is_active: { type: boolean, default: true }
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Template created successfully
+
+  /notifications/channels:
+    get:
+      tags:
+        - Notifications
+      summary: List notification channels
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of channels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationChannel'
+
+    post:
+      tags:
+        - Notifications
+      summary: Create a notification channel
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel_type, provider_name, config_name]
+              properties:
+                channel_type: { type: string, enum: [email, sms, whatsapp, push] }
+                provider_name: { type: string }
+                config_name: { type: string }
+                credentials: { type: object }
+                is_active: { type: boolean, default: true }
+                is_default: { type: boolean, default: false }
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Channel created successfully
+
+  /notifications/logs:
+    get:
+      tags:
+        - Notifications
+      summary: List notification logs
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: notification_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of logs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/NotificationLog'
+
+  # ==================== FINANCE ====================
+  /finance/account-types:
+    get:
+      tags: [Finance]
+      summary: Get basic accounting types
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Success }
+
+  /finance/coa:
+    get:
+      tags: [Finance]
+      summary: Get Chart of Accounts
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Success }
+    post:
+      tags: [Finance]
+      summary: Create custom GL Account
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '201': { description: Created }
+
+  /finance/ledgers:
+    get:
+      tags: [Finance]
+      summary: List Ledgers
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: ledger_type
+          in: query
+          schema: { type: string }
+        - name: control_ledger_type
+          in: query
+          schema: { type: string }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: List of Ledgers
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Ledger' }
+    post:
+      tags: [Finance]
+      summary: Create a Ledger
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, ledger_type]
+              properties:
+                coa_id: { type: string, format: uuid }
+                parent_ledger_id: { type: string, format: uuid }
+                name: { type: string }
+                account_code: { type: string }
+                description: { type: string }
+                ledger_type: { type: string, enum: [GL, Bank, Cash, Control Ledger, Sub-Ledger] }
+                control_ledger_type: { type: string, enum: [vendor, customer, normal, employee] }
+                contact_person: { type: string }
+                contact_phone: { type: string }
+                contact_email: { type: string }
+                tax_details:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      state_code: { type: string }
+                      gst_number: { type: string }
+                      pan_number: { type: string }
+                      tan_number: { type: string }
+                      msme_number: { type: string }
+                      is_primary: { type: boolean }
+                      address_line1: { type: string }
+                      address_line2: { type: string }
+                      city: { type: string }
+                      state: { type: string }
+                      postal_code: { type: string }
+                bank_accounts:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      bank_name: { type: string }
+                      account_number: { type: string }
+                      ifsc_code: { type: string }
+                      bank_branch: { type: string }
+                      account_type: { type: string }
+                      is_primary: { type: boolean }
+                licenses:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      license_type: { type: string }
+                      license_number: { type: string }
+                      expiry_date: { type: string, format: date }
+                      file_url: { type: string, format: uri }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ledger' }
+
+  /finance/ledgers/{id}:
+    get:
+      tags: [Finance]
+      summary: Get Ledger details
+      parameters:
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Ledger details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ledger' }
+        '404': { description: Not Found }
+    patch:
+      tags: [Finance]
+      summary: Update a Ledger
+      parameters:
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                is_active: { type: boolean }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ledger' }
+    delete:
+      tags: [Finance]
+      summary: Delete a Ledger
+      parameters:
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Deleted }
+
+  /finance/coa/bootstrap:
+    post:
+      tags: [Finance]
+      summary: Bootstrap standard accounts
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '201': { description: Created }
+
+  /finance/mappings/revenue-head:
+    get:
+      tags: [Finance]
+      summary: List Revenue Head Mappings
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Success }
+    post:
+      tags: [Finance]
+      summary: Map a Revenue Head
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '201': { description: Created }
+
+  /finance/journals:
+    get:
+      tags: [Finance]
+      summary: List Journal Entries
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Success }
+    post:
+      tags: [Finance]
+      summary: Create a Journal Entry
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entry_date, reference_type, lines]
+              properties:
+                entry_date: { type: string, format: date }
+                description: { type: string }
+                reference_type: { type: string }
+                reference_id: { type: string, format: uuid }
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    required: [account_id]
+                    properties:
+                      account_id: { type: string, format: uuid }
+                      debit_amount: { type: number, format: float }
+                      credit_amount: { type: number, format: float }
+                      party_type: { type: string }
+                      party_id: { type: string, format: uuid }
+      responses:
+        '201': { description: Created }
+
+  /finance/ledger/{accountId}:
+    get:
+      tags: [Finance]
+      summary: Get ledger for specific account
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Success }
+
+  # ==================== PROGRAMS ====================
+  /programs:
+    get:
+      tags: [Programs]
+      summary: List all programs
+      description: Get a paginated list of programs. Supports filtering by context (ngo/csr/hybrid), sector, and active status.
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/SortOrder'
+        - name: context
+          in: query
+          schema: { type: string, enum: [ngo, csr, hybrid] }
+        - name: sector
+          in: query
+          schema: { type: string }
+        - name: is_active
+          in: query
+          schema: { type: boolean }
+        - name: search
+          in: query
+          schema: { type: string }
+          description: Search by name or description
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Paginated list of programs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Program'
+    post:
+      tags: [Programs]
+      summary: Create a new program
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgramCreateRequest'
+      responses:
+        '201':
+          description: Program created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Program' }
+        '400': { description: Validation error }
+
+  /programs/{id}:
+    get:
+      tags: [Programs]
+      summary: Get program by ID
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Program details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Program' }
+        '404': { description: Program not found }
+    patch:
+      tags: [Programs]
+      summary: Update a program
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgramUpdateRequest'
+      responses:
+        '200':
+          description: Program updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Program' }
+    delete:
+      tags: [Programs]
+      summary: Soft-delete a program
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Program deleted }
+
+  /programs/{id}/projects:
+    get:
+      tags: [Programs]
+      summary: List all projects under a program
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Projects under this program
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedResponse' }
+
+  # ==================== PROJECTS ====================
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List all projects
+      description: Get a paginated list of projects. Supports filtering by program, context, status, CSR fiscal year, and more.
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/SortOrder'
+        - name: program_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: context
+          in: query
+          schema: { type: string, enum: [ngo, csr, hybrid] }
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, proposed, approved, in_progress, on_hold, completed, closed, cancelled] }
+        - name: csr_fiscal_year
+          in: query
+          schema: { type: string }
+          description: Filter by CSR fiscal year (e.g., 2025-26)
+        - name: branch_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: project_manager_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: search
+          in: query
+          schema: { type: string }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Paginated list of projects
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Project'
+    post:
+      tags: [Projects]
+      summary: Create a new project
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreateRequest'
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Project' }
+        '400': { description: Validation error }
+
+  /projects/{id}:
+    get:
+      tags: [Projects]
+      summary: Get project by ID
+      description: Returns full project details including financial summary, activity/campaign counts
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Project' }
+        '404': { description: Project not found }
+    patch:
+      tags: [Projects]
+      summary: Update a project
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdateRequest'
+      responses:
+        '200':
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Project' }
+    delete:
+      tags: [Projects]
+      summary: Soft-delete a project
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Project deleted }
+
+  /projects/{id}/hierarchy:
+    get:
+      tags: [Projects]
+      summary: Get full project hierarchy summary
+      description: Returns project with aggregated counts of campaigns, funds, activities, expenses, team members, milestones
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Project hierarchy summary }
+
+  # -- Project Team Members --
+  /projects/{id}/team:
+    get:
+      tags: [Projects]
+      summary: List project team members
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Team members list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProjectTeamMember' }
+    post:
+      tags: [Projects]
+      summary: Add a team member to project
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectTeamMemberRequest' }
+      responses:
+        '201':
+          description: Team member added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ProjectTeamMember' }
+
+  /projects/{projectId}/team/{memberId}:
+    patch:
+      tags: [Projects]
+      summary: Update a team member role/status
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: memberId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectTeamMemberRequest' }
+      responses:
+        '200': { description: Updated }
+    delete:
+      tags: [Projects]
+      summary: Remove a team member from project
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: memberId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Removed }
+
+  # -- Project Milestones --
+  /projects/{id}/milestones:
+    get:
+      tags: [Projects]
+      summary: List project milestones
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Milestones list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProjectMilestone' }
+    post:
+      tags: [Projects]
+      summary: Create a project milestone
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectMilestoneRequest' }
+      responses:
+        '201':
+          description: Milestone created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ProjectMilestone' }
+
+  /projects/{projectId}/milestones/{milestoneId}:
+    patch:
+      tags: [Projects]
+      summary: Update a milestone
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: milestoneId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectMilestoneRequest' }
+      responses:
+        '200': { description: Updated }
+    delete:
+      tags: [Projects]
+      summary: Delete a milestone
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: milestoneId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Deleted }
+
+  # -- Project Documents --
+  /projects/{id}/documents:
+    get:
+      tags: [Projects]
+      summary: List project documents
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+        - name: document_type
+          in: query
+          schema: { type: string }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Documents list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProjectDocument' }
+    post:
+      tags: [Projects]
+      summary: Upload a project document
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectDocumentRequest' }
+      responses:
+        '201':
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ProjectDocument' }
+
+  /projects/{projectId}/documents/{documentId}:
+    delete:
+      tags: [Projects]
+      summary: Delete a project document
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Deleted }
+
+  # -- Project Budget Heads --
+  /projects/{id}/budget-heads:
+    get:
+      tags: [ProjectFunds]
+      summary: List project budget heads
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Budget heads list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProjectBudgetHead' }
+    post:
+      tags: [ProjectFunds]
+      summary: Create a budget head
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectBudgetHeadRequest' }
+      responses:
+        '201':
+          description: Budget head created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ProjectBudgetHead' }
+
+  /projects/{projectId}/budget-heads/{headId}:
+    patch:
+      tags: [ProjectFunds]
+      summary: Update a budget head
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: headId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectBudgetHeadRequest' }
+      responses:
+        '200': { description: Updated }
+    delete:
+      tags: [ProjectFunds]
+      summary: Delete a budget head
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: headId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Deleted }
+
+  # ==================== CAMPAIGNS ====================
+  /campaigns:
+    get:
+      tags: [Campaigns]
+      summary: List all campaigns
+      description: Supports filtering by project, type, status, context, and donation eligibility flags
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/SortOrder'
+        - name: project_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: campaign_type
+          in: query
+          schema: { type: string, enum: [fundraising, crowdfunding, corporate_csr, grant, government_scheme, internal, matching_fund, endowment] }
+        - name: context
+          in: query
+          schema: { type: string, enum: [ngo, csr, hybrid] }
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, pending_approval, active, paused, target_reached, completed, cancelled] }
+        - name: is_featured
+          in: query
+          schema: { type: boolean }
+        - name: is_zakat_eligible
+          in: query
+          schema: { type: boolean }
+        - name: search
+          in: query
+          schema: { type: string }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Paginated list of campaigns
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Campaign'
+    post:
+      tags: [Campaigns]
+      summary: Create a new campaign
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignCreateRequest'
+      responses:
+        '201':
+          description: Campaign created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Campaign' }
+        '400': { description: Validation error }
+
+  /campaigns/{id}:
+    get:
+      tags: [Campaigns]
+      summary: Get campaign by ID
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Campaign details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Campaign' }
+        '404': { description: Not found }
+    patch:
+      tags: [Campaigns]
+      summary: Update a campaign
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignUpdateRequest'
+      responses:
+        '200':
+          description: Campaign updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Campaign' }
+    delete:
+      tags: [Campaigns]
+      summary: Soft-delete a campaign
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Campaign deleted }
+
+  # -- Campaign Contributions --
+  /campaigns/{id}/contributions:
+    get:
+      tags: [Campaigns]
+      summary: List contributions for a campaign
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, completed, failed, refunded] }
+        - name: contribution_type
+          in: query
+          schema: { type: string, enum: [monetary, in_kind, services] }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Contributions list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedResponse' }
+    post:
+      tags: [Campaigns]
+      summary: Record a contribution to campaign
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CampaignContributionRequest' }
+      responses:
+        '201':
+          description: Contribution recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/CampaignContribution' }
+
+  /campaigns/{campaignId}/contributions/{contributionId}:
+    get:
+      tags: [Campaigns]
+      summary: Get contribution details
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: contributionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Contribution details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/CampaignContribution' }
+
+  # ==================== PROJECT FUNDS ====================
+  /projects/{id}/funds:
+    get:
+      tags: [ProjectFunds]
+      summary: List all fund sources for a project
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: source_type
+          in: query
+          schema: { type: string, enum: [donation, csr_contribution, grant, government, corporate_sponsorship, internal_transfer, interest_income, fundraiser_collection, endowment_yield, foreign_contribution, in_kind, other] }
+        - name: status
+          in: query
+          schema: { type: string, enum: [proposed, approved, partially_utilized, fully_utilized, returned, cancelled] }
+        - name: is_foreign_contribution
+          in: query
+          schema: { type: boolean }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Fund sources list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectFund'
+    post:
+      tags: [ProjectFunds]
+      summary: Add a fund source to project
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectFundCreateRequest' }
+      responses:
+        '201':
+          description: Fund source added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ProjectFund' }
+
+  /projects/{projectId}/funds/{fundId}:
+    get:
+      tags: [ProjectFunds]
+      summary: Get fund details
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: fundId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Fund details with installments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ProjectFund' }
+    patch:
+      tags: [ProjectFunds]
+      summary: Update a project fund
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: fundId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectFundUpdateRequest' }
+      responses:
+        '200': { description: Fund updated }
+    delete:
+      tags: [ProjectFunds]
+      summary: Delete a project fund
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: fundId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Deleted }
+
+  # -- Fund Installments --
+  /projects/{projectId}/funds/{fundId}/installments:
+    get:
+      tags: [ProjectFunds]
+      summary: List installments for a fund
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: fundId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Installments list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProjectFundInstallment' }
+    post:
+      tags: [ProjectFunds]
+      summary: Add a fund installment
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: fundId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectFundInstallmentRequest' }
+      responses:
+        '201':
+          description: Installment added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ProjectFundInstallment' }
+
+  /projects/{projectId}/funds/{fundId}/installments/{installmentId}:
+    patch:
+      tags: [ProjectFunds]
+      summary: Update an installment
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: fundId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: installmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectFundInstallmentRequest' }
+      responses:
+        '200': { description: Updated }
+
+  # ==================== ACTIVITIES ====================
+  /activities:
+    get:
+      tags: [Activities]
+      summary: List all activities
+      description: Get activities across all projects. Supports filtering by project, status, priority, assignment, and date range.
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/SortOrder'
+        - name: project_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema: { type: string, enum: [planned, in_progress, completed, on_hold, cancelled, deferred] }
+        - name: priority
+          in: query
+          schema: { type: string, enum: [critical, high, medium, low] }
+        - name: assigned_to_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: branch_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: activity_type
+          in: query
+          schema: { type: string }
+        - name: search
+          in: query
+          schema: { type: string }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Paginated list of activities
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Activity'
+    post:
+      tags: [Activities]
+      summary: Create a new activity
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityCreateRequest'
+      responses:
+        '201':
+          description: Activity created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Activity' }
+        '400': { description: Validation error }
+
+  /activities/{id}:
+    get:
+      tags: [Activities]
+      summary: Get activity by ID
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Activity details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Activity' }
+        '404': { description: Not found }
+    patch:
+      tags: [Activities]
+      summary: Update an activity
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityUpdateRequest'
+      responses:
+        '200':
+          description: Activity updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Activity' }
+    delete:
+      tags: [Activities]
+      summary: Delete an activity
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Activity deleted }
+
+  /projects/{id}/activities:
+    get:
+      tags: [Activities]
+      summary: List activities for a specific project
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema: { type: string, enum: [planned, in_progress, completed, on_hold, cancelled, deferred] }
+        - name: priority
+          in: query
+          schema: { type: string, enum: [critical, high, medium, low] }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Project activities
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedResponse' }
+
+  # ==================== ACTIVITY EXPENSES ====================
+  /expenses:
+    get:
+      tags: [ActivityExpenses]
+      summary: List all expenses
+      description: List expenses across all projects and activities. Supports filtering by project, activity, status, date range, and payment mode.
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/SortOrder'
+        - name: project_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: activity_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: budget_head_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, submitted, approved, rejected, paid, partially_paid, void] }
+        - name: payment_mode
+          in: query
+          schema: { type: string, enum: [bank_transfer, cheque, cash, upi, card, dd, adjustment, in_kind] }
+        - name: is_fcra_expense
+          in: query
+          schema: { type: boolean }
+        - name: from_date
+          in: query
+          schema: { type: string, format: date }
+          description: Filter expenses from this payment date
+        - name: to_date
+          in: query
+          schema: { type: string, format: date }
+          description: Filter expenses up to this payment date
+        - name: search
+          in: query
+          schema: { type: string }
+          description: Search by description, payee name, or expense code
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Paginated list of expenses
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ActivityExpense'
+    post:
+      tags: [ActivityExpenses]
+      summary: Create a new expense
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityExpenseCreateRequest'
+      responses:
+        '201':
+          description: Expense created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ActivityExpense' }
+        '400': { description: Validation error }
+
+  /expenses/{id}:
+    get:
+      tags: [ActivityExpenses]
+      summary: Get expense by ID
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Expense details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ActivityExpense' }
+        '404': { description: Not found }
+    patch:
+      tags: [ActivityExpenses]
+      summary: Update an expense
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityExpenseUpdateRequest'
+      responses:
+        '200':
+          description: Expense updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ActivityExpense' }
+    delete:
+      tags: [ActivityExpenses]
+      summary: Delete an expense
+      description: Only allowed for expense in draft status
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Expense deleted }
+
+  /expenses/{id}/approve:
+    post:
+      tags: [ActivityExpenses]
+      summary: Approve an expense
+      description: Move expense from submitted to approved status
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Expense approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ActivityExpense' }
+
+  /expenses/{id}/reject:
+    post:
+      tags: [ActivityExpenses]
+      summary: Reject an expense
+      description: Move expense from submitted to rejected status with reason
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 5 }
+      responses:
+        '200':
+          description: Expense rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ActivityExpense' }
+
+  /activities/{id}/expenses:
+    get:
+      tags: [ActivityExpenses]
+      summary: List expenses for a specific activity
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/ResourceID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, submitted, approved, rejected, paid, partially_paid, void] }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Activity expenses
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedResponse' }
+
+  # ==================== REPORTING ENDPOINTS ====================
+  /reports/project-financial-summary:
+    get:
+      tags: [Projects]
+      summary: Project financial summary report
+      description: Returns budget, spend, fund utilization, and activity completion stats per project
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: program_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: context
+          in: query
+          schema: { type: string, enum: [ngo, csr, hybrid] }
+        - name: status
+          in: query
+          schema: { type: string }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Project financial summaries }
+
+  /reports/campaign-performance:
+    get:
+      tags: [Campaigns]
+      summary: Campaign performance report
+      description: Returns goal vs raised, completion %, and donor counts per campaign
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: campaign_type
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Campaign performance data }
+
+  /reports/csr-compliance:
+    get:
+      tags: [Projects]
+      summary: CSR compliance report
+      description: Returns CSR project summary including Schedule VII items, prescribed amounts, spends, UC status, and SDG alignment
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: csr_fiscal_year
+          in: query
+          schema: { type: string }
+          description: Filter by CSR fiscal year (e.g., 2025-26)
+        - name: csr_company_id
+          in: query
+          schema: { type: string, format: uuid }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: CSR compliance data }
+
+  /reports/fund-utilization:
+    get:
+      tags: [ProjectFunds]
+      summary: Fund utilization report
+      description: Returns utilization percentage, balance, and UC status per fund source
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: project_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: source_type
+          in: query
+          schema: { type: string }
+        - name: is_foreign_contribution
+          in: query
+          schema: { type: boolean }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Fund utilization data }
+
+  /reports/expense-summary:
+    get:
+      tags: [ActivityExpenses]
+      summary: Expense summary report
+      description: Returns expense totals grouped by project, activity, budget head, with paid/pending/tax breakdowns
+      parameters:
+        - $ref: '#/components/parameters/TenantID'
+        - name: project_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: from_date
+          in: query
+          schema: { type: string, format: date }
+        - name: to_date
+          in: query
+          schema: { type: string, format: date }
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Expense summary data }

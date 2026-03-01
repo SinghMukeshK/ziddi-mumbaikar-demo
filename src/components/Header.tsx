@@ -69,6 +69,9 @@ export default function Header() {
                         <Link href="/fundraisers" className="text-gray-700 hover:text-primary-500 font-medium transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0">
                             Fundraisers
                         </Link>
+                        <Link href="/#events" className="text-gray-700 hover:text-primary-500 font-medium transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0">
+                            Events
+                        </Link>
                         <Link href="/contact" className="text-gray-700 hover:text-primary-500 font-medium transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0">
                             Contact Us
                         </Link>
@@ -296,6 +299,13 @@ export default function Header() {
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
                                 Fundraisers
+                            </Link>
+                            <Link
+                                href="/#events"
+                                className="text-gray-700 hover:text-primary-500 font-medium py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Events
                             </Link>
                             <Link
                                 href="/contact"

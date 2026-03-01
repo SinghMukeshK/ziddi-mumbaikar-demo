@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { X, RotateCcw, RotateCw, ZoomIn, ZoomOut, FlipHorizontal, FlipVertical, Check, RefreshCw } from 'lucide-react'
+import { X, RotateCcw, RotateCw, ZoomIn, ZoomOut, FlipHorizontal, FlipVertical, Check, RefreshCw, RectangleHorizontal, RectangleVertical, Maximize } from 'lucide-react'
 
 interface ImageEditorProps {
     file: File
@@ -64,6 +64,7 @@ export default function ImageEditor({ file, onSave, onCancel, aspectRatio = 16 /
     const [zoom, setZoom] = useState(1)
     const [flipH, setFlipH] = useState(false)
     const [flipV, setFlipV] = useState(false)
+    const [aspect, setAspect] = useState<number | undefined>(aspectRatio)
     const [saving, setSaving] = useState(false)
 
     const naturalImgRef = useRef<HTMLImageElement>(null)  // hidden, loads original file
@@ -86,9 +87,13 @@ export default function ImageEditor({ file, onSave, onCancel, aspectRatio = 16 /
         setPreviewSrc(transformed.toDataURL('image/jpeg', 0.95))
 
         // Reset crop to center of the new preview dimensions
-        setCrop(centerAspectCrop(transformed.width, transformed.height, aspectRatio))
+        if (aspect) {
+            setCrop(centerAspectCrop(transformed.width, transformed.height, aspect))
+        } else {
+            setCrop(centerCrop({ unit: '%', width: 90, height: 90 }, transformed.width, transformed.height))
+        }
         setCompletedCrop(undefined)
-    }, [rotation, zoom, flipH, flipV, aspectRatio])
+    }, [rotation, zoom, flipH, flipV, aspect])
 
     // When the hidden natural image loads, trigger first preview render
     const onNaturalImageLoad = useCallback(() => {
@@ -104,8 +109,12 @@ export default function ImageEditor({ file, onSave, onCancel, aspectRatio = 16 /
 
     const onPreviewImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
         const { naturalWidth: w, naturalHeight: h } = e.currentTarget
-        setCrop(centerAspectCrop(w, h, aspectRatio))
-    }, [aspectRatio])
+        if (aspect) {
+            setCrop(centerAspectCrop(w, h, aspect))
+        } else {
+            setCrop(centerCrop({ unit: '%', width: 90, height: 90 }, w, h))
+        }
+    }, [aspect])
 
     const handleRotate = (dir: 'cw' | 'ccw') => {
         setRotation(r => (r + (dir === 'cw' ? 90 : -90) + 360) % 360)
@@ -116,6 +125,19 @@ export default function ImageEditor({ file, onSave, onCancel, aspectRatio = 16 /
         setZoom(1)
         setFlipH(false)
         setFlipV(false)
+        setAspect(aspectRatio)
+    }
+
+    const handleAspectChange = (newAspect: number | undefined) => {
+        setAspect(newAspect)
+        if (previewImgRef.current) {
+            const { naturalWidth: w, naturalHeight: h } = previewImgRef.current
+            if (newAspect) {
+                setCrop(centerAspectCrop(w, h, newAspect))
+            } else {
+                setCrop(centerCrop({ unit: '%', width: 90, height: 90 }, w, h))
+            }
+        }
     }
 
     const handleSave = async () => {
@@ -163,8 +185,8 @@ export default function ImageEditor({ file, onSave, onCancel, aspectRatio = 16 /
             onClick={onClick}
             title={label}
             className={`flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${active
-                    ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
         >
             {icon}
@@ -211,7 +233,7 @@ export default function ImageEditor({ file, onSave, onCancel, aspectRatio = 16 /
                             crop={crop}
                             onChange={(_, percentCrop) => setCrop(percentCrop)}
                             onComplete={(c) => setCompletedCrop(c)}
-                            aspect={aspectRatio}
+                            aspect={aspect}
                             minWidth={50}
                             minHeight={50}
                         >
@@ -274,6 +296,18 @@ export default function ImageEditor({ file, onSave, onCancel, aspectRatio = 16 /
                             onChange={(e) => setRotation(parseInt(e.target.value))}
                             className="w-full h-2 rounded-full accent-primary-500 cursor-pointer"
                         />
+                    </div>
+
+                    {/* Aspect Ratio */}
+                    <div className="mb-5">
+                        <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Aspect Ratio</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {controlBtn(() => handleAspectChange(16 / 9), <RectangleHorizontal className="w-4 h-4" />, '16:9', aspect === 16 / 9)}
+                            {controlBtn(() => handleAspectChange(9 / 16), <RectangleVertical className="w-4 h-4" />, '9:16', aspect === 9 / 16)}
+                            {controlBtn(() => handleAspectChange(undefined), <Maximize className="w-4 h-4" />, 'Free', aspect === undefined)}
+                        </div>
                     </div>
 
                     {/* Action Buttons */}

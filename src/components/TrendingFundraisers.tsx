@@ -17,7 +17,7 @@ export default function TrendingFundraisers() {
     useEffect(() => {
         const fetchFundraisers = async () => {
             try {
-                const response = await fundraiserService.getFundraisers({ limit: 6, status: 'verified', sort: 'trending' })
+                const response = await fundraiserService.getFundraisers({ limit: 6, status: 'active', sort: 'trending' })
                 if (response.success) {
                     setFundraisers(response.data)
                 }

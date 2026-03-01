@@ -45,7 +45,7 @@ export default function AdminApprovalsPage() {
         }
     }, [isLoggedIn, user, router])
 
-    const handleVerify = async (id: string, status: 'verified' | 'rejected') => {
+    const handleVerify = async (id: string, status: 'active' | 'rejected') => {
         try {
             setProcessingId(id)
             const response = await fundraiserService.verifyFundraiser(id, status)
@@ -149,7 +149,7 @@ export default function AdminApprovalsPage() {
                                                         Reject
                                                     </button>
                                                     <button
-                                                        onClick={() => handleVerify(fundraiser.id, 'verified')}
+                                                        onClick={() => handleVerify(fundraiser.id, 'active')}
                                                         disabled={processingId !== null}
                                                         className="px-8 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
                                                     >
