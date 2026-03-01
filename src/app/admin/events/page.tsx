@@ -155,164 +155,166 @@ function EventModal({
     if (!isOpen) return null
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-900/60 backdrop-blur-sm overflow-y-auto">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl my-auto">
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <h2 className="text-xl font-black text-navy-900">{event ? 'Edit Event' : 'Create New Event'}</h2>
-                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-full transition-colors">
-                        <X className="w-6 h-6" />
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                    {/* Title */}
-                    <div>
-                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Event Title</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            placeholder="e.g. Annual Charity Drive 2024"
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium"
-                        />
+        <>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-900/60 backdrop-blur-sm overflow-y-auto">
+                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl my-auto">
+                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <h2 className="text-xl font-black text-navy-900">{event ? 'Edit Event' : 'Create New Event'}</h2>
+                        <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-full transition-colors">
+                            <X className="w-6 h-6" />
+                        </button>
                     </div>
 
-                    {/* Description */}
-                    <div>
-                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Description</label>
-                        <textarea
-                            rows={3}
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            placeholder="Tell us about the event..."
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium resize-none"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Dates */}
+                    <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                        {/* Title */}
                         <div>
-                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Start Date & Time</label>
-                            <input
-                                type="datetime-local"
-                                required
-                                value={formData.start_datetime}
-                                onChange={(e) => setFormData({ ...formData, start_datetime: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">End Date & Time</label>
-                            <input
-                                type="datetime-local"
-                                value={formData.end_datetime}
-                                onChange={(e) => setFormData({ ...formData, end_datetime: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium"
-                            />
-                        </div>
-
-                        {/* Location */}
-                        <div>
-                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Location</label>
+                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Event Title</label>
                             <input
                                 type="text"
-                                value={formData.location}
-                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                placeholder="e.g. Oshiwara, Mumbai"
+                                required
+                                value={formData.title}
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                placeholder="e.g. Annual Charity Drive 2024"
                                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium"
                             />
                         </div>
 
-                        {/* Type & Status */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Event Type</label>
-                                <select
-                                    value={formData.event_type}
-                                    onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium bg-white"
-                                >
-                                    {EVENT_TYPE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Status</label>
-                                <select
-                                    value={formData.status}
-                                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium bg-white"
-                                >
-                                    {STATUS_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                                </select>
-                            </div>
+                        {/* Description */}
+                        <div>
+                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Description</label>
+                            <textarea
+                                rows={3}
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                placeholder="Tell us about the event..."
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium resize-none"
+                            />
                         </div>
-                    </div>
 
-                    {/* Image Upload */}
-                    <div>
-                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Cover Image</label>
-                        <div className="flex items-start gap-4">
-                            <div className="relative group w-32 h-20 bg-gray-100 rounded-xl overflow-hidden border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer">
-                                {imagePreview ? (
-                                    <Image src={imagePreview} alt="Preview" fill className="object-cover" />
-                                ) : (
-                                    <ImageIcon className="w-6 h-6 text-gray-400" />
-                                )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Dates */}
+                            <div>
+                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Start Date & Time</label>
                                 <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    type="datetime-local"
+                                    required
+                                    value={formData.start_datetime}
+                                    onChange={(e) => setFormData({ ...formData, start_datetime: e.target.value })}
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium"
                                 />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <Edit className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">End Date & Time</label>
+                                <input
+                                    type="datetime-local"
+                                    value={formData.end_datetime}
+                                    onChange={(e) => setFormData({ ...formData, end_datetime: e.target.value })}
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium"
+                                />
+                            </div>
+
+                            {/* Location */}
+                            <div>
+                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Location</label>
+                                <input
+                                    type="text"
+                                    value={formData.location}
+                                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                    placeholder="e.g. Oshiwara, Mumbai"
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium"
+                                />
+                            </div>
+
+                            {/* Type & Status */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Event Type</label>
+                                    <select
+                                        value={formData.event_type}
+                                        onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium bg-white"
+                                    >
+                                        {EVENT_TYPE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Status</label>
+                                    <select
+                                        value={formData.status}
+                                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-primary-500 font-medium bg-white"
+                                    >
+                                        {STATUS_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                    </select>
                                 </div>
                             </div>
-                            <div className="flex-1">
-                                <p className="text-xs text-gray-500 leading-relaxed italic">
-                                    Choose a high-quality cover photo. 16:9 ratio recommended. (Limit 5MB)
-                                </p>
-                                {imageFile && <p className="text-[10px] font-bold text-primary-600 mt-1 uppercase tracking-widest">New Image Selected: {imageFile.name}</p>}
+                        </div>
+
+                        {/* Image Upload */}
+                        <div>
+                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Cover Image</label>
+                            <div className="flex items-start gap-4">
+                                <div className="relative group w-32 h-20 bg-gray-100 rounded-xl overflow-hidden border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer">
+                                    {imagePreview ? (
+                                        <Image src={imagePreview} alt="Preview" fill className="object-cover" />
+                                    ) : (
+                                        <ImageIcon className="w-6 h-6 text-gray-400" />
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                        <Edit className="w-5 h-5 text-white" />
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs text-gray-500 leading-relaxed italic">
+                                        Choose a high-quality cover photo. 16:9 ratio recommended. (Limit 5MB)
+                                    </p>
+                                    {imageFile && <p className="text-[10px] font-bold text-primary-600 mt-1 uppercase tracking-widest">New Image Selected: {imageFile.name}</p>}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Actions */}
-                    <div className="pt-4 flex gap-3">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 py-3.5 px-4 border border-gray-200 text-gray-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 transition-all"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="flex-[2] py-3.5 px-4 bg-primary-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 disabled:opacity-70"
-                        >
-                            {isSubmitting ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Save className="w-4 h-4" />
-                            )}
-                            {event ? 'Update Event' : 'Create Event'}
-                        </button>
-                    </div>
-                </form>
-
-                {/* Image Editor Modal */}
-                {fileToEdit && (
-                    <ImageEditor
-                        file={fileToEdit}
-                        onSave={handleImageEditComplete}
-                        onCancel={() => setFileToEdit(null)}
-                        aspectRatio={16 / 9}
-                    />
-                )}
+                        {/* Actions */}
+                        <div className="pt-4 flex gap-3">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="flex-1 py-3.5 px-4 border border-gray-200 text-gray-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="flex-[2] py-3.5 px-4 bg-primary-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 disabled:opacity-70"
+                            >
+                                {isSubmitting ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Save className="w-4 h-4" />
+                                )}
+                                {event ? 'Update Event' : 'Create Event'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
+
+            {/* Image Editor Modal - Rendered outside the modal to prevent stacking context clipping */}
+            {fileToEdit && (
+                <ImageEditor
+                    file={fileToEdit}
+                    onSave={handleImageEditComplete}
+                    onCancel={() => setFileToEdit(null)}
+                    aspectRatio={16 / 9}
+                />
+            )}
+        </>
     )
 }
 

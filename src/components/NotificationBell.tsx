@@ -3,26 +3,54 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { notificationService, Notification } from '@/services/notification.service'
+import { approvalService, ApprovalRequest } from '@/services/approval.service'
 import { useAuth } from '@/contexts/AuthContext'
+import { Bell, Inbox, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
 export default function NotificationBell() {
-    const { isLoggedIn } = useAuth()
-    const [notifications, setNotifications] = useState<Notification[]>([])
+    const { isLoggedIn, user } = useAuth()
+    const [notifications, setNotifications] = useState<any[]>([])
     const [unreadCount, setUnreadCount] = useState(0)
     const [isOpen, setIsOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const bellRef = useRef<HTMLDivElement>(null)
+    const isAdmin = user?.role === 'admin' || user?.role === 'super_admin'
 
     const fetchNotifications = async () => {
         if (!isLoggedIn) return
         try {
-            const [notifsResp, countResp] = await Promise.all([
-                notificationService.getMyNotifications({ limit: 5 }),
-                notificationService.getUnreadCount()
+            const [notifsResp, countResp, approvalsResp] = await Promise.all([
+                notificationService.getMyNotifications({ limit: 10 }),
+                notificationService.getUnreadCount(),
+                isAdmin ? approvalService.getPendingApprovals({ limit: 5 }) : Promise.resolve({ data: [] })
             ])
-            if (notifsResp.success) setNotifications(notifsResp.data)
-            if (countResp.success) setUnreadCount(countResp.data.unread_count)
+
+            const apiNotifications = notifsResp.data || []
+            const pendingApprovals = (approvalsResp as any).data || []
+
+            // Map approvals to a notification-like structure for display
+            const approvalNotifs = pendingApprovals.map((app: ApprovalRequest) => ({
+                id: `approval-${app.id}`,
+                is_read: false,
+                created_at: app.created_at,
+                is_approval: true,
+                link: '/admin/approvals',
+                template: {
+                    subject: `Pending Approval: ${app.title}`,
+                    content: `${app.summary} requested by ${app.requester?.first_name || 'User'}`
+                }
+            }))
+
+            // Sort merged list by date
+            const merged = [...approvalNotifs, ...apiNotifications].sort((a, b) =>
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            )
+
+            setNotifications(merged.slice(0, 8))
+
+            const totalUnread = (countResp.data?.unread_count || 0) + pendingApprovals.length
+            setUnreadCount(totalUnread)
         } catch (error) {
             console.error('Error fetching notifications:', error)
         }
@@ -77,9 +105,7 @@ export default function NotificationBell() {
                 className={`p-2 rounded-full transition-all relative ${isOpen ? 'bg-primary-50 text-primary-500' : 'text-gray-600 hover:bg-gray-100'
                     }`}
             >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
+                <Bell className="w-6 h-6" />
                 {unreadCount > 0 && (
                     <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
                         {unreadCount > 9 ? '9+' : unreadCount}
@@ -120,27 +146,38 @@ export default function NotificationBell() {
                             ) : (
                                 <div className="divide-y divide-gray-50">
                                     {notifications.map((n) => (
-                                        <div
+                                        <Link
                                             key={n.id}
-                                            onClick={() => !n.is_read && handleMarkAsRead(n.id)}
-                                            className={`p-4 hover:bg-slate-50 transition-colors cursor-pointer group ${!n.is_read ? 'bg-primary-50/30' : ''}`}
+                                            href={n.link || '/notifications'}
+                                            onClick={() => {
+                                                if (!n.is_read && !n.is_approval) handleMarkAsRead(n.id)
+                                                setIsOpen(false)
+                                            }}
+                                            className={`block p-4 hover:bg-slate-50 transition-colors cursor-pointer group ${!n.is_read ? 'bg-primary-50/30' : ''}`}
                                         >
                                             <div className="flex gap-3">
-                                                <div className={`mt-1 shrink-0 w-2 h-2 rounded-full ${!n.is_read ? 'bg-primary-500' : 'bg-transparent'}`} />
+                                                <div className={`mt-1 shrink-0 w-2 h-2 rounded-full ${!n.is_read ? (n.is_approval ? 'bg-orange-500' : 'bg-primary-500') : 'bg-transparent'}`} />
                                                 <div className="flex-1">
-                                                    <p className={`text-sm leading-snug ${!n.is_read ? 'text-navy-900 font-bold' : 'text-gray-600 font-medium'}`}>
-                                                        {n.template?.subject || 'Notification'}
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <p className={`text-xs leading-snug mb-1 ${!n.is_read ? 'text-navy-900 font-bold' : 'text-gray-600 font-medium'}`}>
+                                                            {n.template?.subject || 'Notification'}
+                                                        </p>
+                                                        {n.is_approval && (
+                                                            <span className="shrink-0 bg-orange-100 text-orange-600 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter">Approval</span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[10px] text-gray-400 line-clamp-2 leading-relaxed">
+                                                        {n.template?.content?.replace(/<[^>]*>/g, '') || 'New update available'}
                                                     </p>
-                                                    <p className="text-[11px] text-gray-400 mt-1 line-clamp-2">
-                                                        {/* Simple HTML strip if content is HTML, or just show it */}
-                                                        {n.template?.content?.replace(/<[^>]*>/g, '') || 'You have a new alert'}
-                                                    </p>
-                                                    <p className="text-[9px] font-black text-slate-300 uppercase mt-2">
-                                                        {new Date(n.created_at).toLocaleDateString()} at {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </p>
+                                                    <div className="flex items-center gap-1.5 mt-2 opacity-60">
+                                                        <Clock className="w-3 h-3 text-slate-300" />
+                                                        <p className="text-[9px] font-black text-slate-300 uppercase">
+                                                            {new Date(n.created_at).toLocaleDateString()} at {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </Link>
                                     ))}
                                 </div>
                             )}

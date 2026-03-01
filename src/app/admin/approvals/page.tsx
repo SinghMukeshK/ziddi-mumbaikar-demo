@@ -67,6 +67,7 @@ export default function AdminApprovalsPage() {
             case 'volunteer': return 'bg-purple-100 text-purple-800 border-purple-200'
             case 'campaign': return 'bg-blue-100 text-blue-800 border-blue-200'
             case 'event': return 'bg-orange-100 text-orange-800 border-orange-200'
+            case 'service_book': return 'bg-emerald-100 text-emerald-800 border-emerald-200'
             default: return 'bg-gray-100 text-gray-800 border-gray-200'
         }
     }
@@ -78,10 +79,10 @@ export default function AdminApprovalsPage() {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
                         <div>
                             <h1 className="text-3xl font-bold text-navy-900 mb-2">Pending Workflow Approvals</h1>
-                            <p className="text-gray-600">Review and approve new requests for Volunteers, Campaigns, and Events.</p>
+                            <p className="text-gray-600">Review and approve new requests for Volunteers, Campaigns, Events, and Service Books.</p>
                         </div>
                         <div className="flex gap-2">
-                            {['all', 'volunteer', 'campaign', 'event'].map(type => (
+                            {['all', 'volunteer', 'campaign', 'event', 'service_book'].map(type => (
                                 <button
                                     key={type}
                                     onClick={() => setFilter(type)}
@@ -90,7 +91,7 @@ export default function AdminApprovalsPage() {
                                         : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                                         }`}
                                 >
-                                    {type}
+                                    {type.replace('_', ' ')}
                                 </button>
                             ))}
                         </div>
@@ -121,7 +122,7 @@ export default function AdminApprovalsPage() {
                                             <div>
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${getEntityColor(approval.entity_type)}`}>
-                                                        {approval.entity_type}
+                                                        {approval.entity_type.replace('_', ' ')}
                                                     </span>
                                                     <span className="text-sm text-gray-500">
                                                         Requested: {new Date(approval.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
