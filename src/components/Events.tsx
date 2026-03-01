@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -23,9 +23,10 @@ const formatDate = (start: string, end?: string) => {
 }
 
 export default function Events() {
-    const [activeTab, setActiveTab] = useState<'ongoing' | 'upcoming'>('ongoing')
+    const [activeTab, setActiveTab] = useState<string>('ongoing')
     const [events, setEvents] = useState<EventType[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const scrollContainerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         const fetchEvents = async () => {
@@ -58,7 +59,73 @@ export default function Events() {
         return start > now && !(start.toDateString() === now.toDateString())
     })
 
-    const displayedEvents = activeTab === 'ongoing' ? ongoingEvents : upcomingEvents
+    const completedEvents = events.filter((ev) => {
+        const start = new Date(ev.start_datetime)
+        const end = ev.end_datetime ? new Date(ev.end_datetime) : start
+        return end < now && !(start.toDateString() === now.toDateString()) && !(start <= now && end >= now)
+    })
+
+    const availableTabs = [
+        ...(ongoingEvents.length > 0 ? ['ongoing'] : []),
+        ...(upcomingEvents.length > 0 ? ['upcoming'] : []),
+        ...(completedEvents.length > 0 ? ['completed'] : [])
+    ]
+
+    useEffect(() => {
+        if (!isLoading && availableTabs.length > 0 && !availableTabs.includes(activeTab)) {
+            setActiveTab(availableTabs[0])
+        }
+    }, [isLoading, availableTabs.join(','), activeTab])
+
+    const displayedEvents = activeTab === 'ongoing' ? ongoingEvents : activeTab === 'upcoming' ? upcomingEvents : completedEvents
+
+    if (!isLoading && availableTabs.length === 0) {
+        return null;
+    }
+
+    const tabsToDisplay = isLoading ? ['ongoing', 'upcoming'] : availableTabs
+
+    // Auto-scroll logic
+    useEffect(() => {
+        const container = scrollContainerRef.current;
+        if (!container || displayedEvents.length <= 1) return;
+
+        let scrollInterval: NodeJS.Timeout;
+
+        const startScrolling = () => {
+            scrollInterval = setInterval(() => {
+                const maxScrollLeft = container.scrollWidth - container.clientWidth;
+                // If near the end, wrap back to start
+                if (container.scrollLeft >= maxScrollLeft - 10) {
+                    container.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    // Approximate card width + gap (approx 344px for sm screen, or 80vw for mobile)
+                    const isMobile = window.innerWidth < 640;
+                    const cardWidth = isMobile ? window.innerWidth * 0.8 + 24 : 344;
+                    container.scrollTo({ left: container.scrollLeft + cardWidth, behavior: 'smooth' });
+                }
+            }, 3500); // 3.5 seconds
+        };
+
+        startScrolling();
+
+        // Pause on interaction
+        const pause = () => clearInterval(scrollInterval);
+        const resume = () => { clearInterval(scrollInterval); startScrolling(); };
+
+        container.addEventListener('mouseenter', pause);
+        container.addEventListener('mouseleave', resume);
+        container.addEventListener('touchstart', pause, { passive: true });
+        container.addEventListener('touchend', resume, { passive: true });
+
+        return () => {
+            clearInterval(scrollInterval);
+            container.removeEventListener('mouseenter', pause);
+            container.removeEventListener('mouseleave', resume);
+            container.removeEventListener('touchstart', pause);
+            container.removeEventListener('touchend', resume);
+        };
+    }, [displayedEvents]);
 
     return (
         <section id="events" className="py-20 bg-gray-50 relative overflow-hidden">
@@ -97,27 +164,29 @@ export default function Events() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex justify-center mb-12">
-                    <div className="bg-white p-1.5 rounded-2xl shadow-sm inline-flex border border-gray-100 relative">
-                        {['ongoing', 'upcoming'].map((tab) => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab as 'ongoing' | 'upcoming')}
-                                className={`relative px-8 py-3 rounded-xl font-bold text-sm sm:text-base capitalize transition-colors duration-300 ${activeTab === tab ? 'text-white' : 'text-gray-500 hover:text-navy-900'
-                                    }`}
-                            >
-                                {activeTab === tab && (
-                                    <motion.div
-                                        layoutId="activeTabBadge"
-                                        className="absolute inset-0 bg-primary-500 rounded-xl"
-                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                    />
-                                )}
-                                <span className="relative z-10">{tab} Events</span>
-                            </button>
-                        ))}
+                {tabsToDisplay.length > 1 && (
+                    <div className="flex justify-center mb-12">
+                        <div className="bg-white p-1.5 rounded-2xl shadow-sm inline-flex border border-gray-100 relative">
+                            {tabsToDisplay.map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`relative px-8 py-3 rounded-xl font-bold text-sm sm:text-base capitalize transition-colors duration-300 ${activeTab === tab ? 'text-white' : 'text-gray-500 hover:text-navy-900'
+                                        }`}
+                                >
+                                    {activeTab === tab && (
+                                        <motion.div
+                                            layoutId="activeTabBadge"
+                                            className="absolute inset-0 bg-primary-500 rounded-xl"
+                                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                        />
+                                    )}
+                                    <span className="relative z-10">{tab} Events</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Event Cards or Loading */}
                 {isLoading ? (
@@ -134,8 +203,9 @@ export default function Events() {
                     </div>
                 ) : (
                     <motion.div
+                        ref={scrollContainerRef}
                         layout
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                        className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory pt-4 -mx-4 px-4 sm:mx-0 sm:px-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] scroll-smooth"
                     >
                         <AnimatePresence mode="popLayout">
                             {displayedEvents.map((event, index) => (
@@ -145,9 +215,9 @@ export default function Events() {
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
                                     transition={{ duration: 0.3, delay: index * 0.1 }}
-                                    className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 group flex flex-col"
+                                    className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 group flex flex-col flex-shrink-0 w-[80vw] sm:w-[320px] snap-center sm:snap-start"
                                 >
-                                    <div className="relative h-56 w-full overflow-hidden bg-gray-100">
+                                    <div className="relative h-48 w-full overflow-hidden bg-gray-100">
                                         <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300 z-10" />
                                         {event.cover_image_url && (
                                             <Image
@@ -167,9 +237,13 @@ export default function Events() {
                                                 <span className="bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1.5 animate-pulse">
                                                     <span className="w-1.5 h-1.5 bg-white rounded-full" /> Live
                                                 </span>
-                                            ) : (
+                                            ) : activeTab === 'upcoming' ? (
                                                 <span className="bg-primary-50 text-primary-600 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
                                                     Upcoming
+                                                </span>
+                                            ) : (
+                                                <span className="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm border border-gray-200">
+                                                    Completed
                                                 </span>
                                             )}
                                         </div>

@@ -23,6 +23,10 @@ export interface VolunteerCreateRequest {
     preferred_branch_id?: string;
     id_proof_url?: string;
     photo_url?: string;
+    role_interest?: string;
+    state?: string;
+    zip_code?: string;
+    background_check_consent?: boolean;
 }
 
 export interface Volunteer {
@@ -43,6 +47,10 @@ export interface Volunteer {
     id_proof_url?: string;
     status: 'applied' | 'approved' | 'active' | 'inactive' | 'rejected';
     created_at: string;
+    role_interest?: string;
+    state?: string;
+    zip_code?: string;
+    background_check_consent?: boolean;
 }
 
 class VolunteerService {

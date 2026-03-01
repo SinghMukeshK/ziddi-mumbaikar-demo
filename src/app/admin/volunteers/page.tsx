@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Footer from '@/components/Footer'
 import { volunteerService, Volunteer } from '@/services/volunteer.service'
+import { User, Check, X, Eye, X as CloseIcon } from 'lucide-react'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const NGO_REG = 'Maharashtra State, Mumbai 2018 / GBBSD / 1566 / 2018'
@@ -340,6 +341,176 @@ function VolunteerIDCardPair({ v, index, selected, onToggle, onPrintSingle }: {
     )
 }
 
+// ─── Volunteer Details Modal ──────────────────────────────────────────────────
+function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }: {
+    volunteer: Volunteer,
+    onClose: () => void,
+    onUpdateStatus: (id: string, status: string) => void,
+    loadingId: string | null
+}) {
+    const isUpdating = loadingId === volunteer.id;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-900/60 backdrop-blur-sm print:hidden">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-600">
+                            <User className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-black text-navy-900">Volunteer Details</h2>
+                            <p className="text-xs text-gray-500 font-medium">Application from {new Date(volunteer.created_at || '').toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+                        <CloseIcon className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                    <div className="space-y-6">
+                        {/* Personal Info */}
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Personal Information</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Full Name</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.first_name} {volunteer.last_name}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Email</p>
+                                    <p className="text-sm font-semibold text-gray-900 break-all">{volunteer.email}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Phone</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.phone}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">DOB & Gender</p>
+                                    <p className="text-sm font-semibold text-gray-900">{formatDOB(volunteer.date_of_birth)} · {volunteer.gender || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Location & Occupation */}
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Background</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="bg-gray-50 p-3 rounded-xl sm:col-span-2">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Address</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.address}, {volunteer.city}, {volunteer.state} {volunteer.zip_code}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Occupation</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.occupation || 'Not specified'}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Availability</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.availability || 'Not specified'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Skills & Motivation */}
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Interests & Motivation</h3>
+                            <div className="space-y-4">
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-2">Skills</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {volunteer.skills?.length ? (
+                                            volunteer.skills.map(s => (
+                                                <span key={s} className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 rounded-md text-[11px] font-bold shadow-sm">{s}</span>
+                                            ))
+                                        ) : (
+                                            <span className="text-sm text-gray-500">No specific skills listed</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Role Interest</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.role_interest || 'General Volunteer'}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Motivation / Why join us?</p>
+                                    <p className="text-sm font-medium text-gray-700 whitespace-pre-wrap">{volunteer.motivation || 'No motivation statement provided.'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Legal */}
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Declarations</h3>
+                            <div className="bg-gray-50 p-3 rounded-xl flex items-start gap-3">
+                                <div className={`mt-0.5 p-1 rounded-full ${volunteer.background_check_consent ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                    {volunteer.background_check_consent ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900">Background Check Consent</p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {volunteer.background_check_consent
+                                            ? "The applicant has consented to a background check."
+                                            : "The applicant did NOT consent to a background check."}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="p-4 border-t border-gray-100 bg-gray-50 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Current Status:</span>
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${STATUS_CONFIG[volunteer.status]?.bg || 'bg-gray-100'} ${STATUS_CONFIG[volunteer.status]?.text || 'text-gray-700'}`}>
+                            {STATUS_CONFIG[volunteer.status]?.label || volunteer.status}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 sm:flex-none px-4 py-2 border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-100 transition-colors"
+                        >
+                            Close
+                        </button>
+                        {volunteer.status === 'applied' && (
+                            <>
+                                <button
+                                    onClick={() => { onUpdateStatus(volunteer.id, 'rejected'); onClose(); }}
+                                    disabled={isUpdating}
+                                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
+                                >
+                                    <X className="w-4 h-4" /> Reject
+                                </button>
+                                <button
+                                    onClick={() => { onUpdateStatus(volunteer.id, 'approved'); onClose(); }}
+                                    disabled={isUpdating}
+                                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-6 py-2 bg-primary-500 text-white hover:bg-primary-600 rounded-xl text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
+                                >
+                                    <Check className="w-4 h-4" /> Approve
+                                </button>
+                            </>
+                        )}
+                        {(volunteer.status === 'approved' || volunteer.status === 'inactive') && (
+                            <button
+                                onClick={() => { onUpdateStatus(volunteer.id, 'active'); onClose(); }}
+                                disabled={isUpdating}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-6 py-2 bg-green-500 text-white hover:bg-green-600 rounded-xl text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
+                            >
+                                <Check className="w-4 h-4" /> Mark Active
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 function VolunteersPageContent() {
     const { user, isLoggedIn } = useAuth()
@@ -353,6 +524,7 @@ function VolunteersPageContent() {
     const [printMode, setPrintMode] = useState(false)
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [updatingId, setUpdatingId] = useState<string | null>(null)
+    const [viewingVolunteer, setViewingVolunteer] = useState<Volunteer | null>(null)
     // printSingleId: when set, only this volunteer's card is printed
     const [printSingleId, setPrintSingleId] = useState<string | null>(null)
 
@@ -618,6 +790,7 @@ function VolunteersPageContent() {
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hidden lg:table-cell">Skills</th>
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500">Status</th>
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hidden sm:table-cell">Joined</th>
+                                            <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500">Actions</th>
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500">ID Card</th>
                                         </tr>
                                     </thead>
@@ -677,6 +850,14 @@ function VolunteersPageContent() {
                                                             ? new Date(v.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
                                                             : '—'}
                                                     </td>
+                                                    <td className="px-5 py-4">
+                                                        <button
+                                                            onClick={() => setViewingVolunteer(v)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-navy-600 bg-navy-50 hover:bg-navy-100 rounded-lg transition-colors"
+                                                        >
+                                                            <Eye className="w-3.5 h-3.5" /> View
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             )
                                         })}
@@ -686,6 +867,15 @@ function VolunteersPageContent() {
                         </div>
                     )}
                 </div>
+
+                {viewingVolunteer && (
+                    <VolunteerDetailsModal
+                        volunteer={viewingVolunteer}
+                        onClose={() => setViewingVolunteer(null)}
+                        onUpdateStatus={handleStatusChange}
+                        loadingId={updatingId}
+                    />
+                )}
 
                 <Footer />
             </div>

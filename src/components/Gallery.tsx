@@ -54,11 +54,12 @@ export default function Gallery() {
             try {
               const mediaRes = await galleryService.getAlbumMedia(album.id)
               const firstMedia = (mediaRes.data || [])[0]
+              const itemMedia = firstMedia?.media || (firstMedia as any)?.Media;
               displayItems.push({
                 id: album.id,
                 title: album.title,
                 category: album.description?.split('|')[0]?.trim() || 'General',
-                image: firstMedia?.media?.file_url || album.cover_image_url || FALLBACK_ITEMS[displayItems.length % FALLBACK_ITEMS.length].image,
+                image: itemMedia?.file_url || album.cover_image_url || FALLBACK_ITEMS[displayItems.length % FALLBACK_ITEMS.length].image,
                 description: album.description?.split('|')[1]?.trim() || album.description || '',
               })
             } catch {
