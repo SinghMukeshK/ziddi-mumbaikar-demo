@@ -73,9 +73,9 @@ export default function Header() {
                         <Link href="/#events" className="text-gray-700 hover:text-primary-500 font-medium transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0">
                             Events
                         </Link>
-                        <Link href="/contact" className="text-gray-700 hover:text-primary-500 font-medium transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0">
+                        {/* <Link href="/contact" className="text-gray-700 hover:text-primary-500 font-medium transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0">
                             Contact Us
-                        </Link>
+                        </Link> */}
                         <Link
                             href="/volunteer"
                             className="bg-primary-500 hover:bg-primary-600 text-white px-3 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0"
@@ -333,13 +333,13 @@ export default function Header() {
                             >
                                 Events
                             </Link>
-                            <Link
+                            {/* <Link
                                 href="/contact"
                                 className="text-gray-700 hover:text-primary-500 font-medium py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
                                 Contact Us
-                            </Link>
+                            </Link> */}
 
                             {/* Logged In User Links - Mobile */}
                             {isLoggedIn && (
