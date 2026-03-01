@@ -504,6 +504,15 @@ function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }
                                 <Check className="w-4 h-4" /> Mark Active
                             </button>
                         )}
+                        {volunteer.status === 'active' && (
+                            <button
+                                onClick={() => { onUpdateStatus(volunteer.id, 'inactive'); onClose(); }}
+                                disabled={isUpdating}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-6 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 rounded-xl text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
+                            >
+                                <X className="w-4 h-4" /> Mark Inactive
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -834,16 +843,9 @@ function VolunteersPageContent() {
                                                         </div>
                                                     </td>
                                                     <td className="px-5 py-4">
-                                                        <select
-                                                            value={v.status}
-                                                            disabled={updatingId === v.id}
-                                                            onChange={(e) => handleStatusChange(v.id, e.target.value)}
-                                                            className={`px-3 py-1.5 rounded-full text-[11px] font-bold border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:opacity-50 ${cfg.bg} ${cfg.text}`}
-                                                        >
-                                                            {Object.entries(STATUS_CONFIG).map(([key, c]) => (
-                                                                <option key={key} value={key}>{c.label}</option>
-                                                            ))}
-                                                        </select>
+                                                        <div className={`inline-block px-3 py-1.5 rounded-full text-[11px] font-bold ${cfg.bg} ${cfg.text}`}>
+                                                            {cfg.label}
+                                                        </div>
                                                     </td>
                                                     <td className="px-5 py-4 hidden sm:table-cell text-[11px] text-gray-400">
                                                         {v.created_at
@@ -851,12 +853,32 @@ function VolunteersPageContent() {
                                                             : '—'}
                                                     </td>
                                                     <td className="px-5 py-4">
-                                                        <button
-                                                            onClick={() => setViewingVolunteer(v)}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-navy-600 bg-navy-50 hover:bg-navy-100 rounded-lg transition-colors"
-                                                        >
-                                                            <Eye className="w-3.5 h-3.5" /> View
-                                                        </button>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => setViewingVolunteer(v)}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-navy-600 bg-navy-50 hover:bg-navy-100 rounded-lg transition-colors"
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5" /> View
+                                                            </button>
+                                                            {(v.status === 'approved' || v.status === 'inactive') && (
+                                                                <button
+                                                                    onClick={() => handleStatusChange(v.id, 'active')}
+                                                                    disabled={updatingId === v.id}
+                                                                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors disabled:opacity-50"
+                                                                >
+                                                                    Mark Active
+                                                                </button>
+                                                            )}
+                                                            {v.status === 'active' && (
+                                                                <button
+                                                                    onClick={() => handleStatusChange(v.id, 'inactive')}
+                                                                    disabled={updatingId === v.id}
+                                                                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                                                                >
+                                                                    Mark Inactive
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             )
