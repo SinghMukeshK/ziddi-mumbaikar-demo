@@ -79,7 +79,11 @@ export default function NgoServices() {
         drop_address: '',
         booking_date: '',
         booking_time: '',
-        notes: ''
+        notes: '',
+        age: '',
+        gender: '',
+        reference_name: '',
+        reference_number: ''
     })
     const [isBooking, setIsBooking] = useState(false)
     const [bookingSuccess, setBookingSuccess] = useState(false)
@@ -114,8 +118,9 @@ export default function NgoServices() {
         setIsBooking(true)
         try {
             const response = await ngoService.bookService({
+                ...bookingData,
                 service_id: selectedService.id,
-                ...bookingData
+                age: bookingData.age ? parseInt(bookingData.age, 10) : undefined
             })
             if (response.success) {
                 setBookingSuccess(true)
@@ -209,7 +214,11 @@ export default function NgoServices() {
             drop_address: '',
             booking_date: '',
             booking_time: '',
-            notes: ''
+            notes: '',
+            age: '',
+            gender: '',
+            reference_name: '',
+            reference_number: ''
         })
     }
 
@@ -318,15 +327,15 @@ export default function NgoServices() {
 
                 {/* Booking Modal */}
                 {isModalOpen && selectedService && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 overflow-y-auto pt-20 pb-10">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-10">
                         <div className="fixed inset-0 bg-navy-950/80 backdrop-blur-md" onClick={() => setIsModalOpen(false)}></div>
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            className="bg-white text-navy-900 w-full max-w-2xl rounded-3xl shadow-2xl relative z-10 overflow-hidden"
+                            className="bg-white text-navy-900 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl relative z-10 overflow-hidden"
                         >
                             {bookingSuccess ? (
-                                <div className="p-8 md:p-12 text-center">
+                                <div className="p-8 md:p-12 text-center overflow-y-auto">
                                     <AnimatePresence mode="wait">
                                         {!donationSuccess ? (
                                             <motion.div
@@ -451,8 +460,8 @@ export default function NgoServices() {
                                     </AnimatePresence>
                                 </div>
                             ) : (
-                                <form onSubmit={handleBooking} className="flex flex-col h-full">
-                                    <div className="bg-navy-900 p-8 text-white relative">
+                                <form onSubmit={handleBooking} className="flex flex-col h-full overflow-hidden">
+                                    <div className="bg-navy-900 p-8 text-white relative flex-shrink-0">
                                         <button
                                             type="button"
                                             onClick={() => setIsModalOpen(false)}
@@ -511,6 +520,63 @@ export default function NgoServices() {
                                                     onChange={e => setBookingData({ ...bookingData, email: e.target.value })}
                                                 />
                                                 <Plus className="w-5 h-5 absolute left-4 top-3.5 text-gray-400 rotate-45" />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 col-span-2 md:col-span-1">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Patient Age (Optional)</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    placeholder="E.g. 45"
+                                                    className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all"
+                                                    value={bookingData.age}
+                                                    onChange={e => setBookingData({ ...bookingData, age: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 col-span-2 md:col-span-1">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Patient Gender (Optional)</label>
+                                            <div className="relative">
+                                                <select
+                                                    className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all appearance-none"
+                                                    value={bookingData.gender}
+                                                    onChange={e => setBookingData({ ...bookingData, gender: e.target.value })}
+                                                >
+                                                    <option value="" disabled>Select Gender</option>
+                                                    <option value="male">Male</option>
+                                                    <option value="female">Female</option>
+                                                    <option value="other">Other</option>
+                                                </select>
+                                                <ChevronRight className="w-5 h-5 absolute right-4 top-3.5 text-gray-400 rotate-90 pointer-events-none" />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 col-span-2 md:col-span-1">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Reference Name (Optional)</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Referred By..."
+                                                    className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all"
+                                                    value={bookingData.reference_name}
+                                                    onChange={e => setBookingData({ ...bookingData, reference_name: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 col-span-2 md:col-span-1">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Reference Number (Optional)</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Reference Phone..."
+                                                    className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all"
+                                                    value={bookingData.reference_number}
+                                                    onChange={e => setBookingData({ ...bookingData, reference_number: e.target.value })}
+                                                />
                                             </div>
                                         </div>
 
@@ -601,7 +667,7 @@ export default function NgoServices() {
                                         </div>
                                     </div>
 
-                                    <div className="p-8 pt-0 mt-auto">
+                                    <div className="p-8 pt-4 mt-auto flex-shrink-0 border-t border-gray-100">
                                         <button
                                             disabled={isBooking}
                                             type="submit"
@@ -631,77 +697,91 @@ export default function NgoServices() {
             {/* --- PRINT ONLY SERVICE FORM --- */}
             {
                 isModalOpen && selectedService && latestBookingId && (
-                    <div className="hidden print:block fixed inset-0 bg-white z-[99999] text-black font-sans w-[210mm] mx-auto p-12">
+                    <div className="hidden print:block fixed inset-0 bg-white z-[99999] text-black font-sans w-[210mm] mx-auto p-8">
                         <style dangerouslySetInnerHTML={{
                             __html: `
                     @media print {
                         body * { visibility: hidden; }
                         .print-form-container, .print-form-container * { visibility: visible; }
-                        .print-form-container { position: absolute; left: 0; top: 0; width: 100%; padding: 40px; }
-                        @page { size: portrait; margin: 0; }
+                        .print-form-container { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; box-sizing: border-box; }
+                        @page { size: portrait; margin: 10mm; }
                     }
                 ` }} />
 
-                        <div className="print-form-container bg-white w-full h-full pb-20">
-                            <div className="text-center mb-8">
-                                <img src="/logo.webp" alt="Ziddi Mumbaikar" className="w-32 h-32 mx-auto object-contain" />
+                        <div className="print-form-container bg-white w-full h-full">
+                            <div className="text-center mb-4">
+                                <img src="/logo.webp" alt="Ziddi Mumbaikar" className="w-20 h-20 mx-auto object-contain" />
                             </div>
 
-                            <div className="border border-gray-300 rounded-t-sm shadow-sm">
-                                <div className="bg-gray-50 border-b border-gray-300 p-4">
-                                    <h2 className="text-[18px] font-bold text-gray-900 m-0">
+                            <div className="border border-gray-300 rounded-sm shadow-sm text-[12px]">
+                                <div className="bg-gray-50 border-b border-gray-300 py-2 px-4">
+                                    <h2 className="text-[16px] font-bold text-gray-900 m-0">
                                         {selectedService.name} Form : Entry # {String(latestBookingId).substring(0, 8).toUpperCase()}
                                     </h2>
                                 </div>
 
-                                <div className="border-b border-gray-200 p-4">
-                                    <p className="text-[13px] font-bold text-gray-800 mb-2">Patient / Requester Full Name</p>
-                                    <p className="text-[14px] text-gray-700 ml-4">{bookingData.name || '—'}</p>
+                                <div className="border-b border-gray-200 py-2 px-4">
+                                    <p className="font-bold text-gray-800 mb-1">Patient / Requester Full Name</p>
+                                    <p className="text-gray-700 ml-4">{bookingData.name || '—'}</p>
                                 </div>
 
-                                <div className="border-b border-gray-200 p-4">
-                                    <p className="text-[13px] font-bold text-gray-800 mb-2">Mobile Number</p>
-                                    <p className="text-[14px] text-gray-700 ml-4">{bookingData.phone || '—'}</p>
+                                <div className="border-b border-gray-200 py-2 px-4">
+                                    <p className="font-bold text-gray-800 mb-1">Mobile Number</p>
+                                    <p className="text-gray-700 ml-4">{bookingData.phone || '—'}</p>
                                 </div>
 
-                                <div className="border-b border-gray-200 p-4">
-                                    <p className="text-[13px] font-bold text-gray-800 mb-2">Email Address</p>
-                                    <p className="text-[14px] text-blue-600 underline ml-4">{bookingData.email || '—'}</p>
+                                <div className="border-b border-gray-200 py-2 px-4">
+                                    <p className="font-bold text-gray-800 mb-1">Email Address</p>
+                                    <p className="text-blue-600 underline ml-4">{bookingData.email || '—'}</p>
                                 </div>
 
-                                <div className="border-b border-gray-200 p-4">
-                                    <p className="text-[13px] font-bold text-gray-800 mb-2">Service Location (Home Address)</p>
-                                    <p className="text-[14px] text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.address || '—'}</p>
+                                <div className="border-b border-gray-200 py-2 px-4">
+                                    <p className="font-bold text-gray-800 mb-1">Patient Details</p>
+                                    <p className="text-gray-700 ml-4">
+                                        Age: {bookingData.age || '—'} | Gender: {bookingData.gender ? bookingData.gender.charAt(0).toUpperCase() + bookingData.gender.slice(1) : '—'}
+                                    </p>
+                                </div>
+
+                                <div className="border-b border-gray-200 py-2 px-4">
+                                    <p className="font-bold text-gray-800 mb-1">Reference Info</p>
+                                    <p className="text-gray-700 ml-4">
+                                        Name: {bookingData.reference_name || '—'} | Phone: {bookingData.reference_number || '—'}
+                                    </p>
+                                </div>
+
+                                <div className="border-b border-gray-200 py-2 px-4">
+                                    <p className="font-bold text-gray-800 mb-1">Service Location (Home Address)</p>
+                                    <p className="text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.address || '—'}</p>
                                 </div>
 
                                 {(selectedService.slug === 'ambulance-booking' || selectedService.slug === 'deadbody-freezer' || selectedService.slug === 'funeral-service') && (
                                     <>
-                                        <div className="border-b border-gray-200 p-4">
-                                            <p className="text-[13px] font-bold text-gray-800 mb-2">Pick Up Address</p>
-                                            <p className="text-[14px] text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.pickup_address || '—'}</p>
+                                        <div className="border-b border-gray-200 py-2 px-4">
+                                            <p className="font-bold text-gray-800 mb-1">Pick Up Address</p>
+                                            <p className="text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.pickup_address || '—'}</p>
                                         </div>
-                                        <div className="border-b border-gray-200 p-4">
-                                            <p className="text-[13px] font-bold text-gray-800 mb-2">Drop Off Address</p>
-                                            <p className="text-[14px] text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.drop_address || '—'}</p>
+                                        <div className="border-b border-gray-200 py-2 px-4">
+                                            <p className="font-bold text-gray-800 mb-1">Drop Off Address</p>
+                                            <p className="text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.drop_address || '—'}</p>
                                         </div>
                                     </>
                                 )}
 
-                                <div className="border-b border-gray-200 p-4">
-                                    <p className="text-[13px] font-bold text-gray-800 mb-2">Booking Date & Time</p>
-                                    <p className="text-[14px] text-gray-700 ml-4">
+                                <div className="border-b border-gray-200 py-2 px-4">
+                                    <p className="font-bold text-gray-800 mb-1">Booking Date & Time</p>
+                                    <p className="text-gray-700 ml-4">
                                         {bookingData.booking_date ? new Date(bookingData.booking_date).toLocaleDateString('en-GB') : '—'}
                                         {bookingData.booking_time ? ` at ${bookingData.booking_time}` : ''}
                                     </p>
                                 </div>
 
-                                <div className="p-4 bg-gray-50/50">
-                                    <p className="text-[13px] font-bold text-gray-800 mb-2">Additional Notes</p>
-                                    <p className="text-[14px] text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.notes || '—'}</p>
+                                <div className="py-2 px-4 bg-gray-50/50 flex-grow">
+                                    <p className="font-bold text-gray-800 mb-1">Additional Notes</p>
+                                    <p className="text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.notes || '—'}</p>
                                 </div>
                             </div>
 
-                            <div className="mt-12 text-center text-gray-400 text-sm font-semibold tracking-widest uppercase">
+                            <div className="mt-8 text-center text-gray-400 text-xs font-semibold tracking-widest uppercase">
                                 Ziddi Mumbaikar NGO • Free Service
                             </div>
                         </div>

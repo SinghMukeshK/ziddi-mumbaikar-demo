@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { notificationService, Notification } from '@/services/notification.service'
 import { useAuth } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
@@ -17,7 +17,7 @@ export default function NotificationsPage() {
     const [meta, setMeta] = useState<any>(null)
     const [filter, setFilter] = useState<'all' | 'unread'>('all')
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async () => {
         if (!isLoggedIn) return
         try {
             setLoading(true)
@@ -33,11 +33,11 @@ export default function NotificationsPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [isLoggedIn, page, filter])
 
     useEffect(() => {
         fetchNotifications()
-    }, [isLoggedIn, page, filter])
+    }, [fetchNotifications])
 
     const handleMarkAsRead = async (id: string) => {
         try {

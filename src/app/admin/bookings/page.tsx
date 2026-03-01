@@ -19,7 +19,8 @@ import {
     CheckCircle,
     XCircle,
     Clock as ClockIcon,
-    Check
+    Check,
+    Printer
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -33,6 +34,14 @@ export default function AdminBookings() {
     const [page, setPage] = useState(1)
     const [total, setTotal] = useState(0)
     const [searchTerm, setSearchTerm] = useState('')
+    const [printingBooking, setPrintingBooking] = useState<NgoServiceBooking | null>(null)
+
+    const handlePrint = (booking: NgoServiceBooking) => {
+        setPrintingBooking(booking)
+        setTimeout(() => {
+            window.print()
+        }, 150)
+    }
 
     useEffect(() => {
         if (!isLoggedIn || user?.role !== 'admin') {
@@ -198,7 +207,14 @@ export default function AdminBookings() {
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex items-center gap-2 mt-auto">
+                                    <div className="flex flex-wrap items-center gap-2 mt-auto">
+                                        <button
+                                            onClick={() => handlePrint(booking)}
+                                            className="p-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                                            title="Print Form"
+                                        >
+                                            <Printer className="w-4 h-4" />
+                                        </button>
                                         {booking.status === 'pending' && (
                                             <>
                                                 <button
@@ -261,6 +277,94 @@ export default function AdminBookings() {
                     </div>
                 )}
             </div>
+
+            {/* PRINT COMPONENT */}
+            {printingBooking && (
+                <div className="hidden print:block fixed inset-0 bg-white z-[99999] text-black font-sans w-[210mm] mx-auto p-8">
+                    <style dangerouslySetInnerHTML={{
+                        __html: `
+                @media print {
+                    body * { visibility: hidden; }
+                    .print-form-container, .print-form-container * { visibility: visible; }
+                    .print-form-container { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; box-sizing: border-box; background: white !important; }
+                    @page { size: portrait; margin: 10mm; }
+                }
+            ` }} />
+                    <div className="print-form-container bg-white w-full h-full">
+                        <div className="text-center mb-4">
+                            <img src="/logo.webp" alt="Ziddi Mumbaikar" className="w-20 h-20 mx-auto object-contain" />
+                        </div>
+
+                        <div className="border border-gray-300 rounded-sm shadow-sm text-[12px]">
+                            <div className="bg-gray-50 border-b border-gray-300 py-2 px-4 flex justify-between items-center">
+                                <h2 className="text-[16px] font-bold text-gray-900 m-0">
+                                    {(printingBooking as any).service?.name || 'Service Request'} Form
+                                </h2>
+                                <span className="font-mono bg-gray-200 px-2 py-1 rounded text-[10px]">
+                                    #{String(printingBooking.id).substring(0, 8).toUpperCase()}
+                                </span>
+                            </div>
+
+                            <div className="border-b border-gray-200 py-2 px-4">
+                                <p className="font-bold text-gray-800 mb-1">Requester Full Name</p>
+                                <p className="text-gray-700 ml-4">{printingBooking.name || '—'}</p>
+                            </div>
+
+                            <div className="border-b border-gray-200 py-2 px-4">
+                                <p className="font-bold text-gray-800 mb-1">Mobile Number</p>
+                                <p className="text-gray-700 ml-4">{printingBooking.phone || '—'}</p>
+                            </div>
+
+                            <div className="border-b border-gray-200 py-2 px-4">
+                                <p className="font-bold text-gray-800 mb-1">Email Address</p>
+                                <p className="text-blue-600 underline ml-4">{(printingBooking as any).email || '—'}</p>
+                            </div>
+
+                            <div className="border-b border-gray-200 py-2 px-4">
+                                <p className="font-bold text-gray-800 mb-1">Patient Details</p>
+                                <p className="text-gray-700 ml-4">
+                                    Age: {(printingBooking as any).age || '—'} | Gender: {(printingBooking as any).gender ? (printingBooking as any).gender.charAt(0).toUpperCase() + (printingBooking as any).gender.slice(1) : '—'}
+                                </p>
+                            </div>
+
+                            <div className="border-b border-gray-200 py-2 px-4">
+                                <p className="font-bold text-gray-800 mb-1">Reference Info</p>
+                                <p className="text-gray-700 ml-4">
+                                    Name: {(printingBooking as any).reference_name || '—'} | Phone: {(printingBooking as any).reference_number || '—'}
+                                </p>
+                            </div>
+
+                            <div className="border-b border-gray-200 py-2 px-4">
+                                <p className="font-bold text-gray-800 mb-1">Service Location (Home Address)</p>
+                                <p className="text-gray-700 ml-4 whitespace-pre-wrap">{printingBooking.address || '—'}</p>
+                            </div>
+
+                            <div className="border-b border-gray-200 py-2 px-4">
+                                <p className="font-bold text-gray-800 mb-1">Locations</p>
+                                <p className="text-gray-700 ml-4 whitespace-pre-wrap"><strong>Pick Up:</strong> {(printingBooking as any).pickup_address || '—'}</p>
+                                <p className="text-gray-700 ml-4 whitespace-pre-wrap mt-1"><strong>Drop Off:</strong> {(printingBooking as any).drop_address || '—'}</p>
+                            </div>
+
+                            <div className="border-b border-gray-200 py-2 px-4">
+                                <p className="font-bold text-gray-800 mb-1">Booking Date & Time</p>
+                                <p className="text-gray-700 ml-4">
+                                    {printingBooking.booking_date ? new Date(printingBooking.booking_date).toLocaleDateString('en-GB') : '—'}
+                                    {printingBooking.booking_time ? ` at ${printingBooking.booking_time}` : ''}
+                                </p>
+                            </div>
+
+                            <div className="py-2 px-4 bg-gray-50/50 flex-grow">
+                                <p className="font-bold text-gray-800 mb-1">Additional Notes</p>
+                                <p className="text-gray-700 ml-4 whitespace-pre-wrap">{printingBooking.notes || '—'}</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 text-center text-gray-400 text-xs font-semibold tracking-widest uppercase">
+                            Ziddi Mumbaikar NGO • Free Service
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

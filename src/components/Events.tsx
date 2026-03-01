@@ -71,17 +71,16 @@ export default function Events() {
         ...(completedEvents.length > 0 ? ['completed'] : [])
     ]
 
+    const availableTabsStr = availableTabs.join(',');
+
     useEffect(() => {
-        if (!isLoading && availableTabs.length > 0 && !availableTabs.includes(activeTab)) {
-            setActiveTab(availableTabs[0])
+        const tabs = availableTabsStr ? availableTabsStr.split(',') : [];
+        if (!isLoading && tabs.length > 0 && !tabs.includes(activeTab)) {
+            setActiveTab(tabs[0])
         }
-    }, [isLoading, availableTabs.join(','), activeTab])
+    }, [isLoading, availableTabsStr, activeTab])
 
     const displayedEvents = activeTab === 'ongoing' ? ongoingEvents : activeTab === 'upcoming' ? upcomingEvents : completedEvents
-
-    if (!isLoading && availableTabs.length === 0) {
-        return null;
-    }
 
     const tabsToDisplay = isLoading ? ['ongoing', 'upcoming'] : availableTabs
 
@@ -126,6 +125,10 @@ export default function Events() {
             container.removeEventListener('touchend', resume);
         };
     }, [displayedEvents]);
+
+    if (!isLoading && availableTabs.length === 0) {
+        return null;
+    }
 
     return (
         <section id="events" className="py-20 bg-gray-50 relative overflow-hidden">

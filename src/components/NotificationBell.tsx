@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { notificationService, Notification } from '@/services/notification.service'
 import { approvalService, ApprovalRequest } from '@/services/approval.service'
@@ -17,7 +17,7 @@ export default function NotificationBell() {
     const bellRef = useRef<HTMLDivElement>(null)
     const isAdmin = user?.role === 'admin' || user?.role === 'super_admin'
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async () => {
         if (!isLoggedIn) return
         try {
             const [notifsResp, countResp, approvalsResp] = await Promise.all([
@@ -54,7 +54,7 @@ export default function NotificationBell() {
         } catch (error) {
             console.error('Error fetching notifications:', error)
         }
-    }
+    }, [isLoggedIn, isAdmin])
 
     useEffect(() => {
         if (isLoggedIn) {
@@ -63,7 +63,7 @@ export default function NotificationBell() {
             const interval = setInterval(fetchNotifications, 60000)
             return () => clearInterval(interval)
         }
-    }, [isLoggedIn])
+    }, [isLoggedIn, fetchNotifications])
 
     // Close on outside click
     useEffect(() => {

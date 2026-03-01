@@ -264,9 +264,10 @@ function EventModal({
                                         type="file"
                                         accept="image/*"
                                         onChange={handleImageChange}
-                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        title="Upload Image"
                                     />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
                                         <Edit className="w-5 h-5 text-white" />
                                     </div>
                                 </div>
