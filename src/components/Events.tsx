@@ -188,7 +188,7 @@ export default function Events() {
                                             {event.title}
                                         </h3>
                                         <p className="text-gray-600 mb-6 bg-gray-50 p-4 rounded-xl text-sm italic border-l-4 border-primary-200 flex-grow">
-                                            "{event.description}"
+                                            &quot;{event.description}&quot;
                                         </p>
 
                                         <div className="flex items-center gap-1.5 text-gray-600 text-sm mb-6 mt-auto">

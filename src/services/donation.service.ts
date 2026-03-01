@@ -58,6 +58,7 @@ export interface RazorpaySubscriptionRequest {
     donor_pan?: string;
     is_anonymous?: boolean;
     message?: string;
+    donation_type?: string;
     callback_url?: string;
 }
 

@@ -183,6 +183,8 @@ export default function FundraiserDetailPage() {
     setSubmittingDonation(true)
     setPaymentStep('processing')
 
+    let finalDonationId = ''
+
     try {
       if (isMonthly) {
         // Step 1: Create Razorpay subscription on backend
@@ -204,6 +206,7 @@ export default function FundraiserDetailPage() {
         }
 
         const { subscription_id, internal_subscription_id, key_id } = orderResponse.data as any
+        finalDonationId = internal_subscription_id
 
         // Step 2: Open Razorpay checkout popup
         const paymentResponse = await openRazorpay({
@@ -250,6 +253,7 @@ export default function FundraiserDetailPage() {
         }
 
         const { donation_id, razorpay_order_id, amount: orderAmount, currency, key_id } = orderResponse.data
+        finalDonationId = donation_id
 
         // Step 2: Open Razorpay checkout popup
         const paymentResponse = await openRazorpay({
@@ -282,7 +286,7 @@ export default function FundraiserDetailPage() {
 
       // Fetch the donation to get the official receipt number (donation_number)
       try {
-        const donationDetails = await donationService.getDonationById(donation_id);
+        const donationDetails = await donationService.getDonationById(finalDonationId);
         if (donationDetails.data && donationDetails.data.donation_number) {
           setReceiptNumber(donationDetails.data.donation_number);
         }

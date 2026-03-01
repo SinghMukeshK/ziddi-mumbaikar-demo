@@ -75,7 +75,7 @@ export default function EventsModal() {
                                     Upcoming in Mumbai
                                 </span>
                                 <h2 className="font-display text-2xl font-bold mt-2">
-                                    Don't Miss These Events!
+                                    Don&apos;t Miss These Events!
                                 </h2>
                             </div>
                             <button
