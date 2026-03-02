@@ -1,4 +1,5 @@
 import { apiV1 } from '@/lib/api-v1';
+import { fixImageUrl, fixObjectUrls } from '@/lib/image-utils';
 
 export interface ApiResponse<T = any> {
     success: boolean;
@@ -98,6 +99,8 @@ export interface FundraiserCreateRequest {
     status?: string;
     is_urgent?: boolean;
     is_featured?: boolean;
+    project_id?: string;
+    campaign_code?: string;
 }
 
 export interface FundraiserCategory {
@@ -121,6 +124,7 @@ const mapCampaignToFundraiser = (campaign: any): Fundraiser => {
         description: campaign.description || '',
         completion_percentage: campaign.completion_percentage || (campaign.goal_amount > 0 ? (campaign.raised_amount / campaign.goal_amount) * 100 : 0),
         category: campaign.category || { id: 'general', name: 'General' },
+        cover_image_url: fixImageUrl(campaign.cover_image_url),
     };
 };
 
@@ -155,8 +159,10 @@ export const fundraiserService = {
         const campaignData = {
             ...data,
             name: data.title,
-            // Campaigns require project_id and campaign_code which might be missing from FundraiserCreateRequest
-            // We should ideally have these in the form, but for now we'll pass whatever we have
+            // Generate campaign_code if not provided
+            campaign_code: data.campaign_code || `FND-${Date.now()}`,
+            // Ensure project_id is present (defaulting for now if missing)
+            project_id: data.project_id || '00000000-0000-0000-0000-000000000000',
         };
         return apiV1.post<ApiResponse<any>>('/campaigns', campaignData);
     },
@@ -215,11 +221,18 @@ export const fundraiserService = {
     getFundraiserExtensions: async (id: string) => {
         try {
             const response = await apiV1.get<ApiResponse<FundraiserExtensions>>(`/public/campaigns/${id}/extensions`);
-            if (response.success) return response;
+            if (response.success && response.data) {
+                response.data = fixObjectUrls(response.data);
+                return response;
+            }
         } catch (err) {
             // Fallback
         }
-        return apiV1.get<ApiResponse<FundraiserExtensions>>(`/public/fundraisers/${id}/extensions`);
+        const response = await apiV1.get<ApiResponse<FundraiserExtensions>>(`/public/fundraisers/${id}/extensions`);
+        if (response.success && response.data) {
+            response.data = fixObjectUrls(response.data);
+        }
+        return response;
     },
 
     getCategories: async (): Promise<ApiResponse<FundraiserCategory[]>> => {

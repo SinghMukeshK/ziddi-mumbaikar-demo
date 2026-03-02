@@ -81,10 +81,10 @@ export default function Footer() {
                 <p className="text-gray-300 text-sm">General Enquiries</p>
                 <p className="font-semibold break-all">ziddimumbaikarngo@gmail.com</p>
               </div>
-              <div>
+              {/* <div>
                 <p className="text-gray-300 text-sm">Volunteer Coordination</p>
                 <p className="font-semibold break-all">support@ziddimumbaikarngo.com</p>
-              </div>
+              </div> */}
               <div>
                 <p className="text-gray-300 text-sm">Office Address</p>
                 <p className="text-sm">Oshiwara, Jogeshwari West, <br />
@@ -108,10 +108,13 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-gray-800">
+          <div className="mt-4 pt-4 border-t border-gray-800 flex flex-col items-center justify-center gap-2">
             <p className="text-xs text-gray-500 text-center">
               Ziddi Mumbaikar is a registered non-profit organization dedicated to community service.
               We operate with full transparency and accountability to the people of Mumbai.
+            </p>
+            <p className="text-xs text-gray-500 text-center mt-2">
+              Designed and Developed by <a href="https://drista.in" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:text-primary-400 transition-colors font-medium">Drista Cloud Solutions</a>
             </p>
           </div>
         </div>

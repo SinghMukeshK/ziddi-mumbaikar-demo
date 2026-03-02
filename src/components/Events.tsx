@@ -218,9 +218,9 @@ export default function Events() {
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
                                     transition={{ duration: 0.3, delay: index * 0.1 }}
-                                    className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 group flex flex-col flex-shrink-0 w-[80vw] sm:w-[320px] snap-center sm:snap-start"
+                                    className="h-full bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 group flex flex-col flex-shrink-0 w-[80vw] sm:w-[320px] snap-center sm:snap-start"
                                 >
-                                    <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                                    <div className="relative h-48 w-full overflow-hidden bg-gray-100 shrink-0">
                                         <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300 z-10" />
                                         {event.cover_image_url && (
                                             <Image
@@ -253,7 +253,7 @@ export default function Events() {
                                     </div>
 
                                     <div className="p-6 sm:p-8 flex flex-col flex-grow">
-                                        <div className="flex items-start gap-4 mb-4 text-gray-500 text-sm">
+                                        <div className="flex items-start gap-4 mb-4 text-gray-500 text-sm shrink-0">
                                             <div className="flex items-center gap-1.5">
                                                 <svg className="w-5 h-5 text-primary-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -261,14 +261,14 @@ export default function Events() {
                                                 <span className="font-medium line-clamp-1">{formatDate(event.start_datetime, event.end_datetime)}</span>
                                             </div>
                                         </div>
-                                        <h3 className="text-xl font-bold text-navy-900 mb-3 group-hover:text-primary-500 transition-colors line-clamp-2">
+                                        <h3 className="text-xl font-bold text-navy-900 mb-3 group-hover:text-primary-500 transition-colors line-clamp-2 shrink-0">
                                             {event.title}
                                         </h3>
                                         <p className="text-gray-600 mb-6 bg-gray-50 p-4 rounded-xl text-sm italic border-l-4 border-primary-200 flex-grow">
                                             &quot;{event.description}&quot;
                                         </p>
 
-                                        <div className="flex items-center gap-1.5 text-gray-600 text-sm mb-6 mt-auto">
+                                        <div className="flex items-center gap-1.5 text-gray-600 text-sm mb-6 mt-auto shrink-0">
                                             <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />

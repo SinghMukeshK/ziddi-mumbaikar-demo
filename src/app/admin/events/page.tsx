@@ -61,6 +61,7 @@ function EventModal({
     const [imagePreview, setImagePreview] = useState<string>('')
     const [fileToEdit, setFileToEdit] = useState<File | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [formError, setFormError] = useState('')
 
     useEffect(() => {
         if (event) {
@@ -84,6 +85,7 @@ function EventModal({
             setImagePreview('')
             setImageFile(null)
         }
+        setFormError('')
     }, [event, isOpen])
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,49 +106,87 @@ function EventModal({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!formData.title || !formData.start_datetime) {
-            toast.error('Title and Start Date are required')
+            setFormError('Title and Start Date are required')
+            toast.error('Validation failed')
             return
         }
 
         setIsSubmitting(true)
+        setFormError('')
         try {
             let cover_image_url = formData.cover_image_url
 
             // Upload image if changed
             if (imageFile) {
-                const uploadRes = await galleryService.uploadMedia(imageFile)
-                // galleryService.uploadMedia returns ApiResponse<MediaItem>
-                // ApiResponse has { success: boolean, data: T, message?: string }
-                if (uploadRes.success && uploadRes.data) {
-                    cover_image_url = uploadRes.data.file_url
-                } else if (!uploadRes.success) {
+                const uploadRes = await galleryService.uploadMedia(imageFile, 'events', 'events')
+                // Support both wrapped {success, data: {file_url}} and flat {file_url} responses
+                const uploadedUrl = uploadRes.data?.file_url || (uploadRes as any).file_url || uploadRes.data?.url || (uploadRes as any).url
+
+                if (uploadedUrl) {
+                    cover_image_url = uploadedUrl
+                } else if (uploadRes.success === false) {
                     throw new Error(uploadRes.message || 'Image upload failed')
+                } else {
+                    console.error('Image upload response unexpected:', uploadRes)
+                    // Fallback: check if we have a string that looks like a URL
+                    if (typeof uploadRes === 'string' && uploadRes.startsWith('http')) {
+                        cover_image_url = uploadRes
+                    }
                 }
             }
 
-            // Remove id from payload for create
-            const { id, ...rest } = formData;
-            const dataToSave = {
-                ...rest,
-                cover_image_url,
-                // Ensure defaults for required fields if needed
+            // Build payload explicitly - mapping title to name as backend often expects name
+            const dataToSave: any = {
+                name: formData.title,
+                title: formData.title,
+                description: formData.description,
+                location: formData.location || 'Mumbai, Maharashtra',
+                event_type: formData.event_type || 'General',
+                status: formData.status || 'published',
+                cover_image_url: cover_image_url || null,
                 start_datetime: formData.start_datetime ? new Date(formData.start_datetime).toISOString() : new Date().toISOString(),
                 end_datetime: formData.end_datetime ? new Date(formData.end_datetime).toISOString() : undefined
             }
 
+            // Generate slug for new events if not provided
+            if (!event || !event.slug) {
+                const baseSlug = formData.title?.toLowerCase()
+                    .trim()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/[\s_-]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+                dataToSave.slug = baseSlug || `event-${Date.now()}`;
+            }
+
+            let result;
             if (event) {
-                await eventService.updateEvent(event.id, dataToSave)
-                toast.success('Event updated successfully')
+                result = await eventService.updateEvent(event.id, dataToSave)
+                if (result.success) toast.success('Event updated successfully')
             } else {
-                await eventService.createEvent(dataToSave)
-                toast.success('Event created successfully')
+                result = await eventService.createEvent(dataToSave)
+                if (result.success) toast.success('Event created successfully')
+            }
+
+            if (result && !result.success) {
+                throw new Error((result as any).message || 'Failed to save event data')
             }
 
             onSave()
             onClose()
         } catch (err: any) {
             console.error('Failed to save event', err)
-            toast.error(err.message || 'Failed to save event')
+
+            // Extract specific validation errors if available
+            let msg = err.message || 'Failed to save event'
+            if (err.data && typeof err.data === 'object') {
+                const details = Object.entries(err.data)
+                    .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+                    .join(' | ')
+                if (details) msg = `${msg} (${details})`
+            }
+
+            setFormError(msg)
+            toast.error(msg)
         } finally {
             setIsSubmitting(false)
         }
@@ -166,6 +206,17 @@ function EventModal({
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                        {formError && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-red-50 border border-red-100 flex items-center gap-3 p-4 rounded-2xl text-red-600 mb-2"
+                            >
+                                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                                <span className="text-xs font-bold">{formError}</span>
+                            </motion.div>
+                        )}
+
                         {/* Title */}
                         <div>
                             <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Event Title</label>
@@ -356,14 +407,18 @@ function AdminEventsPage() {
     const handleDelete = async (id: string, title: string) => {
         if (!confirm(`Are you sure you want to delete "${title}"?`)) return
 
+        const tid = toast.loading('Deleting event...')
         try {
             const res = await eventService.deleteEvent(id)
             if (res.success) {
-                toast.success('Event deleted')
-                setEvents(events.filter(e => e.id !== id))
+                toast.success('Event deleted successfully', { id: tid })
+                fetchEvents()
+            } else {
+                toast.error((res as any).message || 'Failed to delete event', { id: tid })
             }
-        } catch (err) {
-            toast.error('Failed to delete event')
+        } catch (err: any) {
+            console.error('Failed to delete event', err)
+            toast.error(err.message || 'Failed to delete event', { id: tid })
         }
     }
 

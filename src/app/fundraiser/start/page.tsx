@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { fundraiserService, FundraiserCategory } from '@/services/fundraiser.service'
+import { projectService, Project } from '@/services/project.service'
 import { beneficiaryService } from '@/services/beneficiary.service'
 import Footer from '@/components/Footer';
 import { formatDate, parseDatabaseDate } from '@/lib/date-utils'
@@ -13,7 +14,7 @@ import { Pencil, X as XIcon, Star, AlertTriangle, Sparkles } from 'lucide-react'
 
 function StartFundraiserContent() {
   const router = useRouter()
-  const [step, setStep] = useState(1) // 1: Category, 2: Details, 3: Story, 4: Documents, 5: Review
+  const [step, setStep] = useState(1) // 1: Project, 2: Details, 3: Story, 4: Documents, 5: Review
   const [formData, setFormData] = useState({
     // Step 1: Category & Type
     category: '',
@@ -62,23 +63,31 @@ function StartFundraiserContent() {
   const [step4Errors, setStep4Errors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [apiCategories, setApiCategories] = useState<FundraiserCategory[]>([])
+  const [apiProjects, setApiProjects] = useState<Project[]>([])
   // Image editor state
   const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null)
   const [pendingFiles, setPendingFiles] = useState<File[]>([]) // queue of new files to edit
   const [pendingIndex, setPendingIndex] = useState(0)
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await fundraiserService.getCategories();
-        if (response.success && response.data) {
-          setApiCategories(response.data);
+        const [catRes, projRes] = await Promise.all([
+          fundraiserService.getCategories(),
+          projectService.getProjects()
+        ]);
+
+        if (catRes.success && catRes.data) {
+          setApiCategories(catRes.data);
+        }
+        if (projRes.success && projRes.data) {
+          setApiProjects(projRes.data);
         }
       } catch (err) {
-        console.error('Failed to fetch categories:', err);
+        console.error('Failed to fetch initial data:', err);
       }
     };
-    fetchCategories();
+    fetchInitialData();
   }, []);
 
   const getCategoryIcon = (name: string) => {
@@ -203,7 +212,7 @@ function StartFundraiserContent() {
 
   const validateStep1 = () => {
     if (!formData.category) {
-      setError('Please select a category')
+      setError('Please select a project')
       return false
     }
     return true
@@ -400,7 +409,8 @@ function StartFundraiserContent() {
         beneficiary_story: `${formData.currentSituation}\n\n${formData.howFundsWillHelp}`.trim(),
         start_date: new Date().toISOString().split('T')[0],
         end_date: formData.requiredBy ? parseDatabaseDate(formData.requiredBy).toISOString().split('T')[0] : undefined,
-        category_id: formData.category,
+        category_id: formData.category || (apiCategories.length > 0 ? apiCategories[0].id : ''),
+        project_id: formData.category, // We are using 'category' state to store the picked project ID
         is_zakat_eligible: formData.isZakatEligible,
         is_sadaqah_eligible: formData.isSadaqahEligible,
         is_lillah_eligible: formData.isLillahEligible,
@@ -520,7 +530,7 @@ function StartFundraiserContent() {
           {/* Progress Indicator */}
           <div className="mb-8">
             <div className="flex justify-between items-center">
-              {['Category', 'Details', 'Story', 'Documents', 'Review'].map((label, index) => {
+              {['Project', 'Details', 'Story', 'Documents', 'Review'].map((label, index) => {
                 const stepNumber = index + 1
                 const isActive = step === stepNumber
                 const isCompleted = step > stepNumber
@@ -555,36 +565,62 @@ function StartFundraiserContent() {
             {/* Step 1: Select Category */}
             {step === 1 && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Fundraiser Category</h2>
-                {apiCategories.length === 0 ? (
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Project</h2>
+                {apiProjects.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                    <p className="text-gray-500">Loading categories...</p>
+                    <p className="text-gray-500">Loading projects...</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {apiCategories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, category: cat.id }))}
-                        className={`p-4 border-2 rounded-lg text-left transition-all ${formData.category === cat.id
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-200 hover:border-primary-300'
-                          }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={`flex-shrink-0 ${formData.category === cat.id ? 'text-primary-600' : 'text-gray-400'
-                            }`}>
-                            {getCategoryIcon(cat.name)}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{cat.name}</h3>
-                            <p className="text-sm text-gray-600 mt-1">{cat.description || 'Campaign for ' + cat.name}</p>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {apiProjects.map((project) => (
+                          <tr
+                            key={project.id}
+                            className={`hover:bg-gray-50 transition-colors cursor-pointer ${formData.category === project.id ? 'bg-primary-50' : ''}`}
+                            onClick={() => setFormData(prev => ({ ...prev, category: project.id }))}
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="text-sm font-medium text-gray-900">{project.name}</div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {project.sector}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${project.status === 'active' || project.status === 'approved' || project.status === 'in_progress'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                {project.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mx-auto ${formData.category === project.id ? 'border-primary-500 bg-primary-500' : 'border-gray-300'
+                                }`}>
+                                {formData.category === project.id && (
+                                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>

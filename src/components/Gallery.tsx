@@ -9,22 +9,67 @@ import { Images, ChevronRight, Loader2 } from 'lucide-react'
 
 // Fallback static items shown while loading or if API returns nothing
 const FALLBACK_ITEMS = [
-  { id: 'f1', title: 'Blood Donation Campl', category: 'Health', image: '/BloodDonationCamp.webp', description: 'Free health checkups in our local community' },
-  { id: 'f2', title: 'Community Health Camp', category: 'Health', image: '/HelpForEMergency.webp', description: 'We are always ready to help in case of emergency' },
-  { id: 'f3', title: "Women's Safety Workshop", category: 'Safety', image: '/ProvidingFood.webp', description: 'Providing food to the needy' },
-  { id: 'f4', title: 'Free Ambulance Service', category: 'Health', image: '/AmbulanceService.webp', description: 'Providing free ambulance service to the needy' },
-  { id: 'f5', title: 'Emergency Response Team', category: 'Emergency', image: '/Ambulance.jpg', description: 'Our ambulance service in action' },
-  // { id: 'f6', title: 'Community Festival', category: 'Community', image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&q=80&w=800', description: 'Celebrating diversity in local neighborhoods' },
-  // { id: 'f7', title: 'Street Cleaning Campaign', category: 'Cleanliness', image: 'https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&q=80&w=800', description: 'Volunteers cleaning busy market areas' },
-  // { id: 'f8', title: 'Youth Engagement Program', category: 'Youth', image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800', description: 'Inspiring next generation of change-makers' },
+  { id: 'f1', title: 'Blood Donation Camp', category: 'Health', images: ['/BloodDonationCamp.webp', '/HelpForEMergency.webp', '/Ambulance.jpg'], description: 'Free health checkups in our local community' },
+  { id: 'f2', title: 'Community Health Camp', category: 'Health', images: ['/HelpForEMergency.webp', '/BloodDonationCamp.webp', '/AmbulanceService.webp'], description: 'We are always ready to help in case of emergency' },
+  { id: 'f3', title: "Women's Safety Workshop", category: 'Safety', images: ['/ProvidingFood.webp', '/HelpForEMergency.webp'], description: 'Providing food to the needy' },
+  { id: 'f4', title: 'Free Ambulance Service', category: 'Health', images: ['/AmbulanceService.webp', '/Ambulance.jpg', '/BloodDonationCamp.webp'], description: 'Providing free ambulance service to the needy' },
+  { id: 'f5', title: 'Emergency Response Team', category: 'Emergency', images: ['/Ambulance.jpg', '/AmbulanceService.webp'], description: 'Our ambulance service in action' },
 ]
 
 interface DisplayItem {
   id: string
   title: string
   category: string
-  image: string
+  images: string[]
   description: string
+}
+
+function CardCarousel({ images, title }: { images: string[], title: string }) {
+  const [index, setIndex] = useState(0)
+
+  useEffect(() => {
+    if (images.length <= 1) return
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % images.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [images])
+
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={images[index]}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 1.2, ease: "easeInOut" }}
+          className="absolute inset-0"
+        >
+          <Image
+            src={images[index]}
+            alt={`${title} - image ${index + 1}`}
+            fill
+            className="object-cover"
+            priority={index === 0}
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Indicator Dots */}
+      {images.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+          {images.map((_, i) => (
+            <div
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${i === index ? 'bg-primary-500 w-4' : 'bg-white/50'
+                }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function Gallery() {
@@ -47,19 +92,22 @@ export default function Gallery() {
           return
         }
 
-        // For each album, fetch its first media item to use as preview
+        // For each album, fetch its media
         const displayItems: DisplayItem[] = []
         await Promise.all(
           fetchedAlbums.slice(0, 8).map(async (album) => {
             try {
               const mediaRes = await galleryService.getAlbumMedia(album.id)
-              const firstMedia = (mediaRes.data || [])[0]
-              const itemMedia = firstMedia?.media || (firstMedia as any)?.Media;
+              const mediaList = mediaRes.data || []
+              const images = mediaList
+                .map(m => m.media?.file_url || (m as any).Media?.file_url)
+                .filter(Boolean) as string[]
+
               displayItems.push({
                 id: album.id,
                 title: album.title,
                 category: album.description?.split('|')[0]?.trim() || 'General',
-                image: itemMedia?.file_url || album.cover_image_url || FALLBACK_ITEMS[displayItems.length % FALLBACK_ITEMS.length].image,
+                images: images.length > 0 ? images : [album.cover_image_url || FALLBACK_ITEMS[displayItems.length % FALLBACK_ITEMS.length].images[0]],
                 description: album.description?.split('|')[1]?.trim() || album.description || '',
               })
             } catch {
@@ -145,12 +193,7 @@ export default function Gallery() {
                   className="group cursor-pointer bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100"
                 >
                   <div className="relative aspect-[4/5] overflow-hidden">
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
+                    <CardCarousel images={item.images} title={item.title} />
                     <div className="absolute inset-0 bg-gradient-to-t from-navy-900/90 via-navy-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6">
                       <span className="text-white font-bold text-xs tracking-widest bg-primary-500 px-3 py-1 rounded-full w-fit mb-3 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                         {item.category}

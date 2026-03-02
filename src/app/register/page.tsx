@@ -87,14 +87,14 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      // Call signup with basic info only (API doesn't require phone or address for registration)
+      // Call signup with basic info only. 
+      // Do not pass a hardcoded role UUID, let the backend/context use undefined to trigger default role assignment.
       await signup(
         formData.first_name,
         formData.last_name,
         formData.email,
         formData.password,
-        formData.phone,
-        '7e9e582e-b3b0-4053-a179-f5fa10747c67' // Default role
+        formData.phone
       )
 
       // Redirect to dashboard or home after successful registration

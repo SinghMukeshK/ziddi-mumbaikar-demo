@@ -118,25 +118,7 @@ export default function EmergencySupportPage() {
                 </div>
               </div>
             </div>
-
-            {/* Impact Stats */}
-            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-8 text-white shadow-lg">
-              <h2 className="font-display text-3xl font-bold mb-6">Our Impact</h2>
-              <div className="grid sm:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">100+</div>
-                  <div className="text-red-100">Emergency Responses</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">5,000+</div>
-                  <div className="text-red-100">Lives Impacted</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">24/7</div>
-                  <div className="text-red-100">Always Available</div>
-                </div>
-              </div>
-            </div>
+ 
 
             {/* How to Participate */}
             <div className="bg-white rounded-2xl p-8 shadow-lg">

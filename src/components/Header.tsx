@@ -173,6 +173,7 @@ export default function Header() {
                                                                 <Link href="/admin/bookings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Service Bookings</Link>
                                                                 <Link href="/donations" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Donations</Link>
                                                                 <Link href="/admin/approvals" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Approval Queue</Link>
+                                                                <Link href="/admin/contact-inquiries" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Contact Inquiries</Link>
                                                             </div>
                                                         </div>
 
@@ -362,6 +363,13 @@ export default function Header() {
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                             >
                                                 Manage Events
+                                            </Link>
+                                            <Link
+                                                href="/admin/contact-inquiries"
+                                                className="text-gray-700 hover:text-primary-600 font-bold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                                Contact Inquiries
                                             </Link>
                                             <Link
                                                 href="/admin/volunteers"

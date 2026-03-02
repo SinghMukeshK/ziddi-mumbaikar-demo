@@ -119,25 +119,6 @@ export default function EnvironmentalActionPage() {
               </div>
             </div>
 
-            {/* Impact Stats */}
-            <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-8 text-white shadow-lg">
-              <h2 className="font-display text-3xl font-bold mb-6">Our Impact</h2>
-              <div className="grid sm:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">10,000+</div>
-                  <div className="text-teal-100">Trees Planted</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">25 Tons</div>
-                  <div className="text-teal-100">Plastic Removed</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">60+</div>
-                  <div className="text-teal-100">Green Initiatives</div>
-                </div>
-              </div>
-            </div>
-
             {/* How to Participate */}
             <div className="bg-white rounded-2xl p-8 shadow-lg">
               <h2 className="font-display text-3xl font-bold text-navy-900 mb-6">How to Participate</h2>

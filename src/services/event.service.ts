@@ -35,7 +35,7 @@ class EventService {
     }
 
     async updateEvent(id: string, data: Partial<Event>): Promise<{ success: boolean; data: Event }> {
-        return apiV1.patch<{ success: boolean; data: Event }>(`/events/${id}`, data);
+        return apiV1.put<{ success: boolean; data: Event }>(`/events/${id}`, data);
     }
 
     async deleteEvent(id: string): Promise<{ success: boolean }> {

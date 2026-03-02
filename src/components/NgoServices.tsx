@@ -305,10 +305,10 @@ export default function NgoServices() {
                                     <div className="mt-auto space-y-6">
                                         <div className="flex items-center justify-between gap-4">
                                             <span className="inline-block bg-green-500/10 text-green-500 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                                                Free of Cost
+                                                {service.is_free ? 'Free of Cost' : 'Coming Soon'}
                                             </span>
 
-                                            <button
+                                            {service.is_free ? <button
                                                 onClick={() => {
                                                     setSelectedService(service)
                                                     setIsModalOpen(true)
@@ -316,7 +316,7 @@ export default function NgoServices() {
                                                 className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-primary-500/20 text-sm whitespace-nowrap"
                                             >
                                                 Book Now
-                                            </button>
+                                            </button> : null}
                                         </div>
                                     </div>
                                 </div>

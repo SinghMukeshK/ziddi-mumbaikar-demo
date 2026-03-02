@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import Footer from '@/components/Footer'
 import { fundraiserService, Fundraiser } from '@/services/fundraiser.service'
+import { projectService, Project } from '@/services/project.service'
 import { useAuth } from '@/contexts/AuthContext'
 import { Info, ArrowRight, CheckCircle2, Loader2, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -69,8 +70,8 @@ function FundraisersList() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [fetchNextPage])
 
-  const [categories, setCategories] = useState<string[]>(['All'])
-  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [projects, setProjects] = useState<Project[]>([])
+  const [selectedProjectId, setSelectedProjectId] = useState('All')
   const [selectedEligibility, setSelectedEligibility] = useState<string[]>([])
   const [showSuccessfulOnly, setShowSuccessfulOnly] = useState(false)
   const [showSuccess, setShowSuccess] = useState(showCreatedMessage)
@@ -82,18 +83,17 @@ function FundraisersList() {
   const eligibilityOptions = ['Urgent', 'Featured', 'Sadaqah', 'Zakat', 'Lillah', 'Bank Interest']
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchProjects = async () => {
       try {
-        const response = await fundraiserService.getCategories();
+        const response = await projectService.getProjects();
         if (response.success && response.data) {
-          const names = response.data.map(c => c.name);
-          setCategories(['All', ...names]);
+          setProjects(response.data);
         }
       } catch (err) {
-        console.error('Failed to fetch categories:', err);
+        console.error('Failed to fetch projects:', err);
       }
     };
-    fetchCategories();
+    fetchProjects();
   }, []);
 
   // Initial load
@@ -130,10 +130,10 @@ function FundraisersList() {
 
   // Filter fundraisers
   const filteredFundraisers = fundraisers.filter((fundraiser) => {
-    const matchesSearch = fundraiser.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      fundraiser.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = (fundraiser.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (fundraiser.description?.toLowerCase() || '').includes(searchQuery.toLowerCase())
 
-    const matchesCategory = selectedCategory === 'All' || fundraiser.category?.name === selectedCategory
+    const matchesProject = selectedProjectId === 'All' || fundraiser.project_id === selectedProjectId
 
     const matchesEligibility = selectedEligibility.length === 0 ||
       (selectedEligibility.includes('Urgent') && fundraiser.is_urgent) ||
@@ -146,7 +146,7 @@ function FundraisersList() {
     const matchesStatus = !showSuccessfulOnly ||
       (fundraiser.status === 'completed' || fundraiser.raised_amount >= fundraiser.goal_amount)
 
-    return matchesSearch && matchesCategory && matchesEligibility && matchesStatus
+    return matchesSearch && matchesProject && matchesEligibility && matchesStatus
   })
 
   const handleCancelFundraiser = async (id: string) => {
@@ -242,18 +242,19 @@ function FundraisersList() {
                 <div className="w-10 h-10 bg-primary-500/10 rounded-xl flex items-center justify-center text-primary-500">
                   <Info className="w-5 h-5" />
                 </div>
-                <h2 className="text-sm font-black text-navy-900 tracking-widest uppercase">Categories</h2>
+                <h2 className="text-sm font-black text-navy-900 tracking-widest uppercase">Projects</h2>
               </div>
 
               {/* Mobile Category Dropdown */}
               <div className="lg:hidden relative">
                 <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
                   className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl py-3 pl-4 pr-10 focus:outline-none focus:border-primary-500 transition-all font-bold text-navy-900 appearance-none shadow-sm"
                 >
-                  {categories.map((category) => (
-                    <option key={category} value={category}>{category}</option>
+                  <option value="All">All Projects</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>{project.name}</option>
                   ))}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
@@ -261,19 +262,30 @@ function FundraisersList() {
                 </div>
               </div>
 
-              {/* Desktop Category List */}
+              {/* Desktop Project List */}
               <ul className="hidden lg:block space-y-2">
-                {categories.map((category) => (
-                  <li key={category}>
+                <li>
+                  <button
+                    onClick={() => setSelectedProjectId('All')}
+                    className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center justify-between group ${selectedProjectId === 'All'
+                      ? 'bg-navy-900 text-white shadow-lg shadow-navy-900/20'
+                      : 'text-gray-600 hover:bg-primary-50 hover:text-primary-600'
+                      }`}
+                  >
+                    <span className="text-sm font-bold">All Projects</span>
+                  </button>
+                </li>
+                {projects.map((project) => (
+                  <li key={project.id}>
                     <button
-                      onClick={() => setSelectedCategory(category)}
-                      className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center justify-between group ${selectedCategory === category
+                      onClick={() => setSelectedProjectId(project.id)}
+                      className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center justify-between group ${selectedProjectId === project.id
                         ? 'bg-navy-900 text-white shadow-lg shadow-navy-900/20'
                         : 'text-gray-600 hover:bg-primary-50 hover:text-primary-600'
                         }`}
                     >
-                      <span className="text-sm font-bold">{category}</span>
-                      {selectedCategory === category && (
+                      <span className="text-sm font-bold">{project.name}</span>
+                      {selectedProjectId === project.id && (
                         <motion.div layoutId="category-arrow">
                           <ArrowRight className="w-4 h-4" />
                         </motion.div>
@@ -291,7 +303,7 @@ function FundraisersList() {
                   Start your own fundraiser and help your community.
                 </p>
                 <Link
-                  href="/fundraisers/create"
+                  href="/fundraiser/start"
                   className="inline-flex items-center gap-2 bg-white text-primary-600 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider hover:bg-navy-900 hover:text-white transition-all relative z-10 shadow-sm"
                 >
                   Start Now <ArrowRight className="w-3 h-3" />

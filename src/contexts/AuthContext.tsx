@@ -23,7 +23,7 @@ interface AuthContextType {
   isLoggedIn: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  signup: (first_name: string, last_name: string, email: string, password: string, phone?: string, role?: string) => Promise<void>
+  signup: (first_name: string, last_name: string, email: string, password: string, phone?: string) => Promise<void>
   logout: () => void
   updateUser: (updates: Partial<User>) => void
 }
@@ -87,24 +87,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // Signup function
-  const signup = async (first_name: string, last_name: string, email: string, password: string, phone: string = '', role_id: string = '7e9e582e-b3b0-4053-a179-f5fa10747c67') => {
+  const signup = async (first_name: string, last_name: string, email: string, password: string, phone: string = '') => {
     try {
-      const response = await apiV1.post<any>('/auth/register', {
+      // Omit role_id to let the backend safely assign the default 'user' role
+      const payload: any = {
+        tenant_id: '050a9c4a-ebf6-4897-b5fe-5fe8a2ce1317',
         first_name,
         last_name,
         email,
         password,
         password_confirm: password, // Backend likely requires confirmation
-        phone,
-        role_id
-      });
+      }
+
+      if (phone) {
+        payload.phone = phone
+      }
+
+      const response = await apiV1.post<any>('/auth/register', payload);
 
       const { access_token, user: userData } = response.data;
 
       // Store token and user data
       localStorage.setItem('auth_token', access_token);
       localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('tenant_id', userData.tenant_id);
+      localStorage.setItem('tenant_id', userData.tenant_id || '050a9c4a-ebf6-4897-b5fe-5fe8a2ce1317');
       setUser(userData);
     } catch (error: any) {
       console.error('Signup failed:', error);

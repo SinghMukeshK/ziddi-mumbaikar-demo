@@ -156,7 +156,7 @@ export default function Hero() {
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
               <Heart className="w-5 h-5 text-primary-500 fill-primary-500/20 group-hover:fill-primary-500 transition-all" />
-              Become a Sustainer
+              Become a Donor
               <span className="bg-primary-500 text-[10px] font-black uppercase px-2 py-0.5 rounded-full ml-1">Monthly</span>
             </span>
           </button>

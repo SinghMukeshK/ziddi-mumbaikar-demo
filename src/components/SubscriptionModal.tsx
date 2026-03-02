@@ -200,7 +200,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                                 <Heart className="w-8 h-8 fill-white" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black uppercase tracking-tight">Become a Sustainer</h2>
+                                <h2 className="text-2xl font-black uppercase tracking-tight">Become a Donor</h2>
                                 <p className="text-white/80 font-bold text-xs uppercase tracking-widest">Support Mumbai Continuously</p>
                             </div>
                         </div>
