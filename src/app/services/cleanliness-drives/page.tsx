@@ -45,12 +45,12 @@ export default function CleanlinessDrivesPage() {
               <h2 className="font-display text-3xl font-bold text-navy-900 mb-6">Overview</h2>
               <div className="prose prose-lg max-w-none text-gray-700">
                 <p>
-                  Our Cleanliness Drives are at the heart of the Ziddi Mumbaikar movement. We believe that a clean city 
-                  starts with active citizens who take responsibility for their surroundings. From beaches to streets, 
+                  Our Cleanliness Drives are at the heart of the Ziddi Mumbaikar movement. We believe that a clean city
+                  starts with active citizens who take responsibility for their surroundings. From beaches to streets,
                   parks to slums, we organize regular cleanup drives across Mumbai.
                 </p>
                 <p className="mt-4">
-                  These aren&apos;t just about picking up trash—they&apos;re about building community, raising awareness, 
+                  These aren&apos;t just about picking up trash—they&apos;re about building community, raising awareness,
                   and creating lasting change in how people think about public spaces.
                 </p>
               </div>
@@ -114,25 +114,6 @@ export default function CleanlinessDrivesPage() {
                       Ongoing care for parks, gardens, and public spaces to maintain cleanliness standards
                     </p>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Impact Stats */}
-            <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-8 text-white shadow-lg">
-              <h2 className="font-display text-3xl font-bold mb-6">Our Impact</h2>
-              <div className="grid sm:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">150+</div>
-                  <div className="text-green-100">Drives Completed</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">50 Tons</div>
-                  <div className="text-green-100">Waste Collected</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">2000+</div>
-                  <div className="text-green-100">Volunteers</div>
                 </div>
               </div>
             </div>

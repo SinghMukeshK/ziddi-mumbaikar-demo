@@ -153,8 +153,10 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-bold text-navy-900 mb-1">Office Address</h3>
                     <p className="text-gray-600">
-                      Oshiwara, Jogeshwari West<br />
-                      Mumbai, Maharashtra 400102
+                      Shop No. 09, Bldg. No. R-5, <br />
+                      Gulshan Nagar, Raghvendra Mandir Road,Oshiwara, Jogeshwari (W), <br />
+                      Mumbai 400102<br />
+                      Maharashtra, India.
                     </p>
                   </div>
                 </div>

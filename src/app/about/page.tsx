@@ -40,7 +40,7 @@ export default function AboutPage() {
             <h2 className="font-display text-4xl font-bold text-navy-900 mb-6">Our Story</h2>
             <div className="prose prose-lg text-gray-700 space-y-4">
               <p>
-                It started during the 2020 lockdown. When the pandemic brought Mumbai to its knees, we saw our neighbors
+                It started during the 2018, and when the pandemic brought Mumbai to its knees, we saw our neighbors
                 struggling—migrants stranded without food, families losing jobs, communities in crisis. The government
                 machinery was overwhelmed, and people needed help immediately.
               </p>
@@ -67,10 +67,10 @@ export default function AboutPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-navy-900">Founded</h3>
-                    <p className="text-2xl font-black text-primary-600">2020</p>
+                    <p className="text-2xl font-black text-primary-600">2018</p>
                   </div>
                 </div>
-                <p className="text-gray-600 text-sm">During the COVID-19 pandemic</p>
+                <p className="text-gray-600 text-sm"></p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="flex items-center gap-4 mb-3">
@@ -81,7 +81,7 @@ export default function AboutPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-navy-900">Volunteers</h3>
-                    <p className="text-2xl font-black text-blue-600">5,000+</p>
+                    <p className="text-2xl font-black text-blue-600">5,00+</p>
                   </div>
                 </div>
                 <p className="text-gray-600 text-sm">Active community members</p>
@@ -95,7 +95,7 @@ export default function AboutPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-navy-900">Projects</h3>
-                    <p className="text-2xl font-black text-green-600">250+</p>
+                    <p className="text-2xl font-black text-green-600">25+</p>
                   </div>
                 </div>
                 <p className="text-gray-600 text-sm">Completed initiatives</p>
@@ -141,34 +141,6 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Our Impact */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-12">
-          <h2 className="font-display text-4xl font-bold text-navy-900 mb-4">Our Impact in Numbers</h2>
-          <p className="text-xl text-gray-600">
-            Real results from real people working together.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div className="text-center">
-            <div className="text-5xl font-black text-primary-600 mb-2">5,000+</div>
-            <div className="text-gray-600 font-medium">Active Volunteers</div>
-          </div>
-          <div className="text-center">
-            <div className="text-5xl font-black text-blue-600 mb-2">250+</div>
-            <div className="text-gray-600 font-medium">Projects Completed</div>
-          </div>
-          <div className="text-center">
-            <div className="text-5xl font-black text-green-600 mb-2">50,000+</div>
-            <div className="text-gray-600 font-medium">Lives Impacted</div>
-          </div>
-          <div className="text-center">
-            <div className="text-5xl font-black text-purple-600 mb-2">24/7</div>
-            <div className="text-gray-600 font-medium">Support Available</div>
-          </div>
-        </div>
-      </div>
 
       {/* Join Us CTA */}
       <div className="bg-gradient-to-br from-primary-500 to-primary-600 py-16">

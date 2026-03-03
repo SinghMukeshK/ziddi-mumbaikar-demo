@@ -29,6 +29,18 @@ class EventService {
         // Because the controller responds directly with { data, meta }, we will treat the returned object as EventsResponse
         return apiV1.get<EventsResponse>('/events', { params });
     }
+
+    async createEvent(data: Partial<Event>): Promise<{ success: boolean; data: Event }> {
+        return apiV1.post<{ success: boolean; data: Event }>('/events', data);
+    }
+
+    async updateEvent(id: string, data: Partial<Event>): Promise<{ success: boolean; data: Event }> {
+        return apiV1.put<{ success: boolean; data: Event }>(`/events/${id}`, data);
+    }
+
+    async deleteEvent(id: string): Promise<{ success: boolean }> {
+        return apiV1.delete<{ success: boolean }>(`/events/${id}`);
+    }
 }
 
 export const eventService = new EventService();

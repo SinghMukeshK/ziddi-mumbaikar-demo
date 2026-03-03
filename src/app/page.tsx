@@ -15,11 +15,12 @@ export default function Home() {
     <main className="min-h-screen">
       <EventsModal />
       <Hero />
+      <About />
+      {/* <Impact /> */}
+      <WhatWeDo />
       <TrendingFundraisers />
       <NgoServices />
-      <WhatWeDo />
       <Events />
-      <About />
       <Gallery />
       <VolunteerHelp />
       <Footer />

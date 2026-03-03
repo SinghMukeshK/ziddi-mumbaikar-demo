@@ -4,8 +4,10 @@ import { motion } from 'framer-motion'
 import { Heart, Clock, CheckCircle2, Users, ArrowRight, Share2, Info, Edit, Star, Ban } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Fundraiser } from '@/services/fundraiser.service'
+import { Fundraiser, fundraiserService } from '@/services/fundraiser.service'
 import { formatDate } from '@/lib/date-utils'
+import { useState, useEffect } from 'react'
+import { AnimatePresence } from 'framer-motion'
 
 interface FundraiserCardProps {
     fundraiser: Fundraiser;
@@ -31,6 +33,41 @@ export default function FundraiserCard({
     const isFeatured = fundraiser.is_featured
     const isCompleted = fundraiser.status === 'completed'
     const isCancelled = fundraiser.status === 'cancelled'
+
+    // Image carousel logic
+    const [currentImageIndex, setCurrentImageIndex] = useState(0)
+    const [fetchedImages, setFetchedImages] = useState<string[]>([])
+
+    useEffect(() => {
+        // Fetch gallery if images array is logically empty and we have an ID
+        if ((!fundraiser.images || fundraiser.images.length === 0) && fundraiser.id) {
+            const loadGallery = async () => {
+                try {
+                    const res = await fundraiserService.getFundraiserExtensions(fundraiser.id);
+                    if (res.success && res.data && res.data.images && res.data.images.length > 0) {
+                        setFetchedImages(res.data.images.map(img => img.image_url));
+                    }
+                } catch (e) {
+                    console.error("Error loading gallery for card", e);
+                }
+            };
+            loadGallery();
+        }
+    }, [fundraiser.id, fundraiser.images]);
+
+    const images = (fundraiser.images && fundraiser.images.length > 0)
+        ? fundraiser.images.map((img: any) => img.image_url)
+        : (fetchedImages.length > 0 ? fetchedImages : [fundraiser.cover_image_url || 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&q=80'])
+
+    useEffect(() => {
+        if (images.length <= 1) return;
+
+        const interval = setInterval(() => {
+            setCurrentImageIndex(prev => (prev + 1) % images.length);
+        }, 3000); // Scroll every 3 seconds
+
+        return () => clearInterval(interval);
+    }, [images.length]);
 
     const handleShare = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -66,12 +103,23 @@ export default function FundraiserCard({
 
                 {/* Image Section with Smart Overlays */}
                 <div className="relative h-60 overflow-hidden">
-                    <Image
-                        src={fundraiser.cover_image_url || 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&q=80'}
-                        alt={fundraiser.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-1000"
-                    />
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={images[currentImageIndex]}
+                            initial={{ opacity: 0, scale: 1.1 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.8 }}
+                            className="absolute inset-0"
+                        >
+                            <Image
+                                src={images[currentImageIndex]}
+                                alt={fundraiser.title}
+                                fill
+                                className="object-cover"
+                            />
+                        </motion.div>
+                    </AnimatePresence>
 
                     {/* Subtle Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -157,6 +205,20 @@ export default function FundraiserCard({
                             )}
                         </div>
                     )}
+
+                    {/* Image Indicators */}
+                    {images.length > 1 && (
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+                            {images.map((_, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${idx === currentImageIndex ? 'bg-white w-4' : 'bg-white/50'
+                                        }`}
+                                />
+                            ))}
+                        </div>
+                    )}
+
                 </div>
 
                 {/* Dynamic Content Section */}

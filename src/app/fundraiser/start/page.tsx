@@ -5,15 +5,16 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { fundraiserService, FundraiserCategory } from '@/services/fundraiser.service'
+import { projectService, Project } from '@/services/project.service'
 import { beneficiaryService } from '@/services/beneficiary.service'
 import Footer from '@/components/Footer';
 import { formatDate, parseDatabaseDate } from '@/lib/date-utils'
 import ImageEditor from '@/components/ImageEditor'
-import { Pencil, X as XIcon, Star, AlertTriangle, Sparkles } from 'lucide-react'
+import { Pencil, X as XIcon, Star, AlertTriangle, Sparkles, CheckCircle2, LayoutGrid } from 'lucide-react'
 
 function StartFundraiserContent() {
   const router = useRouter()
-  const [step, setStep] = useState(1) // 1: Category, 2: Details, 3: Story, 4: Documents, 5: Review
+  const [step, setStep] = useState(1) // 1: Project, 2: Details, 3: Story, 4: Documents, 5: Review
   const [formData, setFormData] = useState({
     // Step 1: Category & Type
     category: '',
@@ -62,23 +63,31 @@ function StartFundraiserContent() {
   const [step4Errors, setStep4Errors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [apiCategories, setApiCategories] = useState<FundraiserCategory[]>([])
+  const [apiProjects, setApiProjects] = useState<Project[]>([])
   // Image editor state
   const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null)
   const [pendingFiles, setPendingFiles] = useState<File[]>([]) // queue of new files to edit
   const [pendingIndex, setPendingIndex] = useState(0)
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await fundraiserService.getCategories();
-        if (response.success && response.data) {
-          setApiCategories(response.data);
+        const [catRes, projRes] = await Promise.all([
+          fundraiserService.getCategories(),
+          projectService.getProjects()
+        ]);
+
+        if (catRes.success && catRes.data) {
+          setApiCategories(catRes.data);
+        }
+        if (projRes.success && projRes.data) {
+          setApiProjects(projRes.data);
         }
       } catch (err) {
-        console.error('Failed to fetch categories:', err);
+        console.error('Failed to fetch initial data:', err);
       }
     };
-    fetchCategories();
+    fetchInitialData();
   }, []);
 
   const getCategoryIcon = (name: string) => {
@@ -203,7 +212,7 @@ function StartFundraiserContent() {
 
   const validateStep1 = () => {
     if (!formData.category) {
-      setError('Please select a category')
+      setError('Please select a project')
       return false
     }
     return true
@@ -400,7 +409,8 @@ function StartFundraiserContent() {
         beneficiary_story: `${formData.currentSituation}\n\n${formData.howFundsWillHelp}`.trim(),
         start_date: new Date().toISOString().split('T')[0],
         end_date: formData.requiredBy ? parseDatabaseDate(formData.requiredBy).toISOString().split('T')[0] : undefined,
-        category_id: formData.category,
+        category_id: formData.category || (apiCategories.length > 0 ? apiCategories[0].id : ''),
+        project_id: formData.category, // We are using 'category' state to store the picked project ID
         is_zakat_eligible: formData.isZakatEligible,
         is_sadaqah_eligible: formData.isSadaqahEligible,
         is_lillah_eligible: formData.isLillahEligible,
@@ -520,7 +530,7 @@ function StartFundraiserContent() {
           {/* Progress Indicator */}
           <div className="mb-8">
             <div className="flex justify-between items-center">
-              {['Category', 'Details', 'Story', 'Documents', 'Review'].map((label, index) => {
+              {['Project', 'Details', 'Story', 'Documents', 'Review'].map((label, index) => {
                 const stepNumber = index + 1
                 const isActive = step === stepNumber
                 const isCompleted = step > stepNumber
@@ -555,35 +565,50 @@ function StartFundraiserContent() {
             {/* Step 1: Select Category */}
             {step === 1 && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Fundraiser Category</h2>
-                {apiCategories.length === 0 ? (
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Project</h2>
+                {apiProjects.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                    <p className="text-gray-500">Loading categories...</p>
+                    <p className="text-gray-500">Loading projects...</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {apiCategories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, category: cat.id }))}
-                        className={`p-4 border-2 rounded-lg text-left transition-all ${formData.category === cat.id
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-200 hover:border-primary-300'
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {apiProjects.map((project) => (
+                      <div
+                        key={project.id}
+                        onClick={() => setFormData(prev => ({ ...prev, category: project.id }))}
+                        className={`group relative cursor-pointer p-6 rounded-[2rem] border-2 transition-all duration-500 flex flex-col items-center justify-center text-center gap-4 min-h-[160px] ${formData.category === project.id
+                            ? 'border-primary-500 bg-primary-50/50 shadow-xl shadow-primary-500/10 scale-[1.02]'
+                            : 'border-gray-100 bg-white hover:border-primary-200 hover:shadow-2xl hover:shadow-gray-200/50 hover:-translate-y-1'
                           }`}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className={`flex-shrink-0 ${formData.category === cat.id ? 'text-primary-600' : 'text-gray-400'
-                            }`}>
-                            {getCategoryIcon(cat.name)}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{cat.name}</h3>
-                            <p className="text-sm text-gray-600 mt-1">{cat.description || 'Campaign for ' + cat.name}</p>
-                          </div>
+                        {/* Status Icon */}
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${formData.category === project.id
+                            ? 'bg-primary-500 text-white rotate-6'
+                            : 'bg-gray-50 text-gray-400 group-hover:bg-primary-100 group-hover:text-primary-500'
+                          }`}>
+                          {formData.category === project.id ? (
+                            <CheckCircle2 className="w-7 h-7" />
+                          ) : (
+                            <LayoutGrid className="w-7 h-7" />
+                          )}
                         </div>
-                      </button>
+
+                        {/* Project Name */}
+                        <div className="space-y-1">
+                          <h3 className={`font-black text-sm uppercase tracking-wider leading-tight transition-colors duration-300 ${formData.category === project.id ? 'text-navy-900' : 'text-gray-500 group-hover:text-navy-900'
+                            }`}>
+                            {project.name}
+                          </h3>
+                          <div className={`h-1 w-8 mx-auto rounded-full transition-all duration-500 ${formData.category === project.id ? 'bg-primary-500 w-12' : 'bg-gray-100 group-hover:bg-primary-200'
+                            }`} />
+                        </div>
+
+                        {/* Selection Glow */}
+                        {formData.category === project.id && (
+                          <div className="absolute inset-0 rounded-[2rem] bg-primary-500/5 animate-pulse pointer-events-none" />
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}

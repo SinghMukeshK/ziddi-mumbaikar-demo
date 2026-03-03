@@ -8,14 +8,35 @@ export interface Tenant {
     website?: string;
     logo_url?: string;
     business_type?: 'ngo' | 'charity' | 'foundation' | 'institution';
-    country?: string;
+
+    // Address Details
+    address_line1?: string;
+    address_line2?: string;
+    landmark?: string;
     city?: string;
     state?: string;
+    country?: string;
+    pincode?: string;
+
+    // Contact
     phone?: string;
     email?: string;
+
+    // Bank Details
+    bank_name?: string;
+    account_name?: string;
+    account_number?: string;
+    ifsc_code?: string;
+    branch_name?: string;
+    account_type?: 'savings' | 'current';
+
+    // Regulatory & Tax
     pan_number?: string;
     ngo_80g?: string;
     ngo_12a?: string;
+    registration_number?: string;
+    darpan_id?: string;
+
     status?: string;
     currency?: string;
     timezone?: string;

@@ -5,10 +5,12 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Footer from '@/components/Footer'
-import { fundraiserService, Fundraiser, FundraiserUpdate } from '@/services/fundraiser.service'
+import { fundraiserService, Fundraiser, FundraiserUpdate, mapCampaignToFundraiser } from '@/services/fundraiser.service'
 import { donationService } from '@/services/donation.service'
+import { beneficiaryService } from '@/services/beneficiary.service'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import FundraiserCard from '@/components/FundraiserCard'
 import { formatDate, parseDatabaseDate } from '@/lib/date-utils'
 import { useRazorpay } from '@/hooks/useRazorpay'
 import {
@@ -33,7 +35,10 @@ import {
   Edit,
   Star,
   Image as ImageIcon,
-  Download
+  Download,
+  Eye,
+  User,
+  HeartHandshake
 } from 'lucide-react'
 
 // Fallback image
@@ -46,7 +51,7 @@ export default function FundraiserDetailPage() {
 
   const [fundraiser, setFundraiser] = useState<Fundraiser | null>(null)
   const [readMore, setReadMore] = useState(false)
-  const [activeTab, setActiveTab] = useState<'about' | 'images' | 'documents' | 'updates'>('about')
+  const [activeTab, setActiveTab] = useState<'about' | 'beneficiary' | 'images' | 'documents' | 'updates'>('about')
   const [showDonationModal, setShowDonationModal] = useState(false)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
 
@@ -76,6 +81,8 @@ export default function FundraiserDetailPage() {
   const [isCancelling, setIsCancelling] = useState(false)
   const [error, setError] = useState('')
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [previewDoc, setPreviewDoc] = useState<{ name: string; url: string; type: string } | null>(null)
+  const [beneficiaryCampaigns, setBeneficiaryCampaigns] = useState<any[]>([])
 
   useEffect(() => {
     const fetchFundraiser = async () => {
@@ -88,9 +95,30 @@ export default function FundraiserDetailPage() {
           fundraiserService.getFundraiserExtensions(params.id as string),
           fundraiserService.getFundraiserStats(params.id as string)
         ]);
-        setFundraiser(fundResponse.data);
-        setExtensions(extResponse.data);
-        setStats(statsResponse.data);
+
+        if (fundResponse.success && fundResponse.data) {
+          // Strict rule: Only active campaigns visible to public
+          if (fundResponse.data.status !== 'active' && user?.role !== 'admin' && user?.role !== 'super_admin') {
+            setError('This campaign is no longer active and is hidden from public view.');
+            setLoading(false);
+            return;
+          }
+          setFundraiser(fundResponse.data);
+          setExtensions(extResponse.data);
+          setStats(statsResponse.data);
+
+          if (fundResponse.data.beneficiary_id) {
+            try {
+              const bResponse = await beneficiaryService.getBeneficiaryCampaigns(fundResponse.data.beneficiary_id);
+              if (bResponse.success && bResponse.data) {
+                // Filter to only show active campaigns from the same beneficiary
+                setBeneficiaryCampaigns(bResponse.data.filter((c: any) => c.status === 'active' && c.id !== fundResponse.data.id));
+              }
+            } catch (bErr) {
+              console.error('Failed to fetch beneficiary campaigns:', bErr);
+            }
+          }
+        }
       } catch (err: any) {
         console.error('Failed to fetch fundraiser:', err);
         setError('Fundraiser not found or failed to load.');
@@ -183,6 +211,8 @@ export default function FundraiserDetailPage() {
     setSubmittingDonation(true)
     setPaymentStep('processing')
 
+    let finalDonationId = ''
+
     try {
       if (isMonthly) {
         // Step 1: Create Razorpay subscription on backend
@@ -204,6 +234,7 @@ export default function FundraiserDetailPage() {
         }
 
         const { subscription_id, internal_subscription_id, key_id } = orderResponse.data as any
+        finalDonationId = internal_subscription_id
 
         // Step 2: Open Razorpay checkout popup
         const paymentResponse = await openRazorpay({
@@ -250,6 +281,7 @@ export default function FundraiserDetailPage() {
         }
 
         const { donation_id, razorpay_order_id, amount: orderAmount, currency, key_id } = orderResponse.data
+        finalDonationId = donation_id
 
         // Step 2: Open Razorpay checkout popup
         const paymentResponse = await openRazorpay({
@@ -282,7 +314,7 @@ export default function FundraiserDetailPage() {
 
       // Fetch the donation to get the official receipt number (donation_number)
       try {
-        const donationDetails = await donationService.getDonationById(donation_id);
+        const donationDetails = await donationService.getDonationById(finalDonationId);
         if (donationDetails.data && donationDetails.data.donation_number) {
           setReceiptNumber(donationDetails.data.donation_number);
         }
@@ -402,6 +434,22 @@ export default function FundraiserDetailPage() {
     }
   }
 
+  const handlePreview = (doc: any) => {
+    setPreviewDoc({
+      name: doc.file_name || doc.document_type,
+      url: doc.file_url,
+      type: doc.file_url.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'
+    })
+  }
+
+  useEffect(() => {
+    return () => {
+      if (previewDoc?.url.startsWith('blob:')) {
+        URL.revokeObjectURL(previewDoc.url)
+      }
+    }
+  }, [previewDoc])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -435,6 +483,70 @@ export default function FundraiserDetailPage() {
 
   return (
     <>
+      {/* Document Preview Modal */}
+      <AnimatePresence>
+        {previewDoc && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-navy-900/90 flex items-center justify-center p-4 md:p-8 backdrop-blur-sm"
+            onClick={() => setPreviewDoc(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-[2.5rem] w-full max-w-5xl h-[85vh] overflow-hidden flex flex-col shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gray-50/50">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-primary-500" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Document Preview</p>
+                    <h3 className="font-bold text-navy-900 truncate max-w-[200px] md:max-w-md">{previewDoc.name}</h3>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setPreviewDoc(null)}
+                  className="p-3 hover:bg-gray-100 rounded-full text-gray-400 hover:text-navy-900 transition-all"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="flex-1 bg-gray-100/50 relative overflow-auto flex items-center justify-center p-4 md:p-10">
+                {previewDoc.type.includes('pdf') ? (
+                  <iframe
+                    src={`${previewDoc.url}#toolbar=0`}
+                    className="w-full h-full rounded-[2rem] shadow-2xl bg-white border-0"
+                    title="PDF Preview"
+                  />
+                ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={previewDoc.url}
+                    alt={previewDoc.name}
+                    className="max-w-full max-h-full object-contain rounded-[2rem] shadow-2xl"
+                  />
+                )}
+              </div>
+
+              <div className="px-8 py-6 bg-gray-50 border-t border-gray-100 flex justify-center">
+                <button
+                  onClick={() => setPreviewDoc(null)}
+                  className="px-12 py-4 bg-navy-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-primary-500 transition-all shadow-xl shadow-navy-900/10"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="min-h-screen bg-white print:hidden">
         {/* Immersive Header / Breadcrumb */}
         <div className="bg-gray-50/50 border-b border-gray-100">
@@ -585,9 +697,10 @@ export default function FundraiserDetailPage() {
 
               {/* Premium Tabs Section */}
               <div className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-100/50 border border-gray-100 overflow-hidden">
-                <div className="flex border-b border-gray-100 px-8 bg-gray-50/30 overflow-x-auto no-scrollbar">
+                <div className="flex border-b border-gray-100 bg-gray-50/30 overflow-hidden">
                   {[
                     { id: 'about', label: 'Our Story', icon: Info },
+                    { id: 'beneficiary', label: 'Beneficiary', icon: User },
                     { id: 'images', label: 'Gallery', icon: Edit },
                     { id: 'documents', label: 'Verification', icon: ShieldCheck },
                     { id: 'updates', label: 'Updates', icon: Clock }
@@ -595,7 +708,7 @@ export default function FundraiserDetailPage() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`relative px-4 sm:px-8 py-4 sm:py-6 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id ? 'text-primary-600' : 'text-gray-400 hover:text-navy-900'
+                      className={`relative flex-1 px-2 py-4 sm:py-6 text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap ${activeTab === tab.id ? 'text-primary-600' : 'text-gray-400 hover:text-navy-900'
                         }`}
                     >
                       <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary-500' : 'text-gray-300'}`} />
@@ -656,6 +769,82 @@ export default function FundraiserDetailPage() {
                             </div>
                           </div>
                         )}
+                      </motion.div>
+                    )}
+
+                    {activeTab === 'beneficiary' && (
+                      <motion.div
+                        key="beneficiary"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        className="space-y-10"
+                      >
+                        <div className="bg-primary-50/30 rounded-[2rem] p-8 md:p-10 border border-primary-100/50">
+                          <h3 className="text-2xl font-black text-navy-900 mb-6 flex items-center gap-3">
+                            <User className="w-6 h-6 text-primary-500" />
+                            Beneficiary Profile
+                          </h3>
+                          <div className="grid md:grid-cols-2 gap-8">
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Name</p>
+                              <p className="text-xl font-bold text-navy-900">{fundraiser.beneficiary_name}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Status</p>
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                <p className="text-sm font-bold text-green-600 uppercase tracking-widest">Verified Beneficiary</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-8 pt-8 border-t border-primary-100/50">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">About the Beneficiary</p>
+                            <p className="text-gray-700 leading-relaxed font-medium whitespace-pre-line">
+                              {fundraiser.beneficiary_story || "Providing support for medical and essential needs to ensure a dignified life."}
+                            </p>
+                          </div>
+                        </div>
+
+                        {beneficiaryCampaigns.length > 0 && (
+                          <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-black text-navy-900 uppercase tracking-widest">Other Campaigns</h4>
+                              <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-[10px] font-black">{beneficiaryCampaigns.length} Active</span>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                              {beneficiaryCampaigns.map((camp: any, idx: number) => (
+                                <FundraiserCard
+                                  key={camp.id}
+                                  fundraiser={mapCampaignToFundraiser(camp)}
+                                  index={idx}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="bg-navy-900 rounded-[2.5rem] p-8 md:p-10 text-white relative overflow-hidden group">
+                          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -mr-32 -mt-32 transition-transform group-hover:scale-125 duration-700" />
+                          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                            <div className="w-20 h-20 bg-white/10 rounded-[1.5rem] flex items-center justify-center backdrop-blur-md">
+                              <HeartHandshake className="w-10 h-10 text-primary-400" />
+                            </div>
+                            <div className="flex-1 text-center md:text-left">
+                              <h4 className="text-2xl font-black mb-2">Support the Cause</h4>
+                              <p className="text-white/60 font-medium leading-relaxed">
+                                Your contribution goes directly to the beneficiary for their {fundraiser.category?.name || 'needs'}. We ensure 100% transparency.
+                              </p>
+                            </div>
+                            <button
+                              onClick={handleDonateClick}
+                              className="px-10 py-5 bg-primary-500 hover:bg-primary-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-primary-500/20"
+                            >
+                              Donate Now
+                            </button>
+                          </div>
+                        </div>
                       </motion.div>
                     )}
 
@@ -722,24 +911,25 @@ export default function FundraiserDetailPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {extensions.documents && extensions.documents.length > 0 ? (
                             extensions.documents.map((doc: any) => (
-                              <a
+                              <div
                                 key={doc.id}
-                                href={doc.file_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group flex items-center gap-4 p-5 bg-gray-50 rounded-[2rem] border-2 border-transparent hover:border-primary-500 hover:bg-white transition-all shadow-sm hover:shadow-xl hover:shadow-primary-500/10"
+                                className="group flex items-center gap-4 p-5 bg-gray-50 rounded-[2rem] border-2 border-transparent hover:border-primary-500 hover:bg-white transition-all shadow-sm hover:shadow-xl hover:shadow-primary-500/10 cursor-pointer"
+                                onClick={() => handlePreview(doc)}
                               >
                                 <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-gray-400 group-hover:text-primary-500 shadow-inner">
                                   <FileText className="w-6 h-6" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-black text-navy-900 truncate uppercase tracking-tight">{doc.file_name || doc.document_type}</p>
-                                  <p className="text-[10px] font-bold text-primary-500 uppercase">View Document</p>
+                                  <p className="text-[10px] font-bold text-primary-500 uppercase flex items-center gap-1.5">
+                                    <Eye className="w-3.5 h-3.5" />
+                                    Preview Document
+                                  </p>
                                 </div>
-                                <motion.div className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all">
+                                <div className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all">
                                   <ArrowRight className="w-5 h-5 text-primary-500" />
-                                </motion.div>
-                              </a>
+                                </div>
+                              </div>
                             ))
                           ) : (
                             <div className="col-span-full py-12 text-center text-gray-400 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">

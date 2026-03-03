@@ -32,6 +32,10 @@ export interface NgoServiceBooking {
     notes?: string;
     status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
     donation_id?: string;
+    age?: number;
+    gender?: string;
+    reference_name?: string;
+    reference_number?: string;
 }
 
 export interface BookingRequest {
@@ -46,6 +50,10 @@ export interface BookingRequest {
     booking_time?: string;
     notes?: string;
     donation_amount?: number;
+    age?: number;
+    gender?: string;
+    reference_name?: string;
+    reference_number?: string;
 }
 
 export const ngoService = {

@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   },
 }
 
+import { Toaster } from 'react-hot-toast'
+
 export default function RootLayout({
   children,
 }: {
@@ -38,6 +40,7 @@ export default function RootLayout({
             <Header />
           </Suspense>
           {children}
+          <Toaster position="top-center" reverseOrder={false} />
         </AuthProvider>
       </body>
     </html>

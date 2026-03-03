@@ -45,13 +45,13 @@ export default function LocalAssistancePage() {
               <h2 className="font-display text-3xl font-bold text-navy-900 mb-6">Overview</h2>
               <div className="prose prose-lg max-w-none text-gray-700">
                 <p>
-                  Every neighborhood has people who need help and people ready to help. Our Local Assistance program 
-                  bridges this gap by creating a network of community support for everyday challenges—from helping 
+                  Every neighborhood has people who need help and people ready to help. Our Local Assistance program
+                  bridges this gap by creating a network of community support for everyday challenges—from helping
                   elderly neighbors with groceries to finding tutors for children.
                 </p>
                 <p className="mt-4">
-                  We believe in the power of local connections. When you know your neighbors and they know you, 
-                  communities become stronger and more resilient. Our platform makes it easy to request help or 
+                  We believe in the power of local connections. When you know your neighbors and they know you,
+                  communities become stronger and more resilient. Our platform makes it easy to request help or
                   offer your skills and time to those nearby.
                 </p>
               </div>
@@ -115,25 +115,6 @@ export default function LocalAssistancePage() {
                       Platform for neighbors to share resources, tools, and services within the community
                     </p>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Impact Stats */}
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-8 text-white shadow-lg">
-              <h2 className="font-display text-3xl font-bold mb-6">Our Impact</h2>
-              <div className="grid sm:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">300+</div>
-                  <div className="text-orange-100">Families Helped</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">1,200+</div>
-                  <div className="text-orange-100">Volunteer Hours</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">40+</div>
-                  <div className="text-orange-100">Active Neighborhoods</div>
                 </div>
               </div>
             </div>

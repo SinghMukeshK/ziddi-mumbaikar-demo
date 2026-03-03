@@ -19,6 +19,8 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
     const [phone, setPhone] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const [lastSubscriptionId, setLastSubscriptionId] = useState<string | null>(null)
+    const [paidFirstInstallment, setPaidFirstInstallment] = useState(false)
     const { openRazorpay } = useRazorpay()
 
     const resetStates = () => {
@@ -31,6 +33,8 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         setPhone('')
         setError('')
         setLoading(false)
+        setLastSubscriptionId(null)
+        setPaidFirstInstallment(false)
     }
 
     // Reset state when modal is closed
@@ -139,6 +143,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 }
 
                 const { subscription_id, key_id } = response.data
+                setLastSubscriptionId(subscription_id)
 
                 // 2. Open Razorpay Checkout for Subscriptions
                 await openRazorpay({
@@ -166,200 +171,223 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         }
     }
 
+    const handleFirstInstallment = async () => {
+        setLoading(true)
+        setStep('processing')
+        try {
+            const finalAmount = getFinalAmount()
+            const response = await donationService.createRazorpayOrder({
+                amount: finalAmount,
+                donor_name: name,
+                donor_email: email,
+                donor_phone: phone,
+                currency: 'INR',
+                donation_type: 'general',
+                message: `First installment for subscription ${lastSubscriptionId}`
+            })
+
+            if (!response.success || !response.data) {
+                throw new Error('Failed to initiate payment.')
+            }
+
+            const { razorpay_order_id, key_id } = response.data
+
+            await openRazorpay({
+                key: key_id,
+                amount: finalAmount * 100,
+                currency: 'INR',
+                order_id: razorpay_order_id,
+                name: 'Ziddi Mumbaikar',
+                description: 'First Installment Payment',
+                image: '/logo.webp',
+                prefill: { name, email, contact: phone },
+                theme: { color: '#f0750a' }
+            })
+            setPaidFirstInstallment(true)
+            setStep('success')
+        } catch (err: any) {
+            setError(err.message || 'Payment failed')
+            setStep('success') // Return to success screen to show error
+        } finally {
+            setLoading(false)
+        }
+    }
+
     if (!isOpen) return null
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:p-8">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                 {/* Backdrop */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
-                    className="absolute inset-0 bg-navy-900/80 backdrop-blur-md"
+                    className="absolute inset-0 bg-navy-900/40 backdrop-blur-sm"
                 />
 
                 {/* Modal Container */}
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="relative w-full max-w-xl bg-white rounded-[2.5rem] overflow-hidden shadow-2xl"
+                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                    className="relative w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100"
                 >
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-primary-500 to-orange-400 p-8 text-white relative">
+                    {/* Header - Compact */}
+                    <div className="bg-navy-900 px-6 py-5 text-white flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary-500 rounded-xl">
+                                <Heart className="w-5 h-5 fill-white" />
+                            </div>
+                            <h2 className="text-lg font-black tracking-tight uppercase">Support Mumbai</h2>
+                        </div>
                         <button
                             onClick={onClose}
-                            className="absolute top-6 right-6 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
+                            className="p-1 hover:bg-white/10 rounded-lg transition-colors"
                         >
                             <X className="w-5 h-5" />
                         </button>
-                        <div className="flex items-center gap-4 mb-2">
-                            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                                <Heart className="w-8 h-8 fill-white" />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-black uppercase tracking-tight">Become a Sustainer</h2>
-                                <p className="text-white/80 font-bold text-xs uppercase tracking-widest">Support Mumbai Continuously</p>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Content */}
-                    <div className="p-8 sm:p-10">
-                        {step === 'amount' && (
-                            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                                <div className="mb-8">
-                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Select Frequency</h3>
-                                    <div className="flex p-1 bg-gray-100 rounded-2xl mb-8">
-                                        {frequencies.map((f) => (
-                                            <button
-                                                key={f.id}
-                                                onClick={() => setFrequency(f.id as any)}
-                                                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${frequency === f.id
-                                                    ? 'bg-white text-primary-500 shadow-sm'
-                                                    : 'text-gray-500 hover:text-navy-900'
-                                                    }`}
-                                            >
-                                                {f.label}
-                                            </button>
-                                        ))}
-                                    </div>
+                    <div className="p-6">
+                        {step !== 'success' && step !== 'processing' ? (
+                            <div className="space-y-5">
+                                {/* Frequency Toggle */}
+                                <div className="grid grid-cols-4 gap-2">
+                                    {frequencies.map((f) => (
+                                        <button
+                                            key={f.id}
+                                            onClick={() => setFrequency(f.id as any)}
+                                            className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${frequency === f.id
+                                                ? 'bg-primary-50 border-primary-500 text-primary-600'
+                                                : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            {f.label}
+                                        </button>
+                                    ))}
+                                </div>
 
-                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Choose Amount</h3>
-                                    <div className="grid grid-cols-2 gap-4">
+                                {/* Amount Grid - Compact */}
+                                <div>
+                                    <div className="grid grid-cols-4 gap-2 mb-2">
                                         {predefinedAmounts.map((amt) => (
                                             <button
                                                 key={amt}
                                                 onClick={() => handleAmountSelect(amt)}
-                                                className={`py-5 rounded-2xl font-black text-lg transition-all border-2 ${amount === amt.toString() && !customAmount
-                                                    ? 'bg-primary-500 border-primary-500 text-white shadow-xl shadow-primary-500/30'
-                                                    : 'bg-gray-50 border-gray-100 text-navy-900 hover:border-primary-200'
+                                                className={`py-3 rounded-xl font-bold text-sm transition-all border-2 ${amount === amt.toString() && !customAmount
+                                                    ? 'bg-primary-500 border-primary-500 text-white'
+                                                    : 'bg-gray-50 border-transparent text-navy-900 hover:border-primary-100'
                                                     }`}
                                             >
-                                                ₹{amt.toLocaleString()}
+                                                ₹{amt >= 1000 ? `${amt / 1000}k` : amt}
                                             </button>
                                         ))}
                                     </div>
-
-                                    <div className="mt-4 relative">
-                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</div>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₹</span>
                                         <input
                                             type="number"
-                                            placeholder="Enter Custom Amount"
+                                            placeholder="Custom amount..."
                                             value={customAmount}
                                             onChange={(e) => {
                                                 setCustomAmount(e.target.value)
                                                 setAmount('')
                                             }}
-                                            className="w-full pl-10 pr-6 py-5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-primary-500 focus:bg-white outline-none font-bold text-navy-900 transition-all"
+                                            className="w-full pl-8 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-primary-500 focus:bg-white outline-none font-bold text-navy-900 transition-all text-sm"
                                         />
                                     </div>
-                                    <p className="text-center mt-4 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                                        Recurring contribution: ₹{getFinalAmount().toLocaleString()} {frequency}
-                                    </p>
                                 </div>
 
-                                {error && (
-                                    <div className="flex items-center gap-2 text-red-500 text-xs font-bold uppercase tracking-wide mb-6">
-                                        <AlertCircle className="w-4 h-4" />
-                                        {error}
-                                    </div>
-                                )}
-
-                                <button
-                                    onClick={handleNext}
-                                    className="w-full bg-navy-900 hover:bg-primary-500 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-navy-900/10 flex items-center justify-center gap-3 uppercase tracking-widest text-sm"
-                                >
-                                    Continue to Details
-                                </button>
-                            </motion.div>
-                        )}
-
-                        {step === 'details' && (
-                            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                                <div className="p-4 bg-primary-50 rounded-2xl border border-primary-100 flex items-center justify-between">
-                                    <div>
-                                        <p className="text-[10px] text-primary-600 font-black uppercase tracking-widest">Your Plan</p>
-                                        <p className="text-navy-900 font-black text-sm">₹{getFinalAmount().toLocaleString()} / {frequency}</p>
-                                    </div>
-                                    <button onClick={() => setStep('amount')} className="text-[10px] text-primary-500 font-black uppercase tracking-widest hover:underline">Change</button>
-                                </div>
-
-                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Donor Information</h3>
-                                <div className="space-y-4">
+                                {/* Donor Fields - Compact Row */}
+                                <div className="space-y-3 pt-2 border-t border-gray-100">
                                     <input
                                         type="text"
                                         placeholder="Full Name"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
-                                        className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-primary-500 focus:bg-white outline-none font-bold text-navy-900 transition-all text-sm"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-primary-500 outline-none font-bold text-navy-900 text-sm"
                                     />
-                                    <input
-                                        type="email"
-                                        placeholder="Email Address"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-primary-500 focus:bg-white outline-none font-bold text-navy-900 transition-all text-sm"
-                                    />
-                                    <input
-                                        type="tel"
-                                        placeholder="Phone Number (10 digits)"
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-primary-500 focus:bg-white outline-none font-bold text-navy-900 transition-all text-sm"
-                                    />
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <input
+                                            type="email"
+                                            placeholder="Email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-primary-500 outline-none font-bold text-navy-900 text-sm"
+                                        />
+                                        <input
+                                            type="tel"
+                                            placeholder="Phone"
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
+                                            className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-primary-500 outline-none font-bold text-navy-900 text-sm"
+                                        />
+                                    </div>
                                 </div>
 
                                 {error && (
-                                    <div className="flex items-center gap-2 text-red-500 text-xs font-bold uppercase tracking-wide">
-                                        <AlertCircle className="w-4 h-4" />
+                                    <div className="flex items-center gap-2 text-red-500 text-[10px] font-black uppercase tracking-wider bg-red-50 p-2 rounded-lg">
+                                        <AlertCircle className="w-3 h-3" />
                                         {error}
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button
-                                        onClick={() => setStep('amount')}
-                                        className="py-5 bg-gray-100 text-gray-600 font-black rounded-2xl uppercase tracking-widest text-xs hover:bg-gray-200 transition-all"
-                                    >
-                                        Back
-                                    </button>
-                                    <button
-                                        onClick={handleSubmit}
-                                        disabled={loading}
-                                        className="bg-primary-500 hover:bg-primary-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-primary-500/20 flex items-center justify-center gap-2 uppercase tracking-widest text-xs transition-all disabled:opacity-50"
-                                    >
-                                        {loading ? 'Processing...' : 'Subscribe Now'}
-                                    </button>
-                                </div>
-                            </motion.div>
-                        )}
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={loading}
+                                    className="w-full bg-primary-500 hover:bg-primary-600 text-white font-black py-4 rounded-xl shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 uppercase tracking-widest text-xs transition-all disabled:opacity-50"
+                                >
+                                    {loading ? 'Processing...' : `Pay ₹${getFinalAmount().toLocaleString()} ${frequency === 'once' ? 'Now' : 'Sub'}`}
+                                </button>
 
-                        {step === 'processing' && (
-                            <div className="py-12 text-center">
-                                <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-                                <h3 className="text-xl font-black text-navy-900 uppercase">One Moment Please</h3>
-                                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-2">Setting up your secure sustainer plan</p>
-                            </div>
-                        )}
-
-                        {step === 'success' && (
-                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="py-8 text-center">
-                                <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8">
-                                    <CheckCircle2 className="w-12 h-12" />
-                                </div>
-                                <h3 className="text-3xl font-black text-navy-900 mb-4 tracking-tight">You&apos;re a Hero!</h3>
-                                <p className="text-gray-600 font-medium text-lg leading-relaxed mb-10 max-w-sm mx-auto">
-                                    Thank you for joining our <span className="text-primary-500 font-bold">{frequency} sustainer</span> program.
-                                    Your support makes a world of difference.
+                                <p className="text-center text-[9px] text-gray-400 font-bold uppercase tracking-widest">
+                                    Secure 256-bit encrypted payment
                                 </p>
+                            </div>
+                        ) : step === 'processing' ? (
+                            <div className="py-12 text-center">
+                                <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                                <h3 className="text-lg font-black text-navy-900 uppercase">Processing</h3>
+                                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-2">Connecting to secure gateway</p>
+                            </div>
+                        ) : (
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="py-6 text-center">
+                                <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <CheckCircle2 className="w-10 h-10" />
+                                </div>
+                                <h3 className="text-2xl font-black text-navy-900 mb-2">Success!</h3>
+                                <p className="text-gray-500 font-medium text-sm leading-relaxed mb-6">
+                                    Thank you for your generous support of Mumbai.
+                                </p>
+
+                                {frequency !== 'once' && !paidFirstInstallment && (
+                                    <div className="mb-8 p-4 bg-primary-50 rounded-2xl border border-primary-100">
+                                        <p className="text-xs font-bold text-primary-700 mb-3 uppercase tracking-wider">Want to start immediately?</p>
+                                        <button
+                                            onClick={handleFirstInstallment}
+                                            disabled={loading}
+                                            className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-black rounded-xl text-xs uppercase tracking-widest transition-all shadow-md"
+                                        >
+                                            {loading ? 'Processing...' : `Pay First Installment (₹${getFinalAmount()}) Now`}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {paidFirstInstallment && (
+                                    <div className="mb-8 p-4 bg-green-50 rounded-2xl border border-green-100 flex items-center justify-center gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                        <p className="text-xs font-bold text-green-700 uppercase tracking-wider">First installment received!</p>
+                                    </div>
+                                )}
+
                                 <button
                                     onClick={onClose}
-                                    className="px-12 py-5 bg-navy-900 text-white font-black rounded-2xl shadow-xl shadow-navy-900/20 uppercase tracking-widest text-xs hover:bg-primary-500 transition-all"
+                                    className="w-full py-4 bg-navy-900 text-white font-black rounded-xl uppercase tracking-widest text-xs hover:bg-primary-500 transition-all"
                                 >
-                                    Wonderful!
+                                    Finish
                                 </button>
                             </motion.div>
                         )}

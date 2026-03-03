@@ -117,26 +117,7 @@ export default function CommunityEventsPage() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Impact Stats */}
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-8 text-white shadow-lg">
-              <h2 className="font-display text-3xl font-bold mb-6">Our Impact</h2>
-              <div className="grid sm:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">120+</div>
-                  <div className="text-purple-100">Events Organized</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">15,000+</div>
-                  <div className="text-purple-100">Participants</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-black mb-2">50+</div>
-                  <div className="text-purple-100">Neighborhoods</div>
-                </div>
-              </div>
-            </div>
+            </div> 
 
             {/* How to Participate */}
             <div className="bg-white rounded-2xl p-8 shadow-lg">

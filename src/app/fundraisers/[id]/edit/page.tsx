@@ -9,15 +9,17 @@ import {
     FundraiserImage,
     FundraiserDocument,
 } from '@/services/fundraiser.service'
+import { projectService, Project } from '@/services/project.service'
 import { useAuth } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Link from 'next/link'
 import Image from 'next/image'
 import ImageEditor from '@/components/ImageEditor'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
     ArrowLeft, Save, AlertCircle, Loader2, Upload, Trash2,
     ImageIcon, FileText, Settings, Star, AlertTriangle, Sparkles,
-    ShieldCheck, Plus, X, CheckCircle2, Pencil
+    ShieldCheck, Plus, X, CheckCircle2, Pencil, Eye
 } from 'lucide-react'
 
 type Tab = 'content' | 'images' | 'documents'
@@ -32,7 +34,7 @@ export default function EditFundraiserPage() {
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState('')
     const [successMsg, setSuccessMsg] = useState('')
-    const [categories, setCategories] = useState<FundraiserCategory[]>([])
+    const [projects, setProjects] = useState<Project[]>([])
     const [fundraiser, setFundraiser] = useState<Fundraiser | null>(null)
 
     // Extensions
@@ -52,12 +54,15 @@ export default function EditFundraiserPage() {
     const imageInputRef = useRef<HTMLInputElement>(null)
     const docInputRef = useRef<HTMLInputElement>(null)
 
+    // Preview
+    const [previewDoc, setPreviewDoc] = useState<{ name: string; url: string; type: string } | null>(null)
+
     const [formData, setFormData] = useState({
         title: '',
         short_description: '',
         description: '',
         goal_amount: '',
-        category_id: '',
+        project_id: '',
         is_urgent: false,
         is_featured: false,
         status: '',
@@ -79,9 +84,9 @@ export default function EditFundraiserPage() {
             if (!params?.id) return
             try {
                 setLoading(true)
-                const [fundRes, catRes, extRes] = await Promise.all([
+                const [fundRes, projRes, extRes] = await Promise.all([
                     fundraiserService.getFundraiserById(params.id as string),
-                    fundraiserService.getCategories(),
+                    projectService.getProjects(),
                     fundraiserService.getFundraiserExtensions(params.id as string),
                 ])
 
@@ -93,7 +98,7 @@ export default function EditFundraiserPage() {
                         short_description: f.short_description,
                         description: f.description,
                         goal_amount: f.goal_amount.toString(),
-                        category_id: f.category.id,
+                        project_id: f.project_id || '',
                         is_urgent: f.is_urgent,
                         is_featured: f.is_featured,
                         status: f.status,
@@ -103,7 +108,7 @@ export default function EditFundraiserPage() {
                         is_interest_eligible: f.is_interest_eligible,
                     })
                 }
-                if (catRes.data) setCategories(catRes.data)
+                if (projRes.data) setProjects(projRes.data)
                 if (extRes.data) {
                     setExistingImages(extRes.data.images || [])
                     setExistingDocuments(extRes.data.documents || [])
@@ -139,7 +144,7 @@ export default function EditFundraiserPage() {
                 short_description: formData.short_description,
                 description: formData.description,
                 goal_amount: parseFloat(formData.goal_amount),
-                category_id: formData.category_id,
+                project_id: formData.project_id,
                 is_urgent: formData.is_urgent,
                 is_featured: formData.is_featured,
                 status: formData.status as any,
@@ -300,6 +305,31 @@ export default function EditFundraiserPage() {
         }
     }
 
+    const handlePreview = (doc: FundraiserDocument | File) => {
+        if (doc instanceof File) {
+            const url = URL.createObjectURL(doc)
+            setPreviewDoc({
+                name: doc.name,
+                url: url,
+                type: doc.type
+            })
+        } else {
+            setPreviewDoc({
+                name: doc.file_name,
+                url: doc.file_url,
+                type: doc.file_url.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'
+            })
+        }
+    }
+
+    useEffect(() => {
+        return () => {
+            if (previewDoc?.url.startsWith('blob:')) {
+                URL.revokeObjectURL(previewDoc.url)
+            }
+        }
+    }, [previewDoc])
+
     // ── Render ───────────────────────────────────────────────────────────────
 
     if (loading) {
@@ -398,6 +428,68 @@ export default function EditFundraiserPage() {
                 />
             )}
 
+            {/* Document Preview Modal */}
+            <AnimatePresence>
+                {previewDoc && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-navy-900/90 flex items-center justify-center p-4 md:p-8 backdrop-blur-sm"
+                        onClick={() => setPreviewDoc(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-3xl w-full max-w-5xl h-[85vh] overflow-hidden flex flex-col shadow-2xl"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                                        <FileText className="w-4 h-4 text-primary-500" />
+                                    </div>
+                                    <h3 className="font-bold text-navy-900 truncate max-w-[200px] md:max-w-md">{previewDoc.name}</h3>
+                                </div>
+                                <button
+                                    onClick={() => setPreviewDoc(null)}
+                                    className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-navy-900 transition-all"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 bg-gray-100 relative overflow-auto flex items-center justify-center p-4 md:p-8">
+                                {previewDoc.type.includes('pdf') ? (
+                                    <iframe
+                                        src={`${previewDoc.url}#toolbar=0`}
+                                        className="w-full h-full rounded-xl shadow-lg bg-white"
+                                        title="PDF Preview"
+                                    />
+                                ) : (
+                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                    <img
+                                        src={previewDoc.url}
+                                        alt={previewDoc.name}
+                                        className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+                                    />
+                                )}
+                            </div>
+
+                            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-center">
+                                <button
+                                    onClick={() => setPreviewDoc(null)}
+                                    className="px-8 py-2.5 bg-navy-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-navy-800 transition-all"
+                                >
+                                    Close Preview
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="min-h-screen bg-gray-50 pt-28 pb-20 px-4">
                 <div className="max-w-4xl mx-auto">
 
@@ -474,14 +566,14 @@ export default function EditFundraiserPage() {
                                 {/* Category & Goal */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Category</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Project</label>
                                         <select
-                                            name="category_id" value={formData.category_id} onChange={handleChange} required
+                                            name="project_id" value={formData.project_id || ''} onChange={handleChange} required
                                             className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 px-6 focus:outline-none focus:border-primary-500 transition-all font-bold text-navy-900 appearance-none"
                                         >
-                                            <option value="">Select Category</option>
-                                            {categories.map(cat => (
-                                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                            <option value="">Select Project</option>
+                                            {projects.map(proj => (
+                                                <option key={proj.id} value={proj.id}>{proj.name}</option>
                                             ))}
                                         </select>
                                     </div>
@@ -668,14 +760,13 @@ export default function EditFundraiserPage() {
                                                     <p className="font-bold text-navy-900 text-sm truncate">{doc.file_name}</p>
                                                     <p className="text-[10px] text-gray-400 uppercase tracking-widest">{doc.document_type}</p>
                                                 </div>
-                                                <a
-                                                    href={doc.file_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-[10px] font-black uppercase tracking-widest text-primary-500 hover:text-primary-600 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-all"
+                                                <button
+                                                    onClick={() => handlePreview(doc)}
+                                                    className="text-[10px] font-black uppercase tracking-widest text-primary-500 hover:text-primary-600 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-all flex items-center gap-1.5"
                                                 >
+                                                    <Eye className="w-3.5 h-3.5" />
                                                     View
-                                                </a>
+                                                </button>
                                                 <button
                                                     onClick={() => handleDeleteDocument(doc)}
                                                     disabled={deletingDocId === doc.id}
@@ -716,8 +807,15 @@ export default function EditFundraiserPage() {
                                                 <span className="flex-1 text-sm font-bold text-navy-900 truncate">{doc.name}</span>
                                                 <span className="text-[10px] text-gray-400">{(doc.size / 1024).toFixed(0)} KB</span>
                                                 <button
+                                                    onClick={() => handlePreview(doc)}
+                                                    className="text-[10px] font-black uppercase tracking-widest text-primary-500 hover:text-primary-600 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-all flex items-center gap-1.5"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    Preview
+                                                </button>
+                                                <button
                                                     onClick={() => setNewDocuments(prev => prev.filter((_, i) => i !== idx))}
-                                                    className="text-gray-400 hover:text-red-500 transition-colors"
+                                                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
                                                 >
                                                     <X className="w-4 h-4" />
                                                 </button>

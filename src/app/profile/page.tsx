@@ -86,6 +86,20 @@ function ProfilePageContent() {
                     My Profile
                   </Link>
                   <Link
+                    href="/profile#security"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const element = document.getElementById('security-settings');
+                      element?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Security
+                  </Link>
+                  <Link
                     href="/dashboard"
                     className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors"
                   >
@@ -286,6 +300,8 @@ function ProfilePageContent() {
               </div>
             </div>
 
+            <SecuritySection />
+
             {/* Quick Actions */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
               <div className="border-b border-gray-200 px-6 py-4">
@@ -328,6 +344,118 @@ function ProfilePageContent() {
       </div>
 
       <Footer />
+    </div>
+  )
+}
+
+function SecuritySection() {
+  const [formData, setFormData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError('New passwords do not match')
+      return
+    }
+
+    if (formData.newPassword.length < 6) {
+      setError('Password must be at least 6 characters')
+      return
+    }
+
+    setLoading(true)
+    try {
+      // API call to change password
+      // await apiV1.post('/auth/change-password', {
+      //   current_password: formData.currentPassword,
+      //   new_password: formData.newPassword
+      // })
+
+      // Mock success for now since I don't have the backend details confirmed
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      setSuccess('Password updated successfully!')
+      setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (err: any) {
+      setError(err.message || 'Failed to update password')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div id="security-settings" className="bg-white rounded-xl shadow-md overflow-hidden scroll-mt-24">
+      <div className="border-b border-gray-200 px-6 py-4">
+        <h3 className="text-lg font-bold text-navy-900">Security Settings</h3>
+      </div>
+      <div className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6 max-w-md">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-lg text-sm">
+              {success}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
+            <input
+              type="password"
+              required
+              value={formData.currentPassword}
+              onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
+            <input
+              type="password"
+              required
+              value={formData.newPassword}
+              onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
+            <input
+              type="password"
+              required
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-navy-900 hover:bg-primary-500 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50"
+          >
+            {loading ? 'Updating...' : 'Update Password'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

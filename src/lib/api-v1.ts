@@ -1,4 +1,5 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/v1';
+import { fixObjectUrls } from './image-utils';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean>;
@@ -55,7 +56,8 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
     return {} as T;
   }
 
-  return response.json();
+  const data = await response.json();
+  return fixObjectUrls(data) as T;
 }
 
 export const apiV1 = {
@@ -105,6 +107,7 @@ export const apiV1 = {
       throw new Error(errorData.message || `API upload failed with status ${response.status}`);
     }
 
-    return response.json();
+    const data = await response.json();
+    return fixObjectUrls(data) as T;
   }
 };

@@ -7,6 +7,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Footer from '@/components/Footer'
 import { volunteerService, Volunteer } from '@/services/volunteer.service'
+import { User, Check, X, Eye, X as CloseIcon, FileText, Download, ExternalLink, ChevronLeft, ChevronRight, Edit, Image as ImageIcon, Upload, PlusCircle, Paperclip, Scan } from 'lucide-react'
+import { toast } from 'react-hot-toast'
+import { fundraiserService } from '@/services/fundraiser.service'
+import ImageEditor from '@/components/ImageEditor'
+import { fixImageUrl, fixObjectUrls } from '@/lib/image-utils'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const NGO_REG = 'Maharashtra State, Mumbai 2018 / GBBSD / 1566 / 2018'
@@ -117,7 +122,7 @@ function IDCardFront({ v, index }: { v: Volunteer; index: number }) {
                 >
                     {v.photo_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={v.photo_url} alt={fullName} className="w-full h-full object-cover object-top" />
+                        <img src={fixImageUrl(v.photo_url)} alt={fullName} className="w-full h-full object-cover object-top" />
                     ) : (
                         <div className="w-full h-full bg-blue-50 flex flex-col items-center justify-center">
                             <span className="text-3xl font-black text-blue-300">{initials}</span>
@@ -321,19 +326,677 @@ function VolunteerIDCardPair({ v, index, selected, onToggle, onPrintSingle }: {
             </div>
 
             {/* ── Card faces ── */}
-            <div className={`flex flex-col gap-0 border border-t-0 rounded-b-2xl overflow-hidden ${selected ? 'border-primary-200' : 'border-gray-200'
+            <div className={`flex flex-row gap-0 border border-t-0 rounded-b-2xl overflow-hidden divide-x divide-gray-100 ${selected ? 'border-primary-200' : 'border-gray-200'
                 }`}>
-                <div className="px-4 pt-3 pb-1 bg-gray-50">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Front</p>
+                {/* Front Section */}
+                <div className="flex-1 bg-gray-50 pb-4">
+                    <div className="px-4 pt-3 pb-1">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Front</p>
+                    </div>
+                    <div className="px-4">
+                        <IDCardFront v={v} index={index} />
+                    </div>
                 </div>
-                <div className="px-4 pb-3 bg-gray-50">
-                    <IDCardFront v={v} index={index} />
+
+                {/* Back Section */}
+                <div className="flex-1 bg-gray-50 pb-4">
+                    <div className="px-4 pt-3 pb-1">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Back</p>
+                    </div>
+                    <div className="px-4">
+                        <IDCardBack v={v} />
+                    </div>
                 </div>
-                <div className="px-4 pt-3 pb-1 bg-gray-50 border-t border-gray-200">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Back</p>
+            </div>
+        </div>
+    )
+}
+
+// ─── Volunteer Details Modal ──────────────────────────────────────────────────
+function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }: {
+    volunteer: Volunteer,
+    onClose: () => void,
+    onUpdateStatus: (id: string, status: string) => void,
+    loadingId: string | null
+}) {
+    const isUpdating = loadingId === volunteer.id;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-900/60 backdrop-blur-sm print:hidden">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-600">
+                            <User className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-black text-navy-900">Volunteer Details</h2>
+                            <p className="text-xs text-gray-500 font-medium">Application from {new Date(volunteer.created_at || '').toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+                        <CloseIcon className="w-5 h-5" />
+                    </button>
                 </div>
-                <div className="px-4 pb-4 bg-gray-50">
-                    <IDCardBack v={v} />
+
+                {/* Body */}
+                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                    <div className="space-y-6">
+                        {/* Personal Info */}
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Personal Information</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Full Name</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.first_name} {volunteer.last_name}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Email</p>
+                                    <p className="text-sm font-semibold text-gray-900 break-all">{volunteer.email}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Phone</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.phone}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">DOB & Gender</p>
+                                    <p className="text-sm font-semibold text-gray-900">{formatDOB(volunteer.date_of_birth)} · {volunteer.gender || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Location & Occupation */}
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Background</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="bg-gray-50 p-3 rounded-xl sm:col-span-2">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Address</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.address}, {volunteer.city}, {volunteer.state} {volunteer.zip_code}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Occupation</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.occupation || 'Not specified'}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Availability</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.availability || 'Not specified'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Skills & Motivation */}
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Interests & Motivation</h3>
+                            <div className="space-y-4">
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-2">Skills</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {volunteer.skills?.length ? (
+                                            volunteer.skills.map(s => (
+                                                <span key={s} className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 rounded-md text-[11px] font-bold shadow-sm">{s}</span>
+                                            ))
+                                        ) : (
+                                            <span className="text-sm text-gray-500">No specific skills listed</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Role Interest</p>
+                                    <p className="text-sm font-semibold text-gray-900">{volunteer.role_interest || 'General Volunteer'}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Motivation / Why join us?</p>
+                                    <p className="text-sm font-medium text-gray-700 whitespace-pre-wrap">{volunteer.motivation || 'No motivation statement provided.'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Legal */}
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Declarations</h3>
+                            <div className="bg-gray-50 p-3 rounded-xl flex items-start gap-3">
+                                <div className={`mt-0.5 p-1 rounded-full ${volunteer.background_check_consent ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                    {volunteer.background_check_consent ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900">Background Check Consent</p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {volunteer.background_check_consent
+                                            ? "The applicant has consented to a background check."
+                                            : "The applicant did NOT consent to a background check."}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Documents */}
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Documents & ID Proof</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* ID Proof */}
+                                {volunteer.id_proof_url && (
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 group relative">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-primary-600 shadow-sm">
+                                                <FileText className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-gray-500">ID Proof</p>
+                                                <p className="text-xs font-bold text-navy-900">Aadhar/PAN/etc.</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-auto">
+                                            <a
+                                                href={fixImageUrl(volunteer.id_proof_url)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" /> View
+                                            </a>
+                                            <a
+                                                href={fixImageUrl(volunteer.id_proof_url)}
+                                                download
+                                                className="w-9 h-9 flex items-center justify-center bg-primary-50 rounded-lg text-primary-600 hover:bg-primary-100 transition-colors"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Photo */}
+                                {volunteer.photo_url && (
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 group relative">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 bg-white rounded-lg overflow-hidden flex items-center justify-center text-gray-400 shadow-sm border border-gray-100">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={fixImageUrl(volunteer.photo_url)} alt="Profile" className="w-full h-full object-cover" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-gray-500">Photo</p>
+                                                <p className="text-xs font-bold text-navy-900">Passport Size</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-auto">
+                                            <a
+                                                href={fixImageUrl(volunteer.photo_url)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" /> View
+                                            </a>
+                                            <a
+                                                href={fixImageUrl(volunteer.photo_url)}
+                                                download
+                                                className="w-9 h-9 flex items-center justify-center bg-primary-50 rounded-lg text-primary-600 hover:bg-primary-100 transition-colors"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Additional Documents */}
+                                {volunteer.documents && volunteer.documents.map((doc, idx) => (
+                                    <div key={idx} className="bg-gray-50 p-4 rounded-xl border border-gray-100 group relative">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-navy-600 shadow-sm">
+                                                <FileText className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[10px] uppercase font-bold text-gray-500">Document</p>
+                                                <p className="text-xs font-bold text-navy-900 truncate" title={doc.name}>{doc.name}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-auto">
+                                            <a
+                                                href={fixImageUrl(doc.url)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" /> View
+                                            </a>
+                                            <a
+                                                href={fixImageUrl(doc.url)}
+                                                download={doc.name}
+                                                className="w-9 h-9 flex items-center justify-center bg-navy-50 rounded-lg text-navy-600 hover:bg-navy-100 transition-colors"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="p-4 border-t border-gray-100 bg-gray-50 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Current Status:</span>
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${STATUS_CONFIG[volunteer.status]?.bg || 'bg-gray-100'} ${STATUS_CONFIG[volunteer.status]?.text || 'text-gray-700'}`}>
+                            {STATUS_CONFIG[volunteer.status]?.label || volunteer.status}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 sm:flex-none px-4 py-2 border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-100 transition-colors"
+                        >
+                            Close
+                        </button>
+                        {volunteer.status === 'applied' && (
+                            <>
+                                <button
+                                    onClick={() => { onUpdateStatus(volunteer.id, 'rejected'); onClose(); }}
+                                    disabled={isUpdating}
+                                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
+                                >
+                                    <X className="w-4 h-4" /> Reject
+                                </button>
+                                <button
+                                    onClick={() => { onUpdateStatus(volunteer.id, 'approved'); onClose(); }}
+                                    disabled={isUpdating}
+                                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-6 py-2 bg-primary-500 text-white hover:bg-primary-600 rounded-xl text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
+                                >
+                                    <Check className="w-4 h-4" /> Approve
+                                </button>
+                            </>
+                        )}
+                        {(volunteer.status === 'approved' || volunteer.status === 'inactive') && (
+                            <button
+                                onClick={() => { onUpdateStatus(volunteer.id, 'active'); onClose(); }}
+                                disabled={isUpdating}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-6 py-2 bg-green-500 text-white hover:bg-green-600 rounded-xl text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
+                            >
+                                <Check className="w-4 h-4" /> Mark Active
+                            </button>
+                        )}
+                        {volunteer.status === 'active' && (
+                            <button
+                                onClick={() => { onUpdateStatus(volunteer.id, 'inactive'); onClose(); }}
+                                disabled={isUpdating}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-6 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 rounded-xl text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
+                            >
+                                <X className="w-4 h-4" /> Mark Inactive
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+
+// ─── Edit Volunteer Modal ───────────────────────────────────────────────────
+function EditVolunteerModal({
+    volunteer,
+    onClose,
+    onSave
+}: {
+    volunteer: Volunteer
+    onClose: () => void
+    onSave: (id: string, data: any) => Promise<void>
+}) {
+    const [formData, setFormData] = useState({
+        first_name: volunteer.first_name || '',
+        last_name: volunteer.last_name || '',
+        email: volunteer.email || '',
+        phone: volunteer.phone || '',
+        date_of_birth: volunteer.date_of_birth ? new Date(volunteer.date_of_birth).toISOString().split('T')[0] : '',
+        gender: volunteer.gender || '',
+        occupation: volunteer.occupation || '',
+        availability: volunteer.availability || '',
+        address: volunteer.address || '',
+        city: volunteer.city || '',
+        state: volunteer.state || 'Maharashtra',
+        zip_code: volunteer.zip_code || '',
+        role_interest: volunteer.role_interest || '',
+        motivation: volunteer.motivation || '',
+        photo_url: volunteer.photo_url || '',
+        id_proof_url: volunteer.id_proof_url || '',
+    })
+    const [saving, setSaving] = useState(false)
+    const [photoFile, setPhotoFile] = useState<File | null>(null)
+    const [idProofFile, setIdProofFile] = useState<File | null>(null)
+    const [editingFile, setEditingFile] = useState<{ file: File, type: 'id' | 'photo' } | null>(null)
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target
+        setFormData(prev => ({ ...prev, [name]: value }))
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setSaving(true)
+        try {
+            let photo_url = formData.photo_url
+            let id_proof_url = formData.id_proof_url
+
+            // Upload Photo if new file is selected
+            if (photoFile) {
+                const photoRes = await fundraiserService.uploadMedia(photoFile, 'volunteers', volunteer.id)
+                if (photoRes.success && photoRes.data?.url) {
+                    photo_url = photoRes.data.url
+                }
+            }
+
+            // Upload ID Proof if new file is selected
+            if (idProofFile) {
+                const idRes = await fundraiserService.uploadMedia(idProofFile, 'volunteers', volunteer.id)
+                if (idRes.success && idRes.data?.url) {
+                    id_proof_url = idRes.data.url
+                }
+            }
+
+            await onSave(volunteer.id, { ...formData, photo_url, id_proof_url })
+            onClose()
+        } catch (error) {
+            console.error(error)
+            toast.error('Failed to save changes')
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white">
+                            <Edit className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-black text-navy-900">Edit Volunteer</h2>
+                            <p className="text-xs text-gray-500 font-medium tracking-wide">ID: {formatIdNo(volunteer.id)}</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+                        <CloseIcon className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">First Name</label>
+                            <input
+                                required
+                                name="first_name"
+                                value={formData.first_name}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Last Name</label>
+                            <input
+                                name="last_name"
+                                value={formData.last_name}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Email Address</label>
+                            <input
+                                required
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Phone Number</label>
+                            <input
+                                required
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Date of Birth</label>
+                            <input
+                                type="date"
+                                name="date_of_birth"
+                                value={formData.date_of_birth}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Gender</label>
+                            <select
+                                name="gender"
+                                value={formData.gender}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            >
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Occupation</label>
+                            <input
+                                name="occupation"
+                                value={formData.occupation}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Availability</label>
+                            <input
+                                name="availability"
+                                value={formData.availability}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="sm:col-span-2 space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Address</label>
+                            <input
+                                name="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">City</label>
+                            <input
+                                name="city"
+                                value={formData.city}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Zip Code</label>
+                            <input
+                                name="zip_code"
+                                value={formData.zip_code}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="sm:col-span-2 space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Role Interest</label>
+                            <input
+                                name="role_interest"
+                                value={formData.role_interest}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="sm:col-span-2 space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Motivation</label>
+                            <textarea
+                                name="motivation"
+                                rows={3}
+                                value={formData.motivation}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900 resize-none"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Documents Upload */}
+                    <div className="space-y-4 pt-4 border-t border-gray-100">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Media & Documents</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            {/* Photo Upload */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Passport Size Photo</label>
+                                <div className="relative group">
+                                    <div className="w-full px-4 py-3 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl group-hover:border-primary-300 transition-all flex items-center gap-3 relative min-h-[70px]">
+                                        <div className="w-10 h-10 bg-white rounded-xl overflow-hidden flex items-center justify-center text-gray-400 shadow-sm border border-gray-100">
+                                            {photoFile ? (
+                                                <img src={URL.createObjectURL(photoFile)} alt="New Photo" className="w-full h-full object-cover" />
+                                            ) : formData.photo_url ? (
+                                                <img src={fixImageUrl(formData.photo_url)} alt="Current Photo" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <ImageIcon className="w-5 h-5" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-xs font-bold text-navy-900 truncate">
+                                                {photoFile ? photoFile.name : formData.photo_url ? 'Current Photo (Click to update)' : 'Upload Photo'}
+                                            </p>
+                                            <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black">2MB Limit · JPG/PNG</p>
+                                        </div>
+                                        <Upload className="w-4 h-4 text-gray-300" />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0]
+                                                if (file) setEditingFile({ file, type: 'photo' })
+                                            }}
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                        />
+                                    </div>
+                                    {(photoFile || formData.photo_url) && (
+                                        <a
+                                            href={photoFile ? URL.createObjectURL(photoFile) : fixImageUrl(formData.photo_url)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="absolute -top-2 -right-2 w-7 h-7 bg-navy-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-10"
+                                            title="View Original"
+                                        >
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* ID Proof Upload */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">ID Proof (Aadhar/PAN)</label>
+                                <div className="relative group">
+                                    <div className="w-full px-4 py-3 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl group-hover:border-primary-300 transition-all flex items-center gap-3 relative min-h-[70px]">
+                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary-500 shadow-sm border border-gray-100">
+                                            {idProofFile || formData.id_proof_url ? (
+                                                <FileText className="w-5 h-5" />
+                                            ) : (
+                                                <Scan className="w-5 h-5" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-xs font-bold text-navy-900 truncate">
+                                                {idProofFile ? idProofFile.name : formData.id_proof_url ? 'Current ID Proof (Click to update)' : 'Upload ID Proof'}
+                                            </p>
+                                            <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black">5MB Limit · PDF/JPG/PNG</p>
+                                        </div>
+                                        <Upload className="w-4 h-4 text-gray-300" />
+                                        <input
+                                            type="file"
+                                            accept="image/*,.pdf"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0]
+                                                if (file) {
+                                                    if (file.type.startsWith('image/')) {
+                                                        setEditingFile({ file, type: 'id' })
+                                                    } else {
+                                                        setIdProofFile(file)
+                                                    }
+                                                }
+                                            }}
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                        />
+                                    </div>
+                                    {(idProofFile || formData.id_proof_url) && (
+                                        <a
+                                            href={idProofFile ? URL.createObjectURL(idProofFile) : fixImageUrl(formData.id_proof_url)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="absolute -top-2 -right-2 w-7 h-7 bg-navy-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-10"
+                                            title="View Original"
+                                        >
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                {/* Image Editor Modal */}
+                {editingFile && (
+                    <ImageEditor
+                        file={editingFile.file}
+                        aspectRatio={editingFile.type === 'id' ? undefined : 1}
+                        onSave={(editedFile) => {
+                            if (editingFile.type === 'id') {
+                                setIdProofFile(editedFile)
+                            } else {
+                                setPhotoFile(editedFile)
+                            }
+                            setEditingFile(null)
+                        }}
+                        onCancel={() => setEditingFile(null)}
+                    />
+                )}
+
+                {/* Footer */}
+                <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-3">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-6 py-2.5 text-gray-400 hover:text-gray-600 font-black text-xs uppercase tracking-widest"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-8 py-2.5 bg-navy-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-navy-800 transition-all shadow-lg shadow-navy-900/20 disabled:opacity-50"
+                    >
+                        {saving ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <Check className="w-4 h-4" />
+                        )}
+                        Save Changes
+                    </button>
                 </div>
             </div>
         </div>
@@ -353,8 +1016,12 @@ function VolunteersPageContent() {
     const [printMode, setPrintMode] = useState(false)
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [updatingId, setUpdatingId] = useState<string | null>(null)
+    const [viewingVolunteer, setViewingVolunteer] = useState<Volunteer | null>(null)
+    const [editingVolunteer, setEditingVolunteer] = useState<Volunteer | null>(null)
     // printSingleId: when set, only this volunteer's card is printed
     const [printSingleId, setPrintSingleId] = useState<string | null>(null)
+    const [currentPage, setCurrentPage] = useState(1)
+    const ITEMS_PER_PAGE = 10
 
     useEffect(() => {
         if (isLoggedIn && user && user.role !== 'admin') router.push('/')
@@ -366,7 +1033,7 @@ function VolunteersPageContent() {
             try {
                 setLoading(true)
                 const res = await volunteerService.getVolunteers()
-                if (res.success) setVolunteers(res.data || [])
+                if (res.success) setVolunteers(fixObjectUrls(res.data) || [])
                 else setError('Failed to load volunteers')
             } catch {
                 setError('Failed to load volunteers. Please try again.')
@@ -377,6 +1044,11 @@ function VolunteersPageContent() {
         fetchAll()
     }, [isLoggedIn, user])
 
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [search, statusFilter])
+
     const filtered = volunteers.filter((v) => {
         const matchSearch =
             !search ||
@@ -384,6 +1056,12 @@ function VolunteersPageContent() {
         const matchStatus = statusFilter === 'all' || v.status === statusFilter
         return matchSearch && matchStatus
     })
+
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
+    const paginatedVolunteers = filtered.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    )
 
     const toggleSelect = (id: string) => {
         setSelected((prev) => {
@@ -422,11 +1100,27 @@ function VolunteersPageContent() {
                 setVolunteers((prev) =>
                     prev.map((v) => (v.id === id ? { ...v, status: status as Volunteer['status'] } : v))
                 )
+                toast.success(`Status updated to ${status}`)
             }
         } catch {
-            alert('Failed to update status')
+            toast.error('Failed to update status')
         } finally {
             setUpdatingId(null)
+        }
+    }
+
+    const handleUpdateVolunteer = async (id: string, data: any) => {
+        try {
+            const res = await volunteerService.updateVolunteer(id, data)
+            if (res.success) {
+                setVolunteers(prev => prev.map(v => v.id === id ? { ...v, ...data } : v))
+                toast.success('Volunteer details updated successfully')
+            } else {
+                toast.error(res.message || 'Failed to update volunteer')
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error('An error occurred while updating')
         }
     }
 
@@ -594,8 +1288,8 @@ function VolunteersPageContent() {
                         </div>
                     ) : printMode ? (
                         /* ── Print mode: ID card pairs ─────────────────────────────────── */
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                            {filtered.map((v) => (
+                        <div className="grid grid-cols-1 gap-8">
+                            {paginatedVolunteers.map((v) => (
                                 <VolunteerIDCardPair
                                     key={v.id}
                                     v={v}
@@ -618,11 +1312,12 @@ function VolunteersPageContent() {
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hidden lg:table-cell">Skills</th>
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500">Status</th>
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hidden sm:table-cell">Joined</th>
+                                            <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500">Actions</th>
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500">ID Card</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
-                                        {filtered.map((v, i) => {
+                                        {paginatedVolunteers.map((v, i) => {
                                             const cfg = STATUS_CONFIG[v.status] ?? STATUS_CONFIG['applied']
                                             const fullName = [v.first_name, v.last_name].filter(Boolean).join(' ')
                                             const initials = [v.first_name?.[0], v.last_name?.[0]].filter(Boolean).join('').toUpperCase()
@@ -632,7 +1327,7 @@ function VolunteersPageContent() {
                                                         <div className="flex items-center gap-3">
                                                             {v.photo_url ? (
                                                                 // eslint-disable-next-line @next/next/no-img-element
-                                                                <img src={v.photo_url} alt={fullName} className="w-9 h-9 rounded-full object-cover border border-gray-200 flex-shrink-0" />
+                                                                <img src={fixImageUrl(v.photo_url)} alt={fullName} className="w-9 h-9 rounded-full object-cover border border-gray-200 flex-shrink-0" />
                                                             ) : (
                                                                 <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
                                                                     <span className="text-xs font-black text-primary-600">{initials}</span>
@@ -661,21 +1356,56 @@ function VolunteersPageContent() {
                                                         </div>
                                                     </td>
                                                     <td className="px-5 py-4">
-                                                        <select
-                                                            value={v.status}
-                                                            disabled={updatingId === v.id}
-                                                            onChange={(e) => handleStatusChange(v.id, e.target.value)}
-                                                            className={`px-3 py-1.5 rounded-full text-[11px] font-bold border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:opacity-50 ${cfg.bg} ${cfg.text}`}
-                                                        >
-                                                            {Object.entries(STATUS_CONFIG).map(([key, c]) => (
-                                                                <option key={key} value={key}>{c.label}</option>
-                                                            ))}
-                                                        </select>
+                                                        <div className={`inline-block px-3 py-1.5 rounded-full text-[11px] font-bold ${cfg.bg} ${cfg.text}`}>
+                                                            {cfg.label}
+                                                        </div>
                                                     </td>
                                                     <td className="px-5 py-4 hidden sm:table-cell text-[11px] text-gray-400">
                                                         {v.created_at
                                                             ? new Date(v.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
                                                             : '—'}
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => setViewingVolunteer(v)}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-navy-600 bg-navy-50 hover:bg-navy-100 rounded-lg transition-colors"
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5" /> View
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingVolunteer(v)}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+                                                            >
+                                                                <Edit className="w-3.5 h-3.5" /> Edit
+                                                            </button>
+                                                            {(v.status === 'approved' || v.status === 'inactive') && (
+                                                                <button
+                                                                    onClick={() => handleStatusChange(v.id, 'active')}
+                                                                    disabled={updatingId === v.id}
+                                                                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors disabled:opacity-50"
+                                                                >
+                                                                    Mark Active
+                                                                </button>
+                                                            )}
+                                                            {v.status === 'active' && (
+                                                                <button
+                                                                    onClick={() => handleStatusChange(v.id, 'inactive')}
+                                                                    disabled={updatingId === v.id}
+                                                                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                                                                >
+                                                                    Mark Inactive
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <button
+                                                            onClick={() => handlePrintSingle(v)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-navy-900 text-white rounded-lg text-xs font-bold hover:bg-navy-800 transition-colors whitespace-nowrap"
+                                                        >
+                                                            <Download className="w-3 h-3" /> Print ID
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             )
@@ -685,7 +1415,79 @@ function VolunteersPageContent() {
                             </div>
                         </div>
                     )}
+
+                    {/* Pagination UI */}
+                    {!loading && !error && filtered.length > 0 && totalPages > 1 && (
+                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between bg-white px-6 py-4 rounded-xl border border-gray-200 gap-4">
+                            <div className="text-sm text-gray-500 font-medium order-2 sm:order-1">
+                                Showing <span className="text-gray-900 font-black">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-gray-900 font-black">{Math.min(filtered.length, currentPage * ITEMS_PER_PAGE)}</span> of <span className="text-gray-900 font-black">{filtered.length}</span> volunteers
+                            </div>
+                            <div className="flex items-center gap-2 order-1 sm:order-2">
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-transparent transition-colors group"
+                                    title="Previous Page"
+                                >
+                                    <ChevronLeft className="w-5 h-5 text-gray-600 group-hover:text-primary-500 transition-colors" />
+                                </button>
+
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: totalPages }).map((_, i) => {
+                                        const pageNum = i + 1;
+                                        // Simple logic to show current, first, last, and neighbours if too many pages
+                                        // For simplicity here, showing all if totalPages <= 7
+                                        if (totalPages > 7) {
+                                            if (pageNum !== 1 && pageNum !== totalPages && Math.abs(pageNum - currentPage) > 1) {
+                                                if (pageNum === 2 || pageNum === totalPages - 1) return <span key={i} className="px-1 text-gray-300">...</span>;
+                                                return null;
+                                            }
+                                        }
+
+                                        return (
+                                            <button
+                                                key={i}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-black transition-all ${currentPage === pageNum
+                                                    ? 'bg-primary-500 text-white shadow-lg shadow-primary-200'
+                                                    : 'text-gray-600 hover:bg-gray-50 hover:text-primary-500'
+                                                    }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-transparent transition-colors group"
+                                    title="Next Page"
+                                >
+                                    <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-primary-500 transition-colors" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
+
+                {viewingVolunteer && (
+                    <VolunteerDetailsModal
+                        volunteer={viewingVolunteer}
+                        onClose={() => setViewingVolunteer(null)}
+                        onUpdateStatus={handleStatusChange}
+                        loadingId={updatingId}
+                    />
+                )}
+
+                {editingVolunteer && (
+                    <EditVolunteerModal
+                        volunteer={editingVolunteer}
+                        onClose={() => setEditingVolunteer(null)}
+                        onSave={handleUpdateVolunteer}
+                    />
+                )}
 
                 <Footer />
             </div>

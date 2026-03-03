@@ -39,7 +39,7 @@ export default function Hero() {
       {/* Background Image with Parallax Effect */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="https://images.unsplash.com/photo-1570168007204-dfb528c6958f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80"
+          src="/gateway-mumbai.avif"
           alt="Mumbai skyline"
           fill
           className="object-cover brightness-[0.35] scale-105 transition-transform duration-[3000ms] hover:scale-100"
@@ -114,6 +114,15 @@ export default function Hero() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 justify-center items-center">
+          <button
+            onClick={() => setIsSubModalOpen(true)}
+            className="group relative bg-gradient-to-r from-navy-900 to-navy-800 border border-primary-500/30 hover:border-primary-500 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all duration-300 w-full sm:w-auto shadow-2xl hover:shadow-primary-500/20 hover:scale-105"
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              <Heart className="w-5 h-5 text-primary-500 fill-primary-500/20 group-hover:fill-primary-500 transition-all" />
+              Become a <span className="bg-primary-500 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">Monthly</span> Donor
+            </span>
+          </button>
           <Link
             href="/volunteer"
             className="group relative bg-primary-500 hover:bg-primary-600 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all duration-300 w-full sm:w-auto shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/50 hover:scale-105"
@@ -138,28 +147,7 @@ export default function Hero() {
             </span>
           </Link>
 
-          {/* <Link
-            href="/fundraisers"
-            className="group border-2 border-white/80 hover:bg-white hover:text-navy-900 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all duration-300 w-full sm:w-auto hover:shadow-xl hover:scale-105 backdrop-blur-sm"
-          >
-            <span className="flex items-center justify-center gap-2">
-              <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-              </svg>
-              Donate / Support
-            </span>
-          </Link> */}
 
-          <button
-            onClick={() => setIsSubModalOpen(true)}
-            className="group relative bg-gradient-to-r from-navy-900 to-navy-800 border border-primary-500/30 hover:border-primary-500 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all duration-300 w-full sm:w-auto shadow-2xl hover:shadow-primary-500/20 hover:scale-105"
-          >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              <Heart className="w-5 h-5 text-primary-500 fill-primary-500/20 group-hover:fill-primary-500 transition-all" />
-              Become a Sustainer
-              <span className="bg-primary-500 text-[10px] font-black uppercase px-2 py-0.5 rounded-full ml-1">Monthly</span>
-            </span>
-          </button>
         </div>
 
         <SubscriptionModal isOpen={isSubModalOpen} onClose={() => setIsSubModalOpen(false)} />
@@ -197,15 +185,6 @@ export default function Hero() {
         )}
       </div>
 
-      {/* Scroll Indicator - Enhanced */}
-      {/* <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20">
-        <div className="flex flex-col items-center gap-2 animate-bounce">
-          <span className="text-white text-sm font-medium opacity-80">Scroll to explore</span>
-          <svg className="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </div>
-      </div> */}
 
       <style jsx>{`
         @keyframes gradient {

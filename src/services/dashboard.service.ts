@@ -20,5 +20,9 @@ export const dashboardService = {
 
     getRecentActivity: async () => {
         return apiV1.get<{ success: boolean; data: RecentActivity }>('/dashboard/recent-activity');
+    },
+
+    getFinancialAnalytics: async () => {
+        return apiV1.get<{ success: boolean; data: any }>('/dashboard/financial-analytics');
     }
 };

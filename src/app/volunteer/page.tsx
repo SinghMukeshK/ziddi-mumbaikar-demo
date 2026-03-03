@@ -23,6 +23,8 @@ import {
     FileText,
     Image as ImageIcon,
     Upload,
+    PlusCircle,
+    X as XIcon,
     Paperclip
 } from 'lucide-react'
 import Link from 'next/link'
@@ -46,6 +48,7 @@ export default function VolunteerPage() {
         availability: '',
         address: '',
         city: 'Mumbai',
+        ward: '',
         motivation: ''
     })
 
@@ -56,6 +59,8 @@ export default function VolunteerPage() {
     const [idProofFile, setIdProofFile] = useState<File | null>(null)
     const [photoFile, setPhotoFile] = useState<File | null>(null)
     const [editingFile, setEditingFile] = useState<{ file: File, type: 'id' | 'photo' } | null>(null)
+    const [extraDocuments, setExtraDocuments] = useState<File[]>([])
+    const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({})
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target
@@ -82,8 +87,36 @@ export default function VolunteerPage() {
         }))
     }
 
+    const validateForm = () => {
+        const errors: { [key: string]: string } = {}
+
+        if (!formData.first_name.trim()) errors.first_name = 'First name is required'
+        else if (formData.first_name.length < 2) errors.first_name = 'First name must be at least 2 characters'
+
+        if (!formData.email.trim()) errors.email = 'Email is required'
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Invalid email address'
+
+        if (!formData.phone.trim()) errors.phone = 'Phone number is required'
+        else if (!/^\+?[0-9]{10,12}$/.test(formData.phone.replace(/\s/g, ''))) errors.phone = 'Invalid phone number'
+
+        if (!idProofFile) errors.id_proof = 'ID Proof is required'
+        if (!photoFile) errors.photo = 'Passport photo is required'
+
+        if (!(formData.motivation || '').trim()) errors.motivation = 'Motivation is required'
+        else if ((formData.motivation || '').length < 20) errors.motivation = 'Please tell us a bit more (min 20 characters)'
+
+        setValidationErrors(errors)
+        return Object.keys(errors).length === 0
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        if (!validateForm()) {
+            setError('Please fix the errors in the form before submitting.')
+            return
+        }
+
         setLoading(true)
         setError('')
 
@@ -96,25 +129,39 @@ export default function VolunteerPage() {
 
             // 1. Upload ID Proof if available
             if (idProofFile) {
-                try {
-                    const uploadRes = await fundraiserService.uploadMedia(idProofFile, 'volunteers', volunteerId)
-                    if (uploadRes.success && uploadRes.data?.url) {
-                        finalFormData.id_proof_url = uploadRes.data.url
-                    }
-                } catch (e) {
-                    console.error('Failed to upload ID proof:', e)
+                const uploadRes = await fundraiserService.uploadMedia(idProofFile, 'volunteers', volunteerId)
+                if (uploadRes.success && uploadRes.data?.url) {
+                    finalFormData.id_proof_url = uploadRes.data.url
+                } else {
+                    throw new Error('Failed to upload ID proof. Please try again.')
                 }
             }
 
             // 2. Upload Photo if available
             if (photoFile) {
-                try {
-                    const uploadRes = await fundraiserService.uploadMedia(photoFile, 'volunteers', volunteerId)
+                const uploadRes = await fundraiserService.uploadMedia(photoFile, 'volunteers', volunteerId)
+                if (uploadRes.success && uploadRes.data?.url) {
+                    finalFormData.photo_url = uploadRes.data.url
+                } else {
+                    throw new Error('Failed to upload passport photo. Please try again.')
+                }
+            }
+
+            // 3. Upload Extra Documents if available
+            if (extraDocuments.length > 0) {
+                const uploadedDocs: { name: string, url: string, type: string }[] = []
+                for (const file of extraDocuments) {
+                    const uploadRes = await fundraiserService.uploadMedia(file, 'volunteers', volunteerId)
                     if (uploadRes.success && uploadRes.data?.url) {
-                        finalFormData.photo_url = uploadRes.data.url
+                        uploadedDocs.push({
+                            name: file.name,
+                            url: uploadRes.data.url,
+                            type: file.type
+                        })
                     }
-                } catch (e) {
-                    console.error('Failed to upload photo:', e)
+                }
+                if (uploadedDocs.length > 0) {
+                    finalFormData.documents = uploadedDocs
                 }
             }
 
@@ -236,14 +283,22 @@ export default function VolunteerPage() {
                                     <div className="relative">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
                                         <input
-                                            required
                                             type="text"
                                             name="first_name"
                                             value={formData.first_name}
-                                            onChange={handleInputChange}
-                                            placeholder="John"
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
+                                            onChange={(e) => {
+                                                handleInputChange(e)
+                                                if (validationErrors.first_name) {
+                                                    setValidationErrors(prev => ({ ...prev, first_name: '' }))
+                                                }
+                                            }}
+                                            placeholder="First Name"
+                                            className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 rounded-[1.5rem] focus:bg-white focus:outline-none transition-all font-medium text-navy-900 ${validationErrors.first_name ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
+                                                }`}
                                         />
+                                        {validationErrors.first_name && (
+                                            <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.first_name}</p>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -255,7 +310,7 @@ export default function VolunteerPage() {
                                             name="last_name"
                                             value={formData.last_name}
                                             onChange={handleInputChange}
-                                            placeholder="Doe"
+                                            placeholder="Last Name"
                                             className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
                                         />
                                     </div>
@@ -265,14 +320,22 @@ export default function VolunteerPage() {
                                     <div className="relative">
                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
                                         <input
-                                            required
                                             type="email"
                                             name="email"
                                             value={formData.email}
-                                            onChange={handleInputChange}
-                                            placeholder="john@example.com"
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
+                                            onChange={(e) => {
+                                                handleInputChange(e)
+                                                if (validationErrors.email) {
+                                                    setValidationErrors(prev => ({ ...prev, email: '' }))
+                                                }
+                                            }}
+                                            placeholder="[EMAIL_ADDRESS]"
+                                            className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 rounded-[1.5rem] focus:bg-white focus:outline-none transition-all font-medium text-navy-900 ${validationErrors.email ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
+                                                }`}
                                         />
+                                        {validationErrors.email && (
+                                            <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.email}</p>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -280,14 +343,22 @@ export default function VolunteerPage() {
                                     <div className="relative">
                                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
                                         <input
-                                            required
                                             type="tel"
                                             name="phone"
                                             value={formData.phone}
-                                            onChange={handleInputChange}
+                                            onChange={(e) => {
+                                                handleInputChange(e)
+                                                if (validationErrors.phone) {
+                                                    setValidationErrors(prev => ({ ...prev, phone: '' }))
+                                                }
+                                            }}
                                             placeholder="+91 XXXXX XXXXX"
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
+                                            className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 rounded-[1.5rem] focus:bg-white focus:outline-none transition-all font-medium text-navy-900 ${validationErrors.phone ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
+                                                }`}
                                         />
+                                        {validationErrors.phone && (
+                                            <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.phone}</p>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -406,18 +477,32 @@ export default function VolunteerPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Address</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Ward</label>
                                     <div className="relative">
                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
                                         <input
                                             type="text"
-                                            name="address"
-                                            value={formData.address}
+                                            name="ward"
+                                            value={formData.ward}
                                             onChange={handleInputChange}
-                                            placeholder="Street, Locality"
+                                            placeholder="e.g. Ward A, Ward K-West"
                                             className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
                                         />
                                     </div>
+                                </div>
+                            </div>
+                            <div className="space-y-2 pt-4">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Address</label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                    <input
+                                        type="text"
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleInputChange}
+                                        placeholder="Street, Building, Flat No."
+                                        className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
+                                    />
                                 </div>
                             </div>
 
@@ -426,7 +511,8 @@ export default function VolunteerPage() {
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">ID Proof (Aadhar/PAN/etc.) *</label>
                                     <div className="relative group">
-                                        <div className="w-full px-4 py-4 bg-gray-50 border-2 border-dashed border-gray-200 rounded-[1.5rem] group-hover:border-primary-300 transition-all flex items-center gap-3 relative">
+                                        <div className={`w-full px-4 py-4 bg-gray-50 border-2 border-dashed rounded-[1.5rem] group-hover:border-primary-300 transition-all flex items-center gap-3 relative ${validationErrors.id_proof ? 'border-red-400' : 'border-gray-200'
+                                            }`}>
                                             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-gray-400 shadow-sm">
                                                 <FileText className="w-5 h-5" />
                                             </div>
@@ -438,12 +524,12 @@ export default function VolunteerPage() {
                                             </div>
                                             <Upload className="w-5 h-5 text-gray-300" />
                                             <input
-                                                required={!idProofFile}
                                                 type="file"
                                                 accept="image/*,.pdf"
                                                 onChange={(e) => {
                                                     const file = e.target.files?.[0]
                                                     if (file) {
+                                                        if (validationErrors.id_proof) setValidationErrors(prev => ({ ...prev, id_proof: '' }))
                                                         if (file.type.startsWith('image/')) {
                                                             setEditingFile({ file, type: 'id' })
                                                         } else {
@@ -454,12 +540,16 @@ export default function VolunteerPage() {
                                                 className="absolute inset-0 opacity-0 cursor-pointer"
                                             />
                                         </div>
+                                        {validationErrors.id_proof && (
+                                            <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.id_proof}</p>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Passport Size Photo *</label>
                                     <div className="relative group">
-                                        <div className="w-full px-4 py-4 bg-gray-50 border-2 border-dashed border-gray-200 rounded-[1.5rem] group-hover:border-primary-300 transition-all flex items-center gap-3 relative">
+                                        <div className={`w-full px-4 py-4 bg-gray-50 border-2 border-dashed rounded-[1.5rem] group-hover:border-primary-300 transition-all flex items-center gap-3 relative ${validationErrors.photo ? 'border-red-400' : 'border-gray-200'
+                                            }`}>
                                             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-gray-400 shadow-sm">
                                                 <ImageIcon className="w-5 h-5" />
                                             </div>
@@ -471,14 +561,66 @@ export default function VolunteerPage() {
                                             </div>
                                             <Upload className="w-5 h-5 text-gray-300" />
                                             <input
-                                                required={!photoFile}
                                                 type="file"
                                                 accept="image/*"
                                                 onChange={(e) => {
                                                     const file = e.target.files?.[0]
                                                     if (file) {
+                                                        if (validationErrors.photo) setValidationErrors(prev => ({ ...prev, photo: '' }))
                                                         setEditingFile({ file, type: 'photo' })
                                                     }
+                                                }}
+                                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                            />
+                                        </div>
+                                        {validationErrors.photo && (
+                                            <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.photo}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Extra Documents */}
+                            <div className="space-y-4 pt-4">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Additional Documents (Certificates, Experience Letters, etc.)</label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <AnimatePresence>
+                                        {extraDocuments.map((file, idx) => (
+                                            <motion.div
+                                                key={`${file.name}-${idx}`}
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.9 }}
+                                                className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-2xl group relative"
+                                            >
+                                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary-500 shadow-sm">
+                                                    <Paperclip className="w-5 h-5" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs font-bold text-navy-900 truncate">{file.name}</p>
+                                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest">{(file.size / 1024).toFixed(0)} KB</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setExtraDocuments(prev => prev.filter((_, i) => i !== idx))}
+                                                    className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"
+                                                >
+                                                    <XIcon className="w-4 h-4" />
+                                                </button>
+                                            </motion.div>
+                                        ))}
+                                    </AnimatePresence>
+
+                                    <div className="relative group min-h-[66px]">
+                                        <div className="w-full h-full px-4 py-3 bg-primary-50 border-2 border-dashed border-primary-100 rounded-2xl group-hover:border-primary-300 transition-all flex items-center justify-center gap-3 relative cursor-pointer">
+                                            <PlusCircle className="w-5 h-5 text-primary-500" />
+                                            <span className="text-xs font-black text-primary-600 uppercase tracking-widest">Add Document</span>
+                                            <input
+                                                type="file"
+                                                multiple
+                                                onChange={(e) => {
+                                                    const files = Array.from(e.target.files || [])
+                                                    setExtraDocuments(prev => [...prev, ...files])
                                                 }}
                                                 className="absolute inset-0 opacity-0 cursor-pointer"
                                             />
@@ -493,14 +635,22 @@ export default function VolunteerPage() {
                                 <div className="relative">
                                     <MessageSquare className="absolute left-4 top-6 w-5 h-5 text-gray-300" />
                                     <textarea
-                                        required
                                         name="motivation"
                                         value={formData.motivation}
-                                        onChange={handleInputChange}
+                                        onChange={(e) => {
+                                            handleInputChange(e)
+                                            if (validationErrors.motivation) {
+                                                setValidationErrors(prev => ({ ...prev, motivation: '' }))
+                                            }
+                                        }}
                                         placeholder="Tell us about your motivation..."
                                         rows={4}
-                                        className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900 resize-none"
+                                        className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 rounded-[1.5rem] focus:bg-white focus:outline-none transition-all font-medium text-navy-900 resize-none ${validationErrors.motivation ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
+                                            }`}
                                     ></textarea>
+                                    {validationErrors.motivation && (
+                                        <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.motivation}</p>
+                                    )}
                                 </div>
                             </div>
 
