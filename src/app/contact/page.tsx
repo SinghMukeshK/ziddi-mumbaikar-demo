@@ -101,7 +101,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-navy-900 mb-1">Phone</h3>
-                    <a href="tel:+919876543210" className="text-gray-600 hover:text-primary-500 transition-colors">
+                    <a href="tel:+919773344447" className="text-gray-600 hover:text-primary-500 transition-colors">
                       +91 97733 44447
                     </a>
                     <p className="text-sm text-gray-500 mt-1">Mon-Sat, 9 AM - 6 PM</p>
@@ -135,7 +135,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-navy-900 mb-1">WhatsApp</h3>
-                    <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-primary-500 transition-colors">
+                    <a href="https://wa.me/919773344447" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-primary-500 transition-colors">
                       +91 97733 44447
                     </a>
                     <p className="text-sm text-gray-500 mt-1">Quick responses</p>
