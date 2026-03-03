@@ -36,7 +36,7 @@ export default function TermsPage() {
                             <h2 className="text-2xl font-bold text-navy-900 mb-4 border-b pb-2">1. General Terms</h2>
                             <div className="prose prose-navy max-w-none text-gray-600 space-y-4">
                                 <p>
-                                    Welcome to Ziddi Mumbaikar. These Terms of Service ("Terms") govern your use of our website and services. Ziddi Mumbaikar is a registered Non-Governmental Organization (NGO) dedicated to community service, social welfare, and fundraising for those in need across Mumbai.
+                                    Welcome to Ziddi Mumbaikar. These Terms of Service (&quot;Terms&quot;) govern your use of our website and services. Ziddi Mumbaikar is a registered Non-Governmental Organization (NGO) dedicated to community service, social welfare, and fundraising for those in need across Mumbai.
                                 </p>
                                 <p>
                                     By using our platform, you acknowledge that Ziddi Mumbaikar (Www.ziddimumbaikar.org) directly collects donations to fund its various social initiatives and verified community causes. We are committed to transparency in the collection and disbursement of all funds.
@@ -48,11 +48,11 @@ export default function TermsPage() {
                             <h2 className="text-2xl font-bold text-navy-900 mb-4 border-b pb-2">2. Terms for Donors</h2>
                             <div className="prose prose-navy max-w-none text-gray-600 space-y-4">
                                 <ul className="list-disc pl-5 space-y-2">
-                                    <li>Donations are made voluntarily to support Ziddi Mumbaikar's social initiatives or specific listed causes. These are non-refundable contributions for charitable purposes.</li>
+                                    <li>Donations are made voluntarily to support Ziddi Mumbaikar&apos;s social initiatives or specific listed causes. These are non-refundable contributions for charitable purposes.</li>
                                     <li>As a registered NGO, Ziddi Mumbaikar ensures that the maximum possible portion of your donation goes directly toward the intended cause, after minimal administrative and payment gateway processing fees.</li>
                                     <li>Donors will receive acknowledgement for their contributions. Where applicable under Indian law, tax benefit certificates (such as 80G) will be issued directly by Ziddi Mumbaikar or the registered beneficiary organization.</li>
-                                    <li>You have the option to remain an "Anonymous" donor, in which case your name and details will not be displayed on our public donor walls.</li>
-                                    <li>Ziddi Mumbaikar reserves the right to redirect funds to other similar urgent causes if a specific project's goal is met or if the project becomes unfeasible.</li>
+                                    <li>You have the option to remain an &quot;Anonymous&quot; donor, in which case your name and details will not be displayed on our public donor walls.</li>
+                                    <li>Ziddi Mumbaikar reserves the right to redirect funds to other similar urgent causes if a specific project&apos;s goal is met or if the project becomes unfeasible.</li>
                                 </ul>
                             </div>
                         </section>
@@ -61,10 +61,10 @@ export default function TermsPage() {
                             <h2 className="text-2xl font-bold text-navy-900 mb-4 border-b pb-2">3. Terms for Volunteers & Beneficiaries</h2>
                             <div className="prose prose-navy max-w-none text-gray-600 space-y-4">
                                 <ul className="list-decimal pl-5 space-y-2">
-                                    <li>Volunteers agree to act in accordance with the NGO's code of conduct and represent the organization with integrity.</li>
+                                    <li>Volunteers agree to act in accordance with the NGO&apos;s code of conduct and represent the organization with integrity.</li>
                                     <li>Beneficiaries and cause creators must provide accurate documentation and information for verification. Ziddi Mumbaikar conducts due diligence before any funds are disbursed.</li>
                                     <li>The NGO has the sole discretion to approve, pause, or reject any request for assistance or fundraising based on internal verification and fund availability.</li>
-                                    <li>Funds are disbursed based on project milestones or as deemed appropriate by the NGO's governing body to ensure effective utilization.</li>
+                                    <li>Funds are disbursed based on project milestones or as deemed appropriate by the NGO&apos;s governing body to ensure effective utilization.</li>
                                 </ul>
                             </div>
                         </section>

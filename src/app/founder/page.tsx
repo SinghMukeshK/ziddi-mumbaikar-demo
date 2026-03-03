@@ -101,7 +101,7 @@ export default function FounderPage() {
                                     <Globe className="w-10 h-10 text-primary-500 mb-6" />
                                     <h3 className="text-xl font-bold text-navy-900 mb-3">Environmental Advocacy</h3>
                                     <p className="text-gray-500 leading-relaxed">
-                                        Successfully led various cleanup drives and sustainable waste management initiatives across Mumbai's beaches and public parks.
+                                        Successfully led various cleanup drives and sustainable waste management initiatives across Mumbai&apos;s beaches and public parks.
                                     </p>
                                 </div>
                             </div>

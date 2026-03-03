@@ -85,7 +85,7 @@ export default function PrivacyPolicyPage() {
                                     <li>With service providers who help us operate our platform (e.g., payment gateways).</li>
                                     <li>When required by law or to comply with a judicial proceeding or court order.</li>
                                     <li>To protect the rights, property, or safety of Ziddi Mumbaikar, our users, or the public.</li>
-                                    <li>If you donate to a specific cause, your name (unless opted as "Anonymous") may be shared with the cause beneficiary for transparency.</li>
+                                    <li>If you donate to a specific cause, your name (unless opted as &quot;Anonymous&quot;) may be shared with the cause beneficiary for transparency.</li>
                                 </ul>
                             </div>
                         </section>

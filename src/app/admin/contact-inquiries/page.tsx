@@ -187,7 +187,7 @@ function AdminContactInquiriesPage() {
                                     </div>
 
                                     <div className="bg-gray-50 p-4 rounded-xl text-gray-600 text-sm line-clamp-3 mt-auto border border-gray-100 italic">
-                                        "{inquiry.message}"
+                                        &quot;{inquiry.message}&quot;
                                     </div>
                                 </div>
                             )

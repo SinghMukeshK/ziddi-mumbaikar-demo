@@ -120,7 +120,7 @@ function EventModal({
             if (imageFile) {
                 const uploadRes = await galleryService.uploadMedia(imageFile)
                 // Support both wrapped {success, data: {file_url}} and flat {file_url} responses
-                const uploadedUrl = uploadRes.data?.file_url || (uploadRes as any).file_url || uploadRes.data?.url || (uploadRes as any).url
+                const uploadedUrl = uploadRes.data?.file_url || (uploadRes as any).file_url || (uploadRes.data as any)?.url || (uploadRes as any).url
 
                 if (uploadedUrl) {
                     cover_image_url = uploadedUrl
@@ -129,8 +129,8 @@ function EventModal({
                 } else {
                     console.error('Image upload response unexpected:', uploadRes)
                     // Fallback: check if we have a string that looks like a URL
-                    if (typeof uploadRes === 'string' && uploadRes.startsWith('http')) {
-                        cover_image_url = uploadRes
+                    if (typeof (uploadRes as any) === 'string' && (uploadRes as any).startsWith('http')) {
+                        cover_image_url = uploadRes as any
                     }
                 }
             }

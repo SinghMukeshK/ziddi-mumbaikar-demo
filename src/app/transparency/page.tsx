@@ -110,10 +110,10 @@ export default function TransparencyPage() {
                             </h2>
                             <div className="prose prose-navy max-w-none text-gray-600 space-y-4">
                                 <p>
-                                    Ziddi Mumbaikar is governed by a board of dedicated trustees and advisors who bring together decades of experience in social service, law, and administration. The board ensures that all activities align with our core mission of serving Mumbai's underserved populations.
+                                    Ziddi Mumbaikar is governed by a board of dedicated trustees and advisors who bring together decades of experience in social service, law, and administration. The board ensures that all activities align with our core mission of serving Mumbai&apos;s underserved populations.
                                 </p>
                                 <p>
-                                    The governing body meets quarterly to review project progress, financial health, and community needs, ensuring that "Zid" (determination) is always translated into effective action.
+                                    The governing body meets quarterly to review project progress, financial health, and community needs, ensuring that &quot;Zid&quot; (determination) is always translated into effective action.
                                 </p>
                             </div>
                         </section>
