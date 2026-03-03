@@ -70,6 +70,10 @@ class VolunteerService {
         return apiV1.patch<ApiResponse<Volunteer>>(`/volunteers/${id}/status`, { status });
     }
 
+    async updateVolunteer(id: string, data: Partial<VolunteerCreateRequest>): Promise<ApiResponse<Volunteer>> {
+        return apiV1.put<ApiResponse<Volunteer>>(`/volunteers/${id}`, data);
+    }
+
     async getVolunteerStats(id: string): Promise<ApiResponse<{ total_hours: number; activity_count: number }>> {
         return apiV1.get<ApiResponse<{ total_hours: number; activity_count: number }>>(`/volunteers/${id}/stats`);
     }

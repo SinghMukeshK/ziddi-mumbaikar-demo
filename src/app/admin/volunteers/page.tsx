@@ -7,7 +7,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Footer from '@/components/Footer'
 import { volunteerService, Volunteer } from '@/services/volunteer.service'
-import { User, Check, X, Eye, X as CloseIcon, FileText, Download, ExternalLink } from 'lucide-react'
+import { User, Check, X, Eye, X as CloseIcon, FileText, Download, ExternalLink, ChevronLeft, ChevronRight, Edit, Image as ImageIcon, Upload, PlusCircle, Paperclip, Scan } from 'lucide-react'
+import { toast } from 'react-hot-toast'
+import { fundraiserService } from '@/services/fundraiser.service'
+import ImageEditor from '@/components/ImageEditor'
+import { fixImageUrl, fixObjectUrls } from '@/lib/image-utils'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const NGO_REG = 'Maharashtra State, Mumbai 2018 / GBBSD / 1566 / 2018'
@@ -118,7 +122,7 @@ function IDCardFront({ v, index }: { v: Volunteer; index: number }) {
                 >
                     {v.photo_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={v.photo_url} alt={fullName} className="w-full h-full object-cover object-top" />
+                        <img src={fixImageUrl(v.photo_url)} alt={fullName} className="w-full h-full object-cover object-top" />
                     ) : (
                         <div className="w-full h-full bg-blue-50 flex flex-col items-center justify-center">
                             <span className="text-3xl font-black text-blue-300">{initials}</span>
@@ -477,7 +481,7 @@ function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }
                                         </div>
                                         <div className="flex items-center gap-2 mt-auto">
                                             <a
-                                                href={volunteer.id_proof_url}
+                                                href={fixImageUrl(volunteer.id_proof_url)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
@@ -485,7 +489,7 @@ function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }
                                                 <ExternalLink className="w-3.5 h-3.5" /> View
                                             </a>
                                             <a
-                                                href={volunteer.id_proof_url}
+                                                href={fixImageUrl(volunteer.id_proof_url)}
                                                 download
                                                 className="w-9 h-9 flex items-center justify-center bg-primary-50 rounded-lg text-primary-600 hover:bg-primary-100 transition-colors"
                                             >
@@ -501,7 +505,7 @@ function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="w-10 h-10 bg-white rounded-lg overflow-hidden flex items-center justify-center text-gray-400 shadow-sm border border-gray-100">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={volunteer.photo_url} alt="Profile" className="w-full h-full object-cover" />
+                                                <img src={fixImageUrl(volunteer.photo_url)} alt="Profile" className="w-full h-full object-cover" />
                                             </div>
                                             <div>
                                                 <p className="text-[10px] uppercase font-bold text-gray-500">Photo</p>
@@ -510,7 +514,7 @@ function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }
                                         </div>
                                         <div className="flex items-center gap-2 mt-auto">
                                             <a
-                                                href={volunteer.photo_url}
+                                                href={fixImageUrl(volunteer.photo_url)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
@@ -518,7 +522,7 @@ function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }
                                                 <ExternalLink className="w-3.5 h-3.5" /> View
                                             </a>
                                             <a
-                                                href={volunteer.photo_url}
+                                                href={fixImageUrl(volunteer.photo_url)}
                                                 download
                                                 className="w-9 h-9 flex items-center justify-center bg-primary-50 rounded-lg text-primary-600 hover:bg-primary-100 transition-colors"
                                             >
@@ -542,7 +546,7 @@ function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }
                                         </div>
                                         <div className="flex items-center gap-2 mt-auto">
                                             <a
-                                                href={doc.url}
+                                                href={fixImageUrl(doc.url)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
@@ -550,7 +554,7 @@ function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }
                                                 <ExternalLink className="w-3.5 h-3.5" /> View
                                             </a>
                                             <a
-                                                href={doc.url}
+                                                href={fixImageUrl(doc.url)}
                                                 download={doc.name}
                                                 className="w-9 h-9 flex items-center justify-center bg-navy-50 rounded-lg text-navy-600 hover:bg-navy-100 transition-colors"
                                             >
@@ -623,6 +627,375 @@ function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }
     )
 }
 
+
+// ─── Edit Volunteer Modal ───────────────────────────────────────────────────
+function EditVolunteerModal({
+    volunteer,
+    onClose,
+    onSave
+}: {
+    volunteer: Volunteer
+    onClose: () => void
+    onSave: (id: string, data: any) => Promise<void>
+}) {
+    const [formData, setFormData] = useState({
+        first_name: volunteer.first_name || '',
+        last_name: volunteer.last_name || '',
+        email: volunteer.email || '',
+        phone: volunteer.phone || '',
+        date_of_birth: volunteer.date_of_birth ? new Date(volunteer.date_of_birth).toISOString().split('T')[0] : '',
+        gender: volunteer.gender || '',
+        occupation: volunteer.occupation || '',
+        availability: volunteer.availability || '',
+        address: volunteer.address || '',
+        city: volunteer.city || '',
+        state: volunteer.state || 'Maharashtra',
+        zip_code: volunteer.zip_code || '',
+        role_interest: volunteer.role_interest || '',
+        motivation: volunteer.motivation || '',
+        photo_url: volunteer.photo_url || '',
+        id_proof_url: volunteer.id_proof_url || '',
+    })
+    const [saving, setSaving] = useState(false)
+    const [photoFile, setPhotoFile] = useState<File | null>(null)
+    const [idProofFile, setIdProofFile] = useState<File | null>(null)
+    const [editingFile, setEditingFile] = useState<{ file: File, type: 'id' | 'photo' } | null>(null)
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target
+        setFormData(prev => ({ ...prev, [name]: value }))
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setSaving(true)
+        try {
+            let photo_url = formData.photo_url
+            let id_proof_url = formData.id_proof_url
+
+            // Upload Photo if new file is selected
+            if (photoFile) {
+                const photoRes = await fundraiserService.uploadMedia(photoFile, 'volunteers', volunteer.id)
+                if (photoRes.success && photoRes.data?.url) {
+                    photo_url = photoRes.data.url
+                }
+            }
+
+            // Upload ID Proof if new file is selected
+            if (idProofFile) {
+                const idRes = await fundraiserService.uploadMedia(idProofFile, 'volunteers', volunteer.id)
+                if (idRes.success && idRes.data?.url) {
+                    id_proof_url = idRes.data.url
+                }
+            }
+
+            await onSave(volunteer.id, { ...formData, photo_url, id_proof_url })
+            onClose()
+        } catch (error) {
+            console.error(error)
+            toast.error('Failed to save changes')
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white">
+                            <Edit className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-black text-navy-900">Edit Volunteer</h2>
+                            <p className="text-xs text-gray-500 font-medium tracking-wide">ID: {formatIdNo(volunteer.id)}</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+                        <CloseIcon className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">First Name</label>
+                            <input
+                                required
+                                name="first_name"
+                                value={formData.first_name}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Last Name</label>
+                            <input
+                                name="last_name"
+                                value={formData.last_name}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Email Address</label>
+                            <input
+                                required
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Phone Number</label>
+                            <input
+                                required
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Date of Birth</label>
+                            <input
+                                type="date"
+                                name="date_of_birth"
+                                value={formData.date_of_birth}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Gender</label>
+                            <select
+                                name="gender"
+                                value={formData.gender}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            >
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Occupation</label>
+                            <input
+                                name="occupation"
+                                value={formData.occupation}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Availability</label>
+                            <input
+                                name="availability"
+                                value={formData.availability}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="sm:col-span-2 space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Address</label>
+                            <input
+                                name="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">City</label>
+                            <input
+                                name="city"
+                                value={formData.city}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Zip Code</label>
+                            <input
+                                name="zip_code"
+                                value={formData.zip_code}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="sm:col-span-2 space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Role Interest</label>
+                            <input
+                                name="role_interest"
+                                value={formData.role_interest}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            />
+                        </div>
+                        <div className="sm:col-span-2 space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Motivation</label>
+                            <textarea
+                                name="motivation"
+                                rows={3}
+                                value={formData.motivation}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900 resize-none"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Documents Upload */}
+                    <div className="space-y-4 pt-4 border-t border-gray-100">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Media & Documents</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            {/* Photo Upload */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Passport Size Photo</label>
+                                <div className="relative group">
+                                    <div className="w-full px-4 py-3 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl group-hover:border-primary-300 transition-all flex items-center gap-3 relative min-h-[70px]">
+                                        <div className="w-10 h-10 bg-white rounded-xl overflow-hidden flex items-center justify-center text-gray-400 shadow-sm border border-gray-100">
+                                            {photoFile ? (
+                                                <img src={URL.createObjectURL(photoFile)} alt="New Photo" className="w-full h-full object-cover" />
+                                            ) : formData.photo_url ? (
+                                                <img src={fixImageUrl(formData.photo_url)} alt="Current Photo" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <ImageIcon className="w-5 h-5" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-xs font-bold text-navy-900 truncate">
+                                                {photoFile ? photoFile.name : formData.photo_url ? 'Current Photo (Click to update)' : 'Upload Photo'}
+                                            </p>
+                                            <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black">2MB Limit · JPG/PNG</p>
+                                        </div>
+                                        <Upload className="w-4 h-4 text-gray-300" />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0]
+                                                if (file) setEditingFile({ file, type: 'photo' })
+                                            }}
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                        />
+                                    </div>
+                                    {(photoFile || formData.photo_url) && (
+                                        <a
+                                            href={photoFile ? URL.createObjectURL(photoFile) : fixImageUrl(formData.photo_url)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="absolute -top-2 -right-2 w-7 h-7 bg-navy-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-10"
+                                            title="View Original"
+                                        >
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* ID Proof Upload */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">ID Proof (Aadhar/PAN)</label>
+                                <div className="relative group">
+                                    <div className="w-full px-4 py-3 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl group-hover:border-primary-300 transition-all flex items-center gap-3 relative min-h-[70px]">
+                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary-500 shadow-sm border border-gray-100">
+                                            {idProofFile || formData.id_proof_url ? (
+                                                <FileText className="w-5 h-5" />
+                                            ) : (
+                                                <Scan className="w-5 h-5" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-xs font-bold text-navy-900 truncate">
+                                                {idProofFile ? idProofFile.name : formData.id_proof_url ? 'Current ID Proof (Click to update)' : 'Upload ID Proof'}
+                                            </p>
+                                            <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black">5MB Limit · PDF/JPG/PNG</p>
+                                        </div>
+                                        <Upload className="w-4 h-4 text-gray-300" />
+                                        <input
+                                            type="file"
+                                            accept="image/*,.pdf"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0]
+                                                if (file) {
+                                                    if (file.type.startsWith('image/')) {
+                                                        setEditingFile({ file, type: 'id' })
+                                                    } else {
+                                                        setIdProofFile(file)
+                                                    }
+                                                }
+                                            }}
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                        />
+                                    </div>
+                                    {(idProofFile || formData.id_proof_url) && (
+                                        <a
+                                            href={idProofFile ? URL.createObjectURL(idProofFile) : fixImageUrl(formData.id_proof_url)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="absolute -top-2 -right-2 w-7 h-7 bg-navy-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-10"
+                                            title="View Original"
+                                        >
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                {/* Image Editor Modal */}
+                {editingFile && (
+                    <ImageEditor
+                        file={editingFile.file}
+                        aspectRatio={editingFile.type === 'id' ? undefined : 1}
+                        onSave={(editedFile) => {
+                            if (editingFile.type === 'id') {
+                                setIdProofFile(editedFile)
+                            } else {
+                                setPhotoFile(editedFile)
+                            }
+                            setEditingFile(null)
+                        }}
+                        onCancel={() => setEditingFile(null)}
+                    />
+                )}
+
+                {/* Footer */}
+                <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-3">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-6 py-2.5 text-gray-400 hover:text-gray-600 font-black text-xs uppercase tracking-widest"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-8 py-2.5 bg-navy-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-navy-800 transition-all shadow-lg shadow-navy-900/20 disabled:opacity-50"
+                    >
+                        {saving ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <Check className="w-4 h-4" />
+                        )}
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 function VolunteersPageContent() {
     const { user, isLoggedIn } = useAuth()
@@ -637,8 +1010,11 @@ function VolunteersPageContent() {
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [updatingId, setUpdatingId] = useState<string | null>(null)
     const [viewingVolunteer, setViewingVolunteer] = useState<Volunteer | null>(null)
+    const [editingVolunteer, setEditingVolunteer] = useState<Volunteer | null>(null)
     // printSingleId: when set, only this volunteer's card is printed
     const [printSingleId, setPrintSingleId] = useState<string | null>(null)
+    const [currentPage, setCurrentPage] = useState(1)
+    const ITEMS_PER_PAGE = 10
 
     useEffect(() => {
         if (isLoggedIn && user && user.role !== 'admin') router.push('/')
@@ -650,7 +1026,7 @@ function VolunteersPageContent() {
             try {
                 setLoading(true)
                 const res = await volunteerService.getVolunteers()
-                if (res.success) setVolunteers(res.data || [])
+                if (res.success) setVolunteers(fixObjectUrls(res.data) || [])
                 else setError('Failed to load volunteers')
             } catch {
                 setError('Failed to load volunteers. Please try again.')
@@ -661,6 +1037,11 @@ function VolunteersPageContent() {
         fetchAll()
     }, [isLoggedIn, user])
 
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [search, statusFilter])
+
     const filtered = volunteers.filter((v) => {
         const matchSearch =
             !search ||
@@ -668,6 +1049,12 @@ function VolunteersPageContent() {
         const matchStatus = statusFilter === 'all' || v.status === statusFilter
         return matchSearch && matchStatus
     })
+
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
+    const paginatedVolunteers = filtered.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    )
 
     const toggleSelect = (id: string) => {
         setSelected((prev) => {
@@ -706,11 +1093,27 @@ function VolunteersPageContent() {
                 setVolunteers((prev) =>
                     prev.map((v) => (v.id === id ? { ...v, status: status as Volunteer['status'] } : v))
                 )
+                toast.success(`Status updated to ${status}`)
             }
         } catch {
-            alert('Failed to update status')
+            toast.error('Failed to update status')
         } finally {
             setUpdatingId(null)
+        }
+    }
+
+    const handleUpdateVolunteer = async (id: string, data: any) => {
+        try {
+            const res = await volunteerService.updateVolunteer(id, data)
+            if (res.success) {
+                setVolunteers(prev => prev.map(v => v.id === id ? { ...v, ...data } : v))
+                toast.success('Volunteer details updated successfully')
+            } else {
+                toast.error(res.message || 'Failed to update volunteer')
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error('An error occurred while updating')
         }
     }
 
@@ -879,7 +1282,7 @@ function VolunteersPageContent() {
                     ) : printMode ? (
                         /* ── Print mode: ID card pairs ─────────────────────────────────── */
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                            {filtered.map((v) => (
+                            {paginatedVolunteers.map((v) => (
                                 <VolunteerIDCardPair
                                     key={v.id}
                                     v={v}
@@ -907,7 +1310,7 @@ function VolunteersPageContent() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
-                                        {filtered.map((v, i) => {
+                                        {paginatedVolunteers.map((v, i) => {
                                             const cfg = STATUS_CONFIG[v.status] ?? STATUS_CONFIG['applied']
                                             const fullName = [v.first_name, v.last_name].filter(Boolean).join(' ')
                                             const initials = [v.first_name?.[0], v.last_name?.[0]].filter(Boolean).join('').toUpperCase()
@@ -917,7 +1320,7 @@ function VolunteersPageContent() {
                                                         <div className="flex items-center gap-3">
                                                             {v.photo_url ? (
                                                                 // eslint-disable-next-line @next/next/no-img-element
-                                                                <img src={v.photo_url} alt={fullName} className="w-9 h-9 rounded-full object-cover border border-gray-200 flex-shrink-0" />
+                                                                <img src={fixImageUrl(v.photo_url)} alt={fullName} className="w-9 h-9 rounded-full object-cover border border-gray-200 flex-shrink-0" />
                                                             ) : (
                                                                 <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
                                                                     <span className="text-xs font-black text-primary-600">{initials}</span>
@@ -963,6 +1366,12 @@ function VolunteersPageContent() {
                                                             >
                                                                 <Eye className="w-3.5 h-3.5" /> View
                                                             </button>
+                                                            <button
+                                                                onClick={() => setEditingVolunteer(v)}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+                                                            >
+                                                                <Edit className="w-3.5 h-3.5" /> Edit
+                                                            </button>
                                                             {(v.status === 'approved' || v.status === 'inactive') && (
                                                                 <button
                                                                     onClick={() => handleStatusChange(v.id, 'active')}
@@ -983,11 +1392,74 @@ function VolunteersPageContent() {
                                                             )}
                                                         </div>
                                                     </td>
+                                                    <td className="px-5 py-4">
+                                                        <button
+                                                            onClick={() => handlePrintSingle(v)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-navy-900 text-white rounded-lg text-xs font-bold hover:bg-navy-800 transition-colors whitespace-nowrap"
+                                                        >
+                                                            <Download className="w-3 h-3" /> Print ID
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             )
                                         })}
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Pagination UI */}
+                    {!loading && !error && filtered.length > 0 && totalPages > 1 && (
+                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between bg-white px-6 py-4 rounded-xl border border-gray-200 gap-4">
+                            <div className="text-sm text-gray-500 font-medium order-2 sm:order-1">
+                                Showing <span className="text-gray-900 font-black">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-gray-900 font-black">{Math.min(filtered.length, currentPage * ITEMS_PER_PAGE)}</span> of <span className="text-gray-900 font-black">{filtered.length}</span> volunteers
+                            </div>
+                            <div className="flex items-center gap-2 order-1 sm:order-2">
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-transparent transition-colors group"
+                                    title="Previous Page"
+                                >
+                                    <ChevronLeft className="w-5 h-5 text-gray-600 group-hover:text-primary-500 transition-colors" />
+                                </button>
+
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: totalPages }).map((_, i) => {
+                                        const pageNum = i + 1;
+                                        // Simple logic to show current, first, last, and neighbours if too many pages
+                                        // For simplicity here, showing all if totalPages <= 7
+                                        if (totalPages > 7) {
+                                            if (pageNum !== 1 && pageNum !== totalPages && Math.abs(pageNum - currentPage) > 1) {
+                                                if (pageNum === 2 || pageNum === totalPages - 1) return <span key={i} className="px-1 text-gray-300">...</span>;
+                                                return null;
+                                            }
+                                        }
+
+                                        return (
+                                            <button
+                                                key={i}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-black transition-all ${currentPage === pageNum
+                                                    ? 'bg-primary-500 text-white shadow-lg shadow-primary-200'
+                                                    : 'text-gray-600 hover:bg-gray-50 hover:text-primary-500'
+                                                    }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-transparent transition-colors group"
+                                    title="Next Page"
+                                >
+                                    <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-primary-500 transition-colors" />
+                                </button>
                             </div>
                         </div>
                     )}
@@ -999,6 +1471,14 @@ function VolunteersPageContent() {
                         onClose={() => setViewingVolunteer(null)}
                         onUpdateStatus={handleStatusChange}
                         loadingId={updatingId}
+                    />
+                )}
+
+                {editingVolunteer && (
+                    <EditVolunteerModal
+                        volunteer={editingVolunteer}
+                        onClose={() => setEditingVolunteer(null)}
+                        onSave={handleUpdateVolunteer}
                     />
                 )}
 

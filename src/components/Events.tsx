@@ -31,7 +31,7 @@ export default function Events() {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const res = await eventService.getEvents({ limit: 100 })
+                const res = await eventService.getEvents({ limit: 100, status: 'published' })
                 // For direct map from API
                 const fetchedEvents = res.data || []
                 setEvents(fetchedEvents)

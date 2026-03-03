@@ -1,19 +1,37 @@
 export function fixImageUrl(url: string | null | undefined): string {
     if (!url) return '';
-    if (url.startsWith('s3://')) {
-        const path = url.replace('s3://', '');
+
+    // Trim and handle already absolute URLs
+    const trimmedUrl = url.trim();
+    if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) return trimmedUrl;
+
+    // Handle S3 protocol
+    if (trimmedUrl.startsWith('s3://')) {
+        const path = trimmedUrl.replace('s3://', '');
         const firstSlashIndex = path.indexOf('/');
         if (firstSlashIndex !== -1) {
             const bucket = path.substring(0, firstSlashIndex);
             const key = path.substring(firstSlashIndex + 1);
-            // Handle specific drista-documents host or fallback to standard S3
-            if (bucket === 'drista-documents') {
-                return `https://drista-documents/${key}`;
-            }
-            return `https://${bucket}.s3.amazonaws.com/${key}`;
+
+            // Handle specific drista-documents or fallback to standard S3 host
+            // Using s3.amazonaws.com as a fallback which usually redirects to the correct region
+            const host = bucket === 'drista-documents'
+                ? 'drista-documents.s3.us-east-1.amazonaws.com'
+                : `${bucket}.s3.amazonaws.com`;
+
+            return `https://${host}/${key}`;
         }
     }
-    return url;
+
+    // Prepend API base URL for relative paths
+    // Strip trailing /v1 if present for image paths
+    let apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    apiBase = apiBase.replace(/\/v1\/?$/, '');
+
+    if (trimmedUrl.startsWith('/')) {
+        return `${apiBase}${trimmedUrl}`;
+    }
+    return `${apiBase}/${trimmedUrl}`;
 }
 
 /**

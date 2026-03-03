@@ -81,7 +81,7 @@ export default function AboutPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-navy-900">Volunteers</h3>
-                    <p className="text-2xl font-black text-blue-600">5,000+</p>
+                    <p className="text-2xl font-black text-blue-600">5,00+</p>
                   </div>
                 </div>
                 <p className="text-gray-600 text-sm">Active community members</p>
@@ -95,7 +95,7 @@ export default function AboutPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-navy-900">Projects</h3>
-                    <p className="text-2xl font-black text-green-600">250+</p>
+                    <p className="text-2xl font-black text-green-600">25+</p>
                   </div>
                 </div>
                 <p className="text-gray-600 text-sm">Completed initiatives</p>

@@ -22,7 +22,7 @@ export default function EventsModal() {
 
         const fetchEvents = async () => {
             try {
-                const res = await eventService.getEvents({ limit: 10 })
+                const res = await eventService.getEvents({ limit: 10, status: 'published' })
                 const fetchedEvents = res.data || []
 
                 const now = new Date()

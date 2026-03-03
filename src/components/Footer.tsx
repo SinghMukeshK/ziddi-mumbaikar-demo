@@ -61,6 +61,7 @@ export default function Footer() {
             <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li><Link href="/about" className="text-gray-300 hover:text-primary-400 transition-colors">About Us</Link></li>
+              <li><Link href="/founder" className="text-gray-300 hover:text-primary-400 transition-colors">Our Founder</Link></li>
               <li><Link href="/contact" className="text-gray-300 hover:text-primary-400 transition-colors">Contact Us</Link></li>
               <li><Link href="/#what-we-do" className="text-gray-300 hover:text-primary-400 transition-colors">What We Do</Link></li>
               <li><Link href="/#impact" className="text-gray-300 hover:text-primary-400 transition-colors">Our Impact</Link></li>
@@ -87,8 +88,7 @@ export default function Footer() {
               </div> */}
               <div>
                 <p className="text-gray-300 text-sm">Office Address</p>
-                <p className="text-sm">Oshiwara, Jogeshwari West, <br />
-                  Mumbai, Maharashtra 400102</p>
+                <p className="text-sm">Shop No. 09, Bldg. No. R-5, Gulshan Nagar, Raghvendra Mandir Road, Oshiwara, Jogeshwari (W), Mumbai 400102. Maharashtra. INDIA.</p>
               </div>
             </div>
           </div>
@@ -102,9 +102,9 @@ export default function Footer() {
             </div>
 
             <div className="flex flex-wrap justify-center md:justify-end gap-4 md:gap-6 text-sm">
-              <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">Privacy Policy</a>
-              <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">Terms of Service</a>
-              <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">Transparency</a>
+              <Link href="/privacy" className="text-gray-400 hover:text-primary-400 transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="text-gray-400 hover:text-primary-400 transition-colors">Terms of Service</Link>
+              <Link href="/transparency" className="text-gray-400 hover:text-primary-400 transition-colors">Transparency</Link>
             </div>
           </div>
 

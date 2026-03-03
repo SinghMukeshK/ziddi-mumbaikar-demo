@@ -73,7 +73,6 @@ function FundraisersList() {
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProjectId, setSelectedProjectId] = useState('All')
   const [selectedEligibility, setSelectedEligibility] = useState<string[]>([])
-  const [showSuccessfulOnly, setShowSuccessfulOnly] = useState(false)
   const [showSuccess, setShowSuccess] = useState(showCreatedMessage)
 
   // Pagination display state (refs above drive the logic; these drive the UI)
@@ -143,8 +142,7 @@ function FundraisersList() {
       (selectedEligibility.includes('Lillah') && fundraiser.is_lillah_eligible) ||
       (selectedEligibility.includes('Bank Interest') && fundraiser.is_interest_eligible)
 
-    const matchesStatus = !showSuccessfulOnly ||
-      (fundraiser.status === 'completed' || fundraiser.raised_amount >= fundraiser.goal_amount)
+    const matchesStatus = fundraiser.status === 'active'
 
     return matchesSearch && matchesProject && matchesEligibility && matchesStatus
   })
@@ -338,21 +336,6 @@ function FundraisersList() {
 
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                 <div className="flex flex-wrap items-center gap-6">
-                  {/* Status Toggle */}
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Status</span>
-                    <button
-                      onClick={() => setShowSuccessfulOnly(!showSuccessfulOnly)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${showSuccessfulOnly
-                        ? 'bg-green-500 text-white shadow-lg shadow-green-500/20'
-                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-                        }`}
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      Funded Only
-                    </button>
-                  </div>
-
                   {/* Eligibility Filter */}
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Eligibility</span>

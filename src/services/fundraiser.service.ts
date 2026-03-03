@@ -151,8 +151,10 @@ export const mapCampaignToFundraiser = (campaign: any): Fundraiser => {
 
 export const fundraiserService = {
     getFundraisers: async (params?: any) => {
+        // Default to active status if not specified
+        const queryParams = { status: 'active', ...params };
         // Try public endpoint first to avoid 401 for non-logged in users
-        const response = await apiV1.get<ApiResponse<any[]>>('/public/campaigns', { params });
+        const response = await apiV1.get<ApiResponse<any[]>>('/public/campaigns', { params: queryParams });
         if (response.success && Array.isArray(response.data)) {
             response.data = response.data.map(mapCampaignToFundraiser);
         }

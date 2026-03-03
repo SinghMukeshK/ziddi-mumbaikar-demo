@@ -97,6 +97,12 @@ export default function FundraiserDetailPage() {
         ]);
 
         if (fundResponse.success && fundResponse.data) {
+          // Strict rule: Only active campaigns visible to public
+          if (fundResponse.data.status !== 'active' && user?.role !== 'admin' && user?.role !== 'super_admin') {
+            setError('This campaign is no longer active and is hidden from public view.');
+            setLoading(false);
+            return;
+          }
           setFundraiser(fundResponse.data);
           setExtensions(extResponse.data);
           setStats(statsResponse.data);
@@ -105,7 +111,8 @@ export default function FundraiserDetailPage() {
             try {
               const bResponse = await beneficiaryService.getBeneficiaryCampaigns(fundResponse.data.beneficiary_id);
               if (bResponse.success && bResponse.data) {
-                setBeneficiaryCampaigns(bResponse.data);
+                // Filter to only show active campaigns from the same beneficiary
+                setBeneficiaryCampaigns(bResponse.data.filter((c: any) => c.status === 'active' && c.id !== fundResponse.data.id));
               }
             } catch (bErr) {
               console.error('Failed to fetch beneficiary campaigns:', bErr);
@@ -808,10 +815,10 @@ export default function FundraiserDetailPage() {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                               {beneficiaryCampaigns.map((camp: any, idx: number) => (
-                                <FundraiserCard 
-                                  key={camp.id} 
-                                  fundraiser={mapCampaignToFundraiser(camp)} 
-                                  index={idx} 
+                                <FundraiserCard
+                                  key={camp.id}
+                                  fundraiser={mapCampaignToFundraiser(camp)}
+                                  index={idx}
                                 />
                               ))}
                             </div>

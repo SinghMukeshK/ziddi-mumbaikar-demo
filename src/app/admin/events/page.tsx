@@ -118,7 +118,7 @@ function EventModal({
 
             // Upload image if changed
             if (imageFile) {
-                const uploadRes = await galleryService.uploadMedia(imageFile, 'events')
+                const uploadRes = await galleryService.uploadMedia(imageFile)
                 // Support both wrapped {success, data: {file_url}} and flat {file_url} responses
                 const uploadedUrl = uploadRes.data?.file_url || (uploadRes as any).file_url || uploadRes.data?.url || (uploadRes as any).url
 

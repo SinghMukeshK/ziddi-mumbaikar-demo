@@ -114,6 +114,15 @@ export default function Hero() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 justify-center items-center">
+          <button
+            onClick={() => setIsSubModalOpen(true)}
+            className="group relative bg-gradient-to-r from-navy-900 to-navy-800 border border-primary-500/30 hover:border-primary-500 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all duration-300 w-full sm:w-auto shadow-2xl hover:shadow-primary-500/20 hover:scale-105"
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              <Heart className="w-5 h-5 text-primary-500 fill-primary-500/20 group-hover:fill-primary-500 transition-all" />
+              Become a <span className="bg-primary-500 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">Monthly</span> Donor
+            </span>
+          </button>
           <Link
             href="/volunteer"
             className="group relative bg-primary-500 hover:bg-primary-600 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all duration-300 w-full sm:w-auto shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/50 hover:scale-105"
@@ -150,16 +159,6 @@ export default function Hero() {
             </span>
           </Link> */}
 
-          <button
-            onClick={() => setIsSubModalOpen(true)}
-            className="group relative bg-gradient-to-r from-navy-900 to-navy-800 border border-primary-500/30 hover:border-primary-500 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all duration-300 w-full sm:w-auto shadow-2xl hover:shadow-primary-500/20 hover:scale-105"
-          >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              <Heart className="w-5 h-5 text-primary-500 fill-primary-500/20 group-hover:fill-primary-500 transition-all" />
-              Become a Donor
-              <span className="bg-primary-500 text-[10px] font-black uppercase px-2 py-0.5 rounded-full ml-1">Monthly</span>
-            </span>
-          </button>
         </div>
 
         <SubscriptionModal isOpen={isSubModalOpen} onClose={() => setIsSubModalOpen(false)} />
