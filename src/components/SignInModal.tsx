@@ -209,12 +209,13 @@ export default function SignInModal({ isOpen, onClose, onSignIn }: SignInModalPr
             {/* Forgot Password - Only for Sign In */}
             {!isSignUp && (
               <div className="flex justify-end">
-                <button
-                  type="button"
+                <Link
+                  href="/forgot-password"
+                  onClick={onClose}
                   className="text-sm text-primary-500 hover:text-primary-600 font-medium"
                 >
                   Forgot Password?
-                </button>
+                </Link>
               </div>
             )}
 

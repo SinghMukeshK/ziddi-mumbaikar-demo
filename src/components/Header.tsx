@@ -73,9 +73,6 @@ export default function Header() {
                         <Link href="/#events" className="text-gray-700 hover:text-primary-500 font-medium transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0">
                             Events
                         </Link>
-                        {/* <Link href="/contact" className="text-gray-700 hover:text-primary-500 font-medium transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0">
-                            Contact Us
-                        </Link> */}
                         <Link
                             href="/volunteer"
                             className="bg-primary-500 hover:bg-primary-600 text-white px-3 xl:px-5 py-2 xl:py-2.5 rounded-lg font-semibold transition-colors text-[13px] xl:text-base whitespace-nowrap shrink-0"
@@ -132,77 +129,61 @@ export default function Header() {
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                                 transition={{ duration: 0.2, ease: "easeOut" }}
-                                                className="absolute right-0 mt-3 w-[720px] bg-white rounded-[32px] shadow-2xl py-0 z-50 border border-gray-100 overflow-hidden hidden lg:block"
+                                                className="absolute right-0 mt-3 w-[360px] bg-white rounded-[32px] shadow-2xl py-0 z-50 border border-gray-100 overflow-hidden hidden lg:block"
                                             >
                                                 {/* Profile Area */}
-                                                <div className="px-8 py-5 border-b border-gray-50 flex items-center justify-between bg-slate-50/50">
+                                                <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-slate-50/50">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary-500/20">
-                                                            <span className="font-black text-lg">{user?.first_name?.charAt(0).toUpperCase()}</span>
+                                                        <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-500/20">
+                                                            <span className="font-black text-base">{user?.first_name?.charAt(0).toUpperCase()}</span>
                                                         </div>
-                                                        <div>
-                                                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Administrator</p>
-                                                            <p className="font-bold text-navy-900 text-sm">{user?.email}</p>
+                                                        <div className="overflow-hidden">
+                                                            <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-0.5 truncate">Administrator</p>
+                                                            <p className="font-bold text-navy-900 text-xs truncate max-w-[140px]">{user?.email}</p>
                                                         </div>
                                                     </div>
                                                     <Link
                                                         href="/profile"
-                                                        className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-navy-900 hover:bg-slate-50 transition-all flex items-center gap-2"
+                                                        className="p-2.5 bg-white border border-slate-200 rounded-xl text-navy-900 hover:bg-primary-500 hover:text-white hover:border-primary-500 transition-all group"
                                                         onClick={() => setShowUserMenu(false)}
+                                                        title="My Profile"
                                                     >
-                                                        <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <svg className="w-4 h-4 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                                         </svg>
-                                                        My Profile
                                                     </Link>
                                                 </div>
 
                                                 {(user?.role === 'admin' || user?.role === 'super_admin') ? (
-                                                    <div className="p-8 grid grid-cols-3 gap-8">
-                                                        {/* Operations Column */}
-                                                        <div>
-                                                            <div className="flex items-center gap-2 mb-4">
-                                                                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                                                                </div>
-                                                                <p className="text-[11px] font-black uppercase tracking-widest text-blue-600">Operations</p>
+                                                    <div className="p-6">
+                                                        {/* Operations Section */}
+                                                        <div className="flex items-center gap-2 mb-4">
+                                                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                                                             </div>
-                                                            <div className="space-y-1">
-                                                                <Link href="/admin/events" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Events & Gallery</Link>
-                                                                <Link href="/admin/volunteers" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Volunteers</Link>
-                                                                <Link href="/admin/bookings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Service Bookings</Link>
-                                                                <Link href="/donations" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Donations</Link>
-                                                                <Link href="/admin/approvals" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Approval Queue</Link>
-                                                                <Link href="/admin/contact-inquiries" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Contact Inquiries</Link>
-                                                            </div>
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Operations Panel</p>
                                                         </div>
-
-                                                        {/* Insights Column */}
-                                                        <div>
-                                                            <div className="flex items-center gap-2 mb-4">
-                                                                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-500">
-                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                                                                </div>
-                                                                <p className="text-[11px] font-black uppercase tracking-widest text-green-600">Analysis</p>
-                                                            </div>
-                                                            <div className="space-y-1">
-                                                                <Link href="/admin/analytics" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Impact Data</Link>
-                                                                <Link href="/admin/audit" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Activity Logs</Link>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Settings Column */}
-                                                        <div>
-                                                            <div className="flex items-center gap-2 mb-4">
-                                                                <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-500">
-                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-                                                                </div>
-                                                                <p className="text-[11px] font-black uppercase tracking-widest text-purple-600">Platform</p>
-                                                            </div>
-                                                            <div className="space-y-1">
-                                                                <Link href="/admin/billing" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Billing & Plan</Link>
-                                                                <Link href="/admin/tenant" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all">Organization</Link>
-                                                            </div>
+                                                        <div className="grid grid-cols-1 gap-1">
+                                                            {[
+                                                                { href: "/admin/events", label: "Events & Gallery" },
+                                                                { href: "/admin/volunteers", label: "Volunteers" },
+                                                                { href: "/admin/bookings", label: "Service Bookings" },
+                                                                { href: "/donations", label: "Donations" },
+                                                                { href: "/admin/approvals", label: "Approval Queue" },
+                                                                { href: "/admin/contact-inquiries", label: "Contact Inquiries" }
+                                                            ].map((link) => (
+                                                                <Link
+                                                                    key={link.href}
+                                                                    href={link.href}
+                                                                    onClick={() => setShowUserMenu(false)}
+                                                                    className="flex items-center justify-between px-3 py-2 text-sm font-bold text-navy-900 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-all group"
+                                                                >
+                                                                    {link.label}
+                                                                    <svg className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                                    </svg>
+                                                                </Link>
+                                                            ))}
                                                         </div>
                                                     </div>
                                                 ) : (
@@ -334,13 +315,6 @@ export default function Header() {
                             >
                                 Events
                             </Link>
-                            {/* <Link
-                                href="/contact"
-                                className="text-gray-700 hover:text-primary-500 font-medium py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                Contact Us
-                            </Link> */}
 
                             {/* Logged In User Links - Mobile */}
                             {isLoggedIn && (

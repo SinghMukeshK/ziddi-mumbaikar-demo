@@ -326,19 +326,26 @@ function VolunteerIDCardPair({ v, index, selected, onToggle, onPrintSingle }: {
             </div>
 
             {/* ── Card faces ── */}
-            <div className={`flex flex-col gap-0 border border-t-0 rounded-b-2xl overflow-hidden ${selected ? 'border-primary-200' : 'border-gray-200'
+            <div className={`flex flex-row gap-0 border border-t-0 rounded-b-2xl overflow-hidden divide-x divide-gray-100 ${selected ? 'border-primary-200' : 'border-gray-200'
                 }`}>
-                <div className="px-4 pt-3 pb-1 bg-gray-50">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Front</p>
+                {/* Front Section */}
+                <div className="flex-1 bg-gray-50 pb-4">
+                    <div className="px-4 pt-3 pb-1">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Front</p>
+                    </div>
+                    <div className="px-4">
+                        <IDCardFront v={v} index={index} />
+                    </div>
                 </div>
-                <div className="px-4 pb-3 bg-gray-50">
-                    <IDCardFront v={v} index={index} />
-                </div>
-                <div className="px-4 pt-3 pb-1 bg-gray-50 border-t border-gray-200">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Back</p>
-                </div>
-                <div className="px-4 pb-4 bg-gray-50">
-                    <IDCardBack v={v} />
+
+                {/* Back Section */}
+                <div className="flex-1 bg-gray-50 pb-4">
+                    <div className="px-4 pt-3 pb-1">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Back</p>
+                    </div>
+                    <div className="px-4">
+                        <IDCardBack v={v} />
+                    </div>
                 </div>
             </div>
         </div>
@@ -1281,7 +1288,7 @@ function VolunteersPageContent() {
                         </div>
                     ) : printMode ? (
                         /* ── Print mode: ID card pairs ─────────────────────────────────── */
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 gap-8">
                             {paginatedVolunteers.map((v) => (
                                 <VolunteerIDCardPair
                                     key={v.id}

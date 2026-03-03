@@ -2,12 +2,12 @@
 
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { CheckCircle2, Users, Rocket, Target } from 'lucide-react'
+import { CheckCircle2, Users, Rocket, Target, Car, Ambulance } from 'lucide-react'
 
 export default function About() {
   const stats = [
     { label: "Active Volunteers", value: "150+", icon: <Users className="w-5 h-5" /> },
-    { label: "Free Ambulance Service", value: "+", icon: <Rocket className="w-5 h-5" /> },
+    { label: "Ambulance Service", value: "Free", icon: <Ambulance className="w-5 h-5" /> },
     { label: "Projects Completed", value: "120+", icon: <Target className="w-5 h-5" /> }
   ]
 
