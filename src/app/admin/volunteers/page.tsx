@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Footer from '@/components/Footer'
 import { volunteerService, Volunteer } from '@/services/volunteer.service'
-import { User, Check, X, Eye, X as CloseIcon } from 'lucide-react'
+import { User, Check, X, Eye, X as CloseIcon, FileText, Download, ExternalLink } from 'lucide-react'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const NGO_REG = 'Maharashtra State, Mumbai 2018 / GBBSD / 1566 / 2018'
@@ -456,6 +456,109 @@ function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }
                                             : "The applicant did NOT consent to a background check."}
                                     </p>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Documents */}
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Documents & ID Proof</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* ID Proof */}
+                                {volunteer.id_proof_url && (
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 group relative">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-primary-600 shadow-sm">
+                                                <FileText className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-gray-500">ID Proof</p>
+                                                <p className="text-xs font-bold text-navy-900">Aadhar/PAN/etc.</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-auto">
+                                            <a
+                                                href={volunteer.id_proof_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" /> View
+                                            </a>
+                                            <a
+                                                href={volunteer.id_proof_url}
+                                                download
+                                                className="w-9 h-9 flex items-center justify-center bg-primary-50 rounded-lg text-primary-600 hover:bg-primary-100 transition-colors"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Photo */}
+                                {volunteer.photo_url && (
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 group relative">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 bg-white rounded-lg overflow-hidden flex items-center justify-center text-gray-400 shadow-sm border border-gray-100">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={volunteer.photo_url} alt="Profile" className="w-full h-full object-cover" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-gray-500">Photo</p>
+                                                <p className="text-xs font-bold text-navy-900">Passport Size</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-auto">
+                                            <a
+                                                href={volunteer.photo_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" /> View
+                                            </a>
+                                            <a
+                                                href={volunteer.photo_url}
+                                                download
+                                                className="w-9 h-9 flex items-center justify-center bg-primary-50 rounded-lg text-primary-600 hover:bg-primary-100 transition-colors"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Additional Documents */}
+                                {volunteer.documents && volunteer.documents.map((doc, idx) => (
+                                    <div key={idx} className="bg-gray-50 p-4 rounded-xl border border-gray-100 group relative">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-navy-600 shadow-sm">
+                                                <FileText className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[10px] uppercase font-bold text-gray-500">Document</p>
+                                                <p className="text-xs font-bold text-navy-900 truncate" title={doc.name}>{doc.name}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-auto">
+                                            <a
+                                                href={doc.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" /> View
+                                            </a>
+                                            <a
+                                                href={doc.url}
+                                                download={doc.name}
+                                                className="w-9 h-9 flex items-center justify-center bg-navy-50 rounded-lg text-navy-600 hover:bg-navy-100 transition-colors"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

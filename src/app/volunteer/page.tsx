@@ -23,6 +23,8 @@ import {
     FileText,
     Image as ImageIcon,
     Upload,
+    PlusCircle,
+    X as XIcon,
     Paperclip
 } from 'lucide-react'
 import Link from 'next/link'
@@ -46,6 +48,7 @@ export default function VolunteerPage() {
         availability: '',
         address: '',
         city: 'Mumbai',
+        ward: '',
         motivation: ''
     })
 
@@ -56,6 +59,7 @@ export default function VolunteerPage() {
     const [idProofFile, setIdProofFile] = useState<File | null>(null)
     const [photoFile, setPhotoFile] = useState<File | null>(null)
     const [editingFile, setEditingFile] = useState<{ file: File, type: 'id' | 'photo' } | null>(null)
+    const [extraDocuments, setExtraDocuments] = useState<File[]>([])
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target
@@ -115,6 +119,30 @@ export default function VolunteerPage() {
                     }
                 } catch (e) {
                     console.error('Failed to upload photo:', e)
+                }
+            }
+
+            // 3. Upload Extra Documents if available
+            if (extraDocuments.length > 0) {
+                const docPromises = extraDocuments.map(async (file) => {
+                    try {
+                        const uploadRes = await fundraiserService.uploadMedia(file, 'volunteers', volunteerId)
+                        if (uploadRes.success && uploadRes.data?.url) {
+                            return {
+                                name: file.name,
+                                url: uploadRes.data.url,
+                                type: file.type
+                            }
+                        }
+                    } catch (e) {
+                        console.error(`Failed to upload document ${file.name}:`, e)
+                    }
+                    return null
+                })
+
+                const uploadedDocs = (await Promise.all(docPromises)).filter(doc => doc !== null) as { name: string, url: string, type: string }[]
+                if (uploadedDocs.length > 0) {
+                    finalFormData.documents = uploadedDocs
                 }
             }
 
@@ -406,18 +434,32 @@ export default function VolunteerPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Address</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Ward</label>
                                     <div className="relative">
                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
                                         <input
                                             type="text"
-                                            name="address"
-                                            value={formData.address}
+                                            name="ward"
+                                            value={formData.ward}
                                             onChange={handleInputChange}
-                                            placeholder="Street, Locality"
+                                            placeholder="e.g. Ward A, Ward K-West"
                                             className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
                                         />
                                     </div>
+                                </div>
+                            </div>
+                            <div className="space-y-2 pt-4">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Address</label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                    <input
+                                        type="text"
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleInputChange}
+                                        placeholder="Street, Building, Flat No."
+                                        className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
+                                    />
                                 </div>
                             </div>
 
@@ -479,6 +521,55 @@ export default function VolunteerPage() {
                                                     if (file) {
                                                         setEditingFile({ file, type: 'photo' })
                                                     }
+                                                }}
+                                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Extra Documents */}
+                            <div className="space-y-4 pt-4">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Additional Documents (Certificates, Experience Letters, etc.)</label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <AnimatePresence>
+                                        {extraDocuments.map((file, idx) => (
+                                            <motion.div 
+                                                key={`${file.name}-${idx}`}
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.9 }}
+                                                className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-2xl group relative"
+                                            >
+                                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary-500 shadow-sm">
+                                                    <Paperclip className="w-5 h-5" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs font-bold text-navy-900 truncate">{file.name}</p>
+                                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest">{(file.size / 1024).toFixed(0)} KB</p>
+                                                </div>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setExtraDocuments(prev => prev.filter((_, i) => i !== idx))}
+                                                    className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"
+                                                >
+                                                    <XIcon className="w-4 h-4" />
+                                                </button>
+                                            </motion.div>
+                                        ))}
+                                    </AnimatePresence>
+
+                                    <div className="relative group min-h-[66px]">
+                                        <div className="w-full h-full px-4 py-3 bg-primary-50 border-2 border-dashed border-primary-100 rounded-2xl group-hover:border-primary-300 transition-all flex items-center justify-center gap-3 relative cursor-pointer">
+                                            <PlusCircle className="w-5 h-5 text-primary-500" />
+                                            <span className="text-xs font-black text-primary-600 uppercase tracking-widest">Add Document</span>
+                                            <input 
+                                                type="file"
+                                                multiple
+                                                onChange={(e) => {
+                                                    const files = Array.from(e.target.files || [])
+                                                    setExtraDocuments(prev => [...prev, ...files])
                                                 }}
                                                 className="absolute inset-0 opacity-0 cursor-pointer"
                                             />

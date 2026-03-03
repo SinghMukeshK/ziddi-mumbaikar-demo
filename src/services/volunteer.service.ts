@@ -19,6 +19,7 @@ export interface VolunteerCreateRequest {
     availability?: string;
     address?: string;
     city?: string;
+    ward?: string;
     motivation?: string;
     preferred_branch_id?: string;
     id_proof_url?: string;
@@ -27,6 +28,7 @@ export interface VolunteerCreateRequest {
     state?: string;
     zip_code?: string;
     background_check_consent?: boolean;
+    documents?: { name: string; url: string; type: string }[];
 }
 
 export interface Volunteer {
@@ -42,6 +44,7 @@ export interface Volunteer {
     availability?: string;
     address?: string;
     city?: string;
+    ward?: string;
     motivation?: string;
     photo_url?: string;
     id_proof_url?: string;
@@ -51,6 +54,7 @@ export interface Volunteer {
     state?: string;
     zip_code?: string;
     background_check_consent?: boolean;
+    documents?: { name: string; url: string; type: string }[];
 }
 
 class VolunteerService {

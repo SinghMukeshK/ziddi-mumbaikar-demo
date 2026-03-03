@@ -10,7 +10,7 @@ import { beneficiaryService } from '@/services/beneficiary.service'
 import Footer from '@/components/Footer';
 import { formatDate, parseDatabaseDate } from '@/lib/date-utils'
 import ImageEditor from '@/components/ImageEditor'
-import { Pencil, X as XIcon, Star, AlertTriangle, Sparkles } from 'lucide-react'
+import { Pencil, X as XIcon, Star, AlertTriangle, Sparkles, CheckCircle2, LayoutGrid } from 'lucide-react'
 
 function StartFundraiserContent() {
   const router = useRouter()
@@ -572,55 +572,44 @@ function StartFundraiserContent() {
                     <p className="text-gray-500">Loading projects...</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {apiProjects.map((project) => (
-                          <tr
-                            key={project.id}
-                            className={`hover:bg-gray-50 transition-colors cursor-pointer ${formData.category === project.id ? 'bg-primary-50' : ''}`}
-                            onClick={() => setFormData(prev => ({ ...prev, category: project.id }))}
-                          >
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <div className="text-sm font-medium text-gray-900">{project.name}</div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                {project.sector}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${project.status === 'active' || project.status === 'approved' || project.status === 'in_progress'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                {project.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mx-auto ${formData.category === project.id ? 'border-primary-500 bg-primary-500' : 'border-gray-300'
-                                }`}>
-                                {formData.category === project.id && (
-                                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {apiProjects.map((project) => (
+                      <div
+                        key={project.id}
+                        onClick={() => setFormData(prev => ({ ...prev, category: project.id }))}
+                        className={`group relative cursor-pointer p-6 rounded-[2rem] border-2 transition-all duration-500 flex flex-col items-center justify-center text-center gap-4 min-h-[160px] ${formData.category === project.id
+                            ? 'border-primary-500 bg-primary-50/50 shadow-xl shadow-primary-500/10 scale-[1.02]'
+                            : 'border-gray-100 bg-white hover:border-primary-200 hover:shadow-2xl hover:shadow-gray-200/50 hover:-translate-y-1'
+                          }`}
+                      >
+                        {/* Status Icon */}
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${formData.category === project.id
+                            ? 'bg-primary-500 text-white rotate-6'
+                            : 'bg-gray-50 text-gray-400 group-hover:bg-primary-100 group-hover:text-primary-500'
+                          }`}>
+                          {formData.category === project.id ? (
+                            <CheckCircle2 className="w-7 h-7" />
+                          ) : (
+                            <LayoutGrid className="w-7 h-7" />
+                          )}
+                        </div>
+
+                        {/* Project Name */}
+                        <div className="space-y-1">
+                          <h3 className={`font-black text-sm uppercase tracking-wider leading-tight transition-colors duration-300 ${formData.category === project.id ? 'text-navy-900' : 'text-gray-500 group-hover:text-navy-900'
+                            }`}>
+                            {project.name}
+                          </h3>
+                          <div className={`h-1 w-8 mx-auto rounded-full transition-all duration-500 ${formData.category === project.id ? 'bg-primary-500 w-12' : 'bg-gray-100 group-hover:bg-primary-200'
+                            }`} />
+                        </div>
+
+                        {/* Selection Glow */}
+                        {formData.category === project.id && (
+                          <div className="absolute inset-0 rounded-[2rem] bg-primary-500/5 animate-pulse pointer-events-none" />
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

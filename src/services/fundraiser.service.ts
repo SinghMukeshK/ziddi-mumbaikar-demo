@@ -41,6 +41,8 @@ export interface Fundraiser {
     name?: string; // Campaigns use name instead of title
     campaign_code?: string;
     project_id?: string;
+    beneficiary_id?: string;
+    images?: FundraiserImage[];
 }
 
 export interface FundraiserImage {
@@ -115,16 +117,35 @@ export interface FundraiserCategory {
 
 let categoriesCache: FundraiserCategory[] | null = null;
 
-const mapCampaignToFundraiser = (campaign: any): Fundraiser => {
+export const mapCampaignToFundraiser = (campaign: any): Fundraiser => {
     if (!campaign) return campaign;
+
+    const fixImageUrl = (url: string) => {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        if (url.startsWith('/')) return `${process.env.NEXT_PUBLIC_API_URL}${url}`;
+        return `${process.env.NEXT_PUBLIC_API_URL}/${url}`;
+    };
+
     return {
         ...campaign,
+        id: campaign.id,
         title: campaign.name || campaign.title,
-        short_description: campaign.short_description || '',
-        description: campaign.description || '',
-        completion_percentage: campaign.completion_percentage || (campaign.goal_amount > 0 ? (campaign.raised_amount / campaign.goal_amount) * 100 : 0),
-        category: campaign.category || { id: 'general', name: 'General' },
+        short_description: campaign.short_description || campaign.description?.substring(0, 160),
+        description: campaign.description,
         cover_image_url: fixImageUrl(campaign.cover_image_url),
+        images: Array.isArray(campaign.images)
+            ? campaign.images.map((img: any) => ({ ...img, image_url: fixImageUrl(img.image_url) }))
+            : undefined,
+        goal_amount: campaign.goal_amount,
+        raised_amount: campaign.raised_amount,
+        start_date: campaign.start_date,
+        end_date: campaign.end_date,
+        status: campaign.status,
+        project_id: campaign.project_id,
+        completion_percentage: (campaign.goal_amount > 0 ? (campaign.raised_amount / campaign.goal_amount) * 100 : 0),
+        donor_count: campaign.donor_count || 0,
+        category: campaign.category || { id: 'general', name: 'General' }, // Ensure category is always present
     };
 };
 

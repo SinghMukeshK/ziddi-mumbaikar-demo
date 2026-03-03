@@ -24,6 +24,7 @@ export default function RegisterPage() {
     addressLine1: '',
     addressLine2: '',
     locality: '',
+    ward: '',
     city: 'Mumbai',
     state: 'Maharashtra',
     pincode: '',
@@ -94,7 +95,17 @@ export default function RegisterPage() {
         formData.last_name,
         formData.email,
         formData.password,
-        formData.phone
+        formData.phone,
+        {
+          date_of_birth: formData.dateOfBirth,
+          gender: formData.gender,
+          address: `${formData.addressLine1}${formData.addressLine2 ? ', ' + formData.addressLine2 : ''}`,
+          locality: formData.locality,
+          ward: formData.ward,
+          city: formData.city,
+          state: formData.state,
+          zip_code: formData.pincode
+        }
       )
 
       // Redirect to dashboard or home after successful registration
@@ -400,7 +411,7 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Locality */}
                   <div>
                     <label htmlFor="locality" className="block text-sm font-semibold text-gray-700">
@@ -414,6 +425,22 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                       placeholder="Andheri, Bandra, etc."
+                    />
+                  </div>
+
+                  {/* Ward */}
+                  <div>
+                    <label htmlFor="ward" className="block text-sm font-semibold text-gray-700">
+                      Ward
+                    </label>
+                    <input
+                      type="text"
+                      id="ward"
+                      name="ward"
+                      value={formData.ward}
+                      onChange={handleChange}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="e.g. Ward K-West"
                     />
                   </div>
 

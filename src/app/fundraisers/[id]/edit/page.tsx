@@ -15,6 +15,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import Link from 'next/link'
 import Image from 'next/image'
 import ImageEditor from '@/components/ImageEditor'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
     ArrowLeft, Save, AlertCircle, Loader2, Upload, Trash2,
     ImageIcon, FileText, Settings, Star, AlertTriangle, Sparkles,

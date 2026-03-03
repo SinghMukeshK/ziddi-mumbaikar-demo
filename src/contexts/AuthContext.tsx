@@ -23,7 +23,7 @@ interface AuthContextType {
   isLoggedIn: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  signup: (first_name: string, last_name: string, email: string, password: string, phone?: string) => Promise<void>
+  signup: (first_name: string, last_name: string, email: string, password: string, phone?: string, additionalData?: any) => Promise<void>
   logout: () => void
   updateUser: (updates: Partial<User>) => void
 }
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // Signup function
-  const signup = async (first_name: string, last_name: string, email: string, password: string, phone: string = '') => {
+  const signup = async (first_name: string, last_name: string, email: string, password: string, phone: string = '', additionalData: any = {}) => {
     try {
       // Omit role_id to let the backend safely assign the default 'user' role
       const payload: any = {
@@ -101,6 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (phone) {
         payload.phone = phone
+      }
+
+      // Add any additional data (like ward, address, etc.)
+      if (additionalData) {
+        Object.assign(payload, additionalData)
       }
 
       const response = await apiV1.post<any>('/auth/register', payload);

@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { approvalService, ApprovalRequest } from '@/services/approval.service'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import DecisionModal from '@/components/DecisionModal'
 
 export default function AdminApprovalsPage() {
     const { user, isLoggedIn } = useAuth()
@@ -17,6 +18,17 @@ export default function AdminApprovalsPage() {
     const [error, setError] = useState('')
     const [processingId, setProcessingId] = useState<string | null>(null)
     const [filter, setFilter] = useState<string>('all')
+
+    // Modal state
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        decision: 'approved' | 'rejected' | null;
+        approval: ApprovalRequest | null;
+    }>({
+        isOpen: false,
+        decision: null,
+        approval: null
+    })
 
     useEffect(() => {
         if (isLoggedIn && user && user.role !== 'admin') {
@@ -46,13 +58,24 @@ export default function AdminApprovalsPage() {
         }
     }, [isLoggedIn, user, filter, router])
 
-    const handleDecision = async (id: string, decision: 'approved' | 'rejected') => {
+    const openDecisionModal = (approval: ApprovalRequest, decision: 'approved' | 'rejected') => {
+        setModalConfig({
+            isOpen: true,
+            decision,
+            approval
+        })
+    }
+
+    const handleDecisionConfirm = async (comments: string) => {
+        const { approval, decision } = modalConfig
+        if (!approval || !decision) return
+
         try {
-            setProcessingId(id)
-            const comments = prompt(`Please enter a comment for this ${decision} decision (optional):`) || ''
-            const response = await approvalService.processDecision(id, decision, comments)
+            setProcessingId(approval.id)
+            const response = await approvalService.processDecision(approval.id, decision, comments)
             if (response.success) {
-                setApprovals(prev => prev.filter(req => req.id !== id))
+                setApprovals(prev => prev.filter(req => req.id !== approval.id))
+                setModalConfig(prev => ({ ...prev, isOpen: false }))
             }
         } catch (err: any) {
             console.error(`Failed to process decision:`, err)
@@ -137,14 +160,14 @@ export default function AdminApprovalsPage() {
                                             </div>
                                             <div className="flex gap-3 mt-2 md:mt-0">
                                                 <button
-                                                    onClick={() => handleDecision(approval.id, 'rejected')}
+                                                    onClick={() => openDecisionModal(approval, 'rejected')}
                                                     disabled={processingId !== null}
                                                     className="px-6 py-2 border-2 border-red-500 text-red-500 rounded-lg text-sm font-bold hover:bg-red-50 transition-colors disabled:opacity-50"
                                                 >
                                                     Reject
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDecision(approval.id, 'approved')}
+                                                    onClick={() => openDecisionModal(approval, 'approved')}
                                                     disabled={processingId !== null}
                                                     className="px-8 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
                                                 >
@@ -163,6 +186,14 @@ export default function AdminApprovalsPage() {
                         </div>
                     )}
                 </div>
+                <DecisionModal
+                    isOpen={modalConfig.isOpen}
+                    onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+                    onConfirm={handleDecisionConfirm}
+                    decision={modalConfig.decision}
+                    title={modalConfig.approval?.title || ''}
+                    loading={processingId !== null}
+                />
                 <Footer />
             </div>
         </ProtectedRoute>
