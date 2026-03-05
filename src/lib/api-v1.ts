@@ -76,6 +76,8 @@ export const apiV1 = {
   delete: <T>(endpoint: string, options?: RequestOptions) =>
     apiRequest<T>(endpoint, { ...options, method: 'DELETE' }),
 
+  get_base_url: () => BASE_URL,
+
   // For multi-part form data (file uploads)
   upload: async <T>(endpoint: string, formData: FormData, options: RequestOptions = {}) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;

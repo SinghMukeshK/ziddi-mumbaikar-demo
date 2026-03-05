@@ -6,6 +6,8 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
 import { formatDate } from '@/lib/date-utils'
+import { apiV1 } from '@/lib/api-v1'
+import toast from 'react-hot-toast'
 
 function ProfilePageContent() {
   const { user, updateUser, logout } = useAuth()
@@ -375,19 +377,23 @@ function SecuritySection() {
 
     setLoading(true)
     try {
+      console.log('Attempting password change to:', apiV1.get_base_url?.() || 'default URL');
       // API call to change password
-      // await apiV1.post('/auth/change-password', {
-      //   current_password: formData.currentPassword,
-      //   new_password: formData.newPassword
-      // })
+      const response = await apiV1.post('/auth/change-password', {
+        current_password: formData.currentPassword,
+        new_password: formData.newPassword
+      })
 
-      // Mock success for now since I don't have the backend details confirmed
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('Password change response:', response);
 
       setSuccess('Password updated successfully!')
+      toast.success('Password updated successfully!')
       setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' })
     } catch (err: any) {
-      setError(err.message || 'Failed to update password')
+      console.error('Password update error full details:', err);
+      const errorMessage = err.message || 'Failed to update password';
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
