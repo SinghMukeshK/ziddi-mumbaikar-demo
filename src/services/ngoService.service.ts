@@ -36,6 +36,7 @@ export interface NgoServiceBooking {
     gender?: string;
     reference_name?: string;
     reference_number?: string;
+    attachment_url?: string;
 }
 
 export interface BookingRequest {
@@ -54,6 +55,7 @@ export interface BookingRequest {
     gender?: string;
     reference_name?: string;
     reference_number?: string;
+    attachment_url?: string;
 }
 
 export const ngoService = {

@@ -1,12 +1,14 @@
 'use client'
 
-import { Suspense, useState, useEffect } from 'react'
+import React, { Suspense, useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { ngoService, NgoService } from '@/services/ngoService.service'
 import { donationService } from '@/services/donation.service'
+import { fundraiserService } from '@/services/fundraiser.service'
 import { useRazorpay } from '@/hooks/useRazorpay'
+import ImageEditor from '@/components/ImageEditor'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
 import {
@@ -25,7 +27,11 @@ import {
     Shield,
     Users,
     Activity,
-    LifeBuoy
+    LifeBuoy,
+    Paperclip,
+    FileText,
+    Upload,
+    X
 } from 'lucide-react'
 
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1200&q=80'
@@ -60,6 +66,13 @@ function ServicesContent() {
     const [services, setServices] = useState<NgoService[]>([])
     const [loading, setLoading] = useState(true)
     const [selectedService, setSelectedService] = useState<NgoService | null>(null)
+    
+    // Attachment State
+    const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
+    const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null)
+    const [showImageEditor, setShowImageEditor] = useState(false)
+    const [editorFile, setEditorFile] = useState<File | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const [bookingData, setBookingData] = useState({
         name: '',
         phone: '',
@@ -192,9 +205,21 @@ function ServicesContent() {
 
         setIsBooking(true)
         try {
+            let attachment_url = undefined;
+
+            if (attachmentFile) {
+                const uploadRes = await fundraiserService.uploadMedia(attachmentFile, 'services')
+                if (uploadRes.success && uploadRes.data?.url) {
+                    attachment_url = uploadRes.data.url
+                } else {
+                    console.warn('Failed to upload attachment:', uploadRes)
+                }
+            }
+
             const response = await ngoService.bookService({
                 ...bookingData,
                 service_id: selectedService.id,
+                attachment_url,
                 age: bookingData.age ? parseInt(bookingData.age, 10) : undefined
             })
             if (response.success) {
@@ -210,6 +235,34 @@ function ServicesContent() {
         } finally {
             setIsBooking(false)
         }
+    }
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (file.type.startsWith('image/')) {
+            setEditorFile(file)
+            setShowImageEditor(true)
+        } else if (file.type === 'application/pdf') {
+            setAttachmentFile(file)
+            setAttachmentPreview(null)
+        } else {
+            alert('Please upload an image or PDF file.')
+        }
+    }
+
+    const handleEditorSave = (editedFile: File) => {
+        setAttachmentFile(editedFile)
+        setAttachmentPreview(URL.createObjectURL(editedFile))
+        setShowImageEditor(false)
+        setEditorFile(null)
+    }
+
+    const handleRemoveAttachment = () => {
+        setAttachmentFile(null)
+        setAttachmentPreview(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
     }
 
     const handleDonation = async () => {
@@ -278,6 +331,8 @@ function ServicesContent() {
         setDonationSuccess(false)
         setShowDonationPrompt(false)
         setDonationAmount('')
+        setAttachmentFile(null)
+        setAttachmentPreview(null)
         setBookingData({
             name: '',
             phone: '',
@@ -323,9 +378,9 @@ function ServicesContent() {
                             Emergency Response 24/7
                         </span>
                         <h1 className="text-4xl md:text-6xl font-black text-white mb-8 leading-tight">
-                            Free NGO Services For <br />
+                            Free NGO Services offered <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-primary-600">
-                                Every Mumbaikar
+                                By Ziddi Mumbaikar
                             </span>
                         </h1>
                         <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto mb-10 leading-relaxed">
@@ -776,6 +831,59 @@ function ServicesContent() {
                                                     onChange={e => setBookingData({ ...bookingData, notes: e.target.value })}
                                                 />
                                             </div>
+
+                                            {/* Attachment Upload */}
+                                            <div className="md:col-span-2 space-y-3">
+                                                <label className="text-sm font-black text-navy-900 uppercase tracking-wider">Medical File / ID Document (Optional)</label>
+                                                
+                                                <input
+                                                    type="file"
+                                                    ref={fileInputRef}
+                                                    onChange={handleFileSelect}
+                                                    accept="image/*,application/pdf"
+                                                    className="hidden"
+                                                />
+
+                                                {!attachmentFile ? (
+                                                    <div 
+                                                        onClick={() => fileInputRef.current?.click()}
+                                                        className="w-full border-2 border-dashed border-gray-200 rounded-2xl p-8 hover:border-primary-500 hover:bg-primary-50/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 text-gray-400 group"
+                                                    >
+                                                        <div className="w-12 h-12 bg-gray-50 group-hover:bg-primary-100 rounded-full flex items-center justify-center transition-colors">
+                                                            <Upload className="w-5 h-5 group-hover:text-primary-500 transition-colors" />
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <p className="font-bold text-gray-600 group-hover:text-primary-600 transition-colors">Click to upload document</p>
+                                                            <p className="text-xs mt-1">Accepts Images (JPG, PNG) or PDF</p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="p-4 border-2 border-primary-500 rounded-2xl bg-primary-50/30 flex flex-col sm:flex-row items-center gap-4 relative">
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={handleRemoveAttachment}
+                                                            className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                        
+                                                        {attachmentPreview ? (
+                                                            <img src={attachmentPreview} alt="Preview" className="w-16 h-16 object-cover rounded-xl" />
+                                                        ) : (
+                                                            <div className="w-16 h-16 bg-red-100 text-red-500 flex items-center justify-center rounded-xl shrink-0">
+                                                                <FileText className="w-8 h-8" />
+                                                            </div>
+                                                        )}
+                                                        
+                                                        <div className="flex-1 min-w-0 pr-8">
+                                                            <p className="font-bold text-navy-900 truncate">{attachmentFile.name}</p>
+                                                            <p className="text-xs text-primary-600 font-bold uppercase tracking-wider mt-1">
+                                                                {(attachmentFile.size / 1024 / 1024).toFixed(2)} MB • Ready to attach
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="mt-12 flex flex-col md:flex-row items-center gap-6 p-8 bg-primary-50 rounded-[2rem] border-2 border-primary-100">
@@ -845,13 +953,13 @@ function ServicesContent() {
             {/* --- PRINT ONLY SERVICE FORM --- */}
             {
                 selectedService && latestBookingId && (
-                    <div className="hidden print:block fixed inset-0 bg-white z-[99999] text-black font-sans w-[210mm] mx-auto p-8">
+                    <div className="hidden print-block fixed inset-0 bg-white text-black font-sans w-[210mm] mx-auto p-8">
                         <style dangerouslySetInnerHTML={{
                             __html: `
                     @media print {
-                        body * { visibility: hidden; }
-                        .print-form-container, .print-form-container * { visibility: visible; }
-                        .print-form-container { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; box-sizing: border-box; }
+                        html, body { height: auto; overflow: visible !important; }
+                        body > :not(.print-block) { display: none !important; }
+                        .print-block { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: auto; z-index: 999999; }
                         @page { size: portrait; margin: 10mm; }
                     }
                 ` }} />
@@ -938,6 +1046,20 @@ function ServicesContent() {
             }
 
             <Footer />
+
+            <AnimatePresence>
+                {showImageEditor && editorFile && (
+                    <ImageEditor
+                        file={editorFile}
+                        onSave={handleEditorSave}
+                        onCancel={() => {
+                            setShowImageEditor(false)
+                            setEditorFile(null)
+                            if (fileInputRef.current) fileInputRef.current.value = ''
+                        }}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     )
 }

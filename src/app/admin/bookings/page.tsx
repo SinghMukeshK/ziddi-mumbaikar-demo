@@ -20,7 +20,8 @@ import {
     XCircle,
     Clock as ClockIcon,
     Check,
-    Printer
+    Printer,
+    FileText
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -215,6 +216,18 @@ export default function AdminBookings() {
                                         >
                                             <Printer className="w-4 h-4" />
                                         </button>
+                                        
+                                        {booking.attachment_url && (
+                                            <a
+                                                href={booking.attachment_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                                                title="View Attachment"
+                                            >
+                                                <FileText className="w-4 h-4" />
+                                            </a>
+                                        )}
                                         {booking.status === 'pending' && (
                                             <>
                                                 <button
