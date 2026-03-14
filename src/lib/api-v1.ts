@@ -30,11 +30,6 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
 
   if (token) {
     defaultHeaders['Authorization'] = `Bearer ${token}`;
-  } else {
-    // 🛡️ Protected mode: allow public-protected actions without a user token
-    // This addresses 401 Unauthorized for public actions like donation verification
-    defaultHeaders['Authorization'] = 'Bearer drista-protected-mode';
-    defaultHeaders['X-Protected-Mode'] = 'true';
   }
 
   if (tenantId) {
@@ -95,9 +90,6 @@ export const apiV1 = {
     const headers: Record<string, string> = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
-    } else {
-      headers['Authorization'] = 'Bearer drista-protected-mode';
-      headers['X-Protected-Mode'] = 'true';
     }
 
     if (tenantId) {
