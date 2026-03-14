@@ -11,7 +11,7 @@ export default function EnvironmentalActionPage() {
           <nav className="flex items-center space-x-2 text-sm">
             <Link href="/" className="text-gray-600 hover:text-primary-500">Home</Link>
             <span className="text-gray-400">›</span>
-            <Link href="/#services" className="text-gray-600 hover:text-primary-500">Services</Link>
+            <Link href="/services" className="text-gray-600 hover:text-primary-500">Services</Link>
             <span className="text-gray-400">›</span>
             <span className="text-gray-900 font-medium">Environmental Action</span>
           </nav>

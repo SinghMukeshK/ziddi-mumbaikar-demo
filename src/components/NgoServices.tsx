@@ -77,9 +77,9 @@ export default function NgoServices() {
         address: '',
         pickup_address: '',
         drop_address: '',
-        booking_date: '',
-        booking_time: '',
-        notes: '',
+        booking_date: new Date().toISOString().split('T')[0],
+        booking_time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }),
+        notes: 'Requested via NGO Services section',
         age: '',
         gender: '',
         reference_name: '',
@@ -93,6 +93,8 @@ export default function NgoServices() {
     const [isDonating, setIsDonating] = useState(false)
     const [donationSuccess, setDonationSuccess] = useState(false)
     const { openRazorpay } = useRazorpay()
+
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
     useEffect(() => {
         const fetchServices = async () => {
@@ -111,9 +113,46 @@ export default function NgoServices() {
         fetchServices()
     }, [])
 
+    const validateForm = () => {
+        const errors: Record<string, string> = {}
+        
+        if (!bookingData.name.trim()) errors.name = 'Full name is required'
+        
+        const phoneRegex = /^[6-9]\d{9}$/
+        if (!bookingData.phone.trim()) {
+            errors.phone = 'Phone number is required'
+        } else if (!phoneRegex.test(bookingData.phone.replace(/\D/g, '').slice(-10))) {
+            errors.phone = 'Please enter a valid 10-digit phone number'
+        }
+
+        if (bookingData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bookingData.email)) {
+            errors.email = 'Please enter a valid email address'
+        }
+
+        if (!bookingData.booking_date) {
+            errors.booking_date = 'Required date is missing'
+        } else {
+            const selectedDate = new Date(bookingData.booking_date)
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            if (selectedDate < today) {
+                errors.booking_date = 'Date cannot be in the past'
+            }
+        }
+
+        if (!bookingData.address.trim()) {
+            errors.address = 'Service address is required'
+        }
+
+        setFormErrors(errors)
+        return Object.keys(errors).length === 0
+    }
+
     const handleBooking = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!selectedService) return
+
+        if (!validateForm()) return
 
         setIsBooking(true)
         try {
@@ -149,6 +188,7 @@ export default function NgoServices() {
                 donor_phone: bookingData.phone,
                 message: `Donation for ${selectedService?.name} booking`,
                 donation_type: 'service-booking',
+                payment_method: 'card',
             })
 
             if (!orderResponse.success || !orderResponse.data) {
@@ -212,9 +252,9 @@ export default function NgoServices() {
             address: '',
             pickup_address: '',
             drop_address: '',
-            booking_date: '',
-            booking_time: '',
-            notes: '',
+            booking_date: new Date().toISOString().split('T')[0],
+            booking_time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }),
+            notes: 'Requested via NGO Services section',
             age: '',
             gender: '',
             reference_name: '',
@@ -308,15 +348,14 @@ export default function NgoServices() {
                                                 {service.is_free ? 'Free of Cost' : 'Coming Soon'}
                                             </span>
 
-                                            {service.is_free ? <button
-                                                onClick={() => {
-                                                    setSelectedService(service)
-                                                    setIsModalOpen(true)
-                                                }}
-                                                className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-primary-500/20 text-sm whitespace-nowrap"
-                                            >
-                                                Book Now
-                                            </button> : null}
+                                            {service.is_free ? (
+                                                <Link
+                                                    href={`/services?s=${service.slug}`}
+                                                    className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-primary-500/20 text-sm whitespace-nowrap"
+                                                >
+                                                    Book Now
+                                                </Link>
+                                            ) : null}
                                         </div>
                                     </div>
                                 </div>
@@ -486,12 +525,16 @@ export default function NgoServices() {
                                                     required
                                                     type="text"
                                                     placeholder="John Doe"
-                                                    className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all pl-11"
+                                                    className={`w-full bg-gray-50 border-2 rounded-xl px-4 py-3 outline-none transition-all pl-11 ${formErrors.name ? 'border-red-500 bg-red-50/10' : 'border-gray-200 focus:border-primary-500'}`}
                                                     value={bookingData.name}
-                                                    onChange={e => setBookingData({ ...bookingData, name: e.target.value })}
+                                                    onChange={e => {
+                                                        setBookingData({ ...bookingData, name: e.target.value })
+                                                        if (formErrors.name) setFormErrors({ ...formErrors, name: '' })
+                                                    }}
                                                 />
                                                 <Plus className="w-5 h-5 absolute left-4 top-3.5 text-gray-400" />
                                             </div>
+                                            {formErrors.name && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{formErrors.name}</p>}
                                         </div>
 
                                         <div className="space-y-2 col-span-2 md:col-span-1">
@@ -501,12 +544,16 @@ export default function NgoServices() {
                                                     required
                                                     type="tel"
                                                     placeholder="+91 00000 00000"
-                                                    className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all pl-11"
+                                                    className={`w-full bg-gray-50 border-2 rounded-xl px-4 py-3 outline-none transition-all pl-11 ${formErrors.phone ? 'border-red-500 bg-red-50/10' : 'border-gray-200 focus:border-primary-500'}`}
                                                     value={bookingData.phone}
-                                                    onChange={e => setBookingData({ ...bookingData, phone: e.target.value })}
+                                                    onChange={e => {
+                                                        setBookingData({ ...bookingData, phone: e.target.value })
+                                                        if (formErrors.phone) setFormErrors({ ...formErrors, phone: '' })
+                                                    }}
                                                 />
                                                 <Phone className="w-5 h-5 absolute left-4 top-3.5 text-gray-400" />
                                             </div>
+                                            {formErrors.phone && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{formErrors.phone}</p>}
                                         </div>
 
                                         <div className="space-y-2 col-span-2 md:col-span-1">
@@ -568,7 +615,7 @@ export default function NgoServices() {
                                         </div>
 
                                         <div className="space-y-2 col-span-2 md:col-span-1">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Reference Number (Optional)</label>
+                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Reference Phone Number (Optional)</label>
                                             <div className="relative">
                                                 <input
                                                     type="text"
@@ -587,41 +634,45 @@ export default function NgoServices() {
                                                     required
                                                     rows={2}
                                                     placeholder="Full address where service is required in Mumbai"
-                                                    className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all pl-11"
+                                                    className={`w-full bg-gray-50 border-2 rounded-xl px-4 py-3 outline-none transition-all pl-11 ${formErrors.address ? 'border-red-500 bg-red-50/10' : 'border-gray-200 focus:border-primary-500'}`}
                                                     value={bookingData.address}
-                                                    onChange={e => setBookingData({ ...bookingData, address: e.target.value })}
+                                                    onChange={e => {
+                                                        setBookingData({ ...bookingData, address: e.target.value })
+                                                        if (formErrors.address) setFormErrors({ ...formErrors, address: '' })
+                                                    }}
                                                 />
                                                 <MapPin className="w-5 h-5 absolute left-4 top-4 text-gray-400" />
                                             </div>
+                                            {formErrors.address && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{formErrors.address}</p>}
                                         </div>
 
                                         {(selectedService.slug === 'ambulance-booking' || selectedService.slug === 'deadbody-freezer' || selectedService.slug === 'funeral-service') && (
                                             <>
-                                                <div className="space-y-2 col-span-2 md:col-span-1">
+                                                <div className="space-y-2 col-span-2">
                                                     <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Pickup Address</label>
                                                     <div className="relative">
-                                                        <input
-                                                            type="text"
+                                                        <textarea
+                                                            rows={2}
                                                             placeholder="From..."
                                                             className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all pl-11"
                                                             value={bookingData.pickup_address}
                                                             onChange={e => setBookingData({ ...bookingData, pickup_address: e.target.value })}
                                                         />
-                                                        <MapPin className="w-5 h-5 absolute left-4 top-3.5 text-gray-400" />
+                                                        <MapPin className="w-5 h-5 absolute left-4 top-4 text-gray-400" />
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-2 col-span-2 md:col-span-1">
+                                                <div className="space-y-2 col-span-2">
                                                     <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Drop Address</label>
                                                     <div className="relative">
-                                                        <input
-                                                            type="text"
+                                                        <textarea
+                                                            rows={2}
                                                             placeholder="To..."
                                                             className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all pl-11"
                                                             value={bookingData.drop_address}
                                                             onChange={e => setBookingData({ ...bookingData, drop_address: e.target.value })}
                                                         />
-                                                        <MapPin className="w-5 h-5 absolute left-4 top-3.5 text-gray-400" />
+                                                        <MapPin className="w-5 h-5 absolute left-4 top-4 text-gray-400" />
                                                     </div>
                                                 </div>
                                             </>
@@ -633,13 +684,17 @@ export default function NgoServices() {
                                                 <input
                                                     required
                                                     type="date"
-                                                    className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all pl-11"
+                                                    className={`w-full bg-gray-50 border-2 rounded-xl px-4 py-3 outline-none transition-all pl-11 ${formErrors.booking_date ? 'border-red-500 bg-red-50/10' : 'border-gray-200 focus:border-primary-500'}`}
                                                     value={bookingData.booking_date}
                                                     min={new Date().toISOString().split('T')[0]}
-                                                    onChange={e => setBookingData({ ...bookingData, booking_date: e.target.value })}
+                                                    onChange={e => {
+                                                        setBookingData({ ...bookingData, booking_date: e.target.value })
+                                                        if (formErrors.booking_date) setFormErrors({ ...formErrors, booking_date: '' })
+                                                    }}
                                                 />
                                                 <Calendar className="w-5 h-5 absolute left-4 top-3.5 text-gray-400" />
                                             </div>
+                                            {formErrors.booking_date && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{formErrors.booking_date}</p>}
                                         </div>
 
                                         <div className="space-y-2">

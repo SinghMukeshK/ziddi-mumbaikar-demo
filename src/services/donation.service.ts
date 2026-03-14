@@ -7,7 +7,7 @@ export interface Donation {
     donor_id: string;
     amount: number;
     currency: string;
-    donation_type: 'general' | 'zakat' | 'sadaqah' | 'fitrah' | 'qurbani';
+    donation_type: 'general' | 'zakat' | 'sadaqah' | 'fitrah' | 'qurbani' | 'service-booking';
     payment_method: 'upi' | 'card' | 'net_banking' | 'wallet' | 'bank_transfer' | 'cash' | 'cheque';
     status: 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled';
     is_anonymous: boolean;
@@ -22,7 +22,7 @@ export interface DonationCreateRequest {
     fundraiser_id: string;
     donor_id?: string;
     amount: number;
-    donation_type?: 'general' | 'zakat' | 'sadaqah' | 'fitrah' | 'qurbani';
+    donation_type?: 'general' | 'zakat' | 'sadaqah' | 'fitrah' | 'qurbani' | 'service-booking';
     payment_method: 'upi' | 'card' | 'net_banking' | 'wallet' | 'bank_transfer' | 'cash' | 'cheque';
     donor_name?: string;
     donor_email?: string;
@@ -44,6 +44,7 @@ export interface RazorpayOrderRequest {
     is_anonymous?: boolean;
     donation_type?: string;
     message?: string;
+    payment_method?: 'upi' | 'card' | 'net_banking' | 'wallet' | 'bank_transfer' | 'cash' | 'cheque';
 }
 
 export interface RazorpaySubscriptionRequest {
@@ -105,7 +106,7 @@ export const donationService = {
      */
     createRazorpayOrder: async (data: RazorpayOrderRequest) => {
         return apiV1.post<{ success: boolean; data: RazorpayOrderResponse }>(
-            '/donations/razorpay/create-order',
+            '/public/donations/create-order',
             data
         );
     },
@@ -115,7 +116,7 @@ export const donationService = {
      * the user completes payment in the Razorpay popup.
      */
     verifyPayment: async (donationId: string, data: PaymentVerificationRequest) => {
-        return apiV1.post<any>(`/donations/${donationId}/verify`, data);
+        return apiV1.post<any>(`/public/donations/${donationId}/verify`, data);
     },
 
     /**

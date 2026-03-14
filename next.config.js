@@ -16,6 +16,10 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'drista-documents',
+      },
+      {
+        protocol: 'https',
         hostname: '**.amazonaws.com',
       },
       {

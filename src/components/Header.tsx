@@ -60,7 +60,7 @@ export default function Header() {
 
                     {/* Right Section - Desktop */}
                     <div className="hidden lg:flex items-center gap-2 xl:gap-4">
-                        <Link href="/#services" className="bg-primary-50 text-primary-600 hover:bg-primary-100 px-3 xl:px-4 py-2 rounded-full font-bold text-xs xl:text-sm transition-all border border-primary-200 flex items-center gap-1.5 shadow-sm hover:shadow-md animate-pulse whitespace-nowrap shrink-0">
+                        <Link href="/services" className="bg-primary-50 text-primary-600 hover:bg-primary-100 px-3 xl:px-4 py-2 rounded-full font-bold text-xs xl:text-sm transition-all border border-primary-200 flex items-center gap-1.5 shadow-sm hover:shadow-md animate-pulse whitespace-nowrap shrink-0">
                             <span className="flex h-2 w-2 relative shrink-0">
                                 <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
@@ -288,7 +288,7 @@ export default function Header() {
                             )}
 
                             <Link
-                                href="/#services"
+                                href="/services"
                                 className="flex items-center justify-between bg-primary-50 text-primary-700 font-bold py-3 px-4 rounded-xl border border-primary-100 transition-colors"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
