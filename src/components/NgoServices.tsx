@@ -90,6 +90,7 @@ export default function NgoServices() {
     const [latestBookingId, setLatestBookingId] = useState<string | null>(null)
     const [showDonationPrompt, setShowDonationPrompt] = useState(false)
     const [donationAmount, setDonationAmount] = useState<string>('')
+    const [showCustomAmount, setShowCustomAmount] = useState(false)
     const [isDonating, setIsDonating] = useState(false)
     const [donationSuccess, setDonationSuccess] = useState(false)
     const { openRazorpay } = useRazorpay()
@@ -142,6 +143,31 @@ export default function NgoServices() {
 
         if (!bookingData.address.trim()) {
             errors.address = 'Service address is required'
+        }
+
+        // Reference Phone validation (if provided)
+        if (bookingData.reference_number.trim()) {
+            if (!phoneRegex.test(bookingData.reference_number.replace(/\D/g, '').slice(-10))) {
+                errors.reference_number = 'Please enter a valid 10-digit phone number'
+            }
+        }
+
+        // Age validation (if provided)
+        if (bookingData.age) {
+            const ageNum = parseInt(bookingData.age, 10)
+            if (isNaN(ageNum) || ageNum <= 0 || ageNum > 120) {
+                errors.age = 'Please enter a valid age (1-120)'
+            }
+        }
+
+        // Pickup/Drop validation for specific services
+        if (selectedService?.slug === 'ambulance-booking' || selectedService?.slug === 'deadbody-freezer' || selectedService?.slug === 'funeral-service') {
+            if (!bookingData.pickup_address.trim()) {
+                errors.pickup_address = 'Pickup point is required'
+            }
+            if (!bookingData.drop_address.trim()) {
+                errors.drop_address = 'Drop point is required'
+            }
         }
 
         setFormErrors(errors)
@@ -405,55 +431,85 @@ export default function NgoServices() {
                                                             <button
                                                                 key={amt}
                                                                 type="button"
-                                                                onClick={() => setDonationAmount(amt)}
-                                                                className={`px-6 py-2 rounded-xl font-bold text-sm transition-all ${donationAmount === amt ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20' : 'bg-white text-navy-900 border border-gray-200 hover:border-primary-500'}`}
+                                                                onClick={() => {
+                                                                    setDonationAmount(amt)
+                                                                    setShowCustomAmount(false)
+                                                                }}
+                                                                className={`px-6 py-2 rounded-xl font-bold text-sm transition-all ${donationAmount === amt && !showCustomAmount ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20' : 'bg-white text-navy-900 border border-gray-200 hover:border-primary-500'}`}
                                                             >
                                                                 ₹{amt}
                                                             </button>
                                                         ))}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setShowCustomAmount(true)
+                                                                setDonationAmount('')
+                                                            }}
+                                                            className={`px-6 py-2 rounded-xl font-bold text-sm transition-all ${showCustomAmount ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20' : 'bg-white text-navy-900 border border-gray-200 hover:border-primary-500'}`}
+                                                        >
+                                                            Custom
+                                                        </button>
                                                     </div>
 
-                                                    <div className="relative mb-6">
-                                                        <input
-                                                            type="number"
-                                                            placeholder="Other Amount"
-                                                            value={donationAmount}
-                                                            onChange={(e) => setDonationAmount(e.target.value)}
-                                                            className="w-full bg-white border-2 border-gray-100 rounded-xl px-4 py-3 focus:border-primary-500 outline-none text-center font-bold"
-                                                        />
-                                                    </div>
+                                                    <AnimatePresence>
+                                                        {showCustomAmount && (
+                                                            <motion.div 
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: 'auto' }}
+                                                                exit={{ opacity: 0, height: 0 }}
+                                                                className="relative mb-6 overflow-hidden"
+                                                            >
+                                                                <input
+                                                                    type="number"
+                                                                    placeholder="Enter Custom Amount"
+                                                                    value={donationAmount}
+                                                                    onChange={(e) => setDonationAmount(e.target.value)}
+                                                                    className="w-full bg-white border-2 border-primary-500/30 rounded-xl px-4 py-3 focus:border-primary-500 outline-none text-center font-bold"
+                                                                    autoFocus
+                                                                />
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
 
-                                                    <div className="flex flex-col gap-3">
+                                                    <div className="flex flex-col gap-4 pt-4 border-t border-gray-100">
                                                         <button
                                                             type="button"
                                                             onClick={handleDonation}
                                                             disabled={isDonating || !donationAmount}
-                                                            className="w-full bg-navy-900 text-white py-4 rounded-xl font-bold hover:bg-navy-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                                            className="w-full bg-primary-500 text-white py-4 rounded-2xl font-bold text-lg hover:bg-primary-600 transition-all shadow-xl shadow-primary-500/20 disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98]"
                                                         >
                                                             {isDonating ? (
                                                                 <>
                                                                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                                                     Processing...
                                                                 </>
-                                                            ) : 'Donate & Support'}
+                                                            ) : (
+                                                                <>
+                                                                    <Heart className="w-5 h-5 fill-white/20" />
+                                                                    Donate & Support
+                                                                </>
+                                                            )}
                                                         </button>
 
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => window.print()}
-                                                            className="w-full bg-white text-navy-900 border-2 border-navy-900 py-3.5 rounded-xl font-bold hover:bg-navy-50 transition-all flex items-center justify-center gap-2"
-                                                        >
-                                                            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2-2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                                                            Download Form (No Donation)
-                                                        </button>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => window.print()}
+                                                                className="bg-white text-navy-900 border border-gray-200 py-3 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                                                            >
+                                                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2-2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                                                Download
+                                                            </button>
 
-                                                        <button
-                                                            type="button"
-                                                            onClick={closeModal}
-                                                            className="text-gray-400 font-bold text-sm hover:text-navy-900 transition-colors mt-2"
-                                                        >
-                                                            Skip & Close Details
-                                                        </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={closeModal}
+                                                                className="bg-navy-900 text-white py-3 rounded-xl font-bold text-sm hover:bg-navy-800 transition-all flex items-center justify-center"
+                                                            >
+                                                                Skip & Close
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </motion.div>
@@ -577,11 +633,15 @@ export default function NgoServices() {
                                                     type="number"
                                                     min="0"
                                                     placeholder="E.g. 45"
-                                                    className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all"
+                                                    className={`w-full bg-gray-50 border-2 rounded-xl px-4 py-3 outline-none transition-all ${formErrors.age ? 'border-red-500 bg-red-50/10' : 'border-gray-200 focus:border-primary-500'}`}
                                                     value={bookingData.age}
-                                                    onChange={e => setBookingData({ ...bookingData, age: e.target.value })}
+                                                    onChange={e => {
+                                                        setBookingData({ ...bookingData, age: e.target.value })
+                                                        if (formErrors.age) setFormErrors({ ...formErrors, age: '' })
+                                                    }}
                                                 />
                                             </div>
+                                            {formErrors.age && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{formErrors.age}</p>}
                                         </div>
 
                                         <div className="space-y-2 col-span-2 md:col-span-1">
@@ -620,11 +680,15 @@ export default function NgoServices() {
                                                 <input
                                                     type="text"
                                                     placeholder="Reference Phone..."
-                                                    className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all"
+                                                    className={`w-full bg-gray-50 border-2 rounded-xl px-4 py-3 outline-none transition-all ${formErrors.reference_number ? 'border-red-500 bg-red-50/10' : 'border-gray-200 focus:border-primary-500'}`}
                                                     value={bookingData.reference_number}
-                                                    onChange={e => setBookingData({ ...bookingData, reference_number: e.target.value })}
+                                                    onChange={e => {
+                                                        setBookingData({ ...bookingData, reference_number: e.target.value })
+                                                        if (formErrors.reference_number) setFormErrors({ ...formErrors, reference_number: '' })
+                                                    }}
                                                 />
                                             </div>
+                                            {formErrors.reference_number && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{formErrors.reference_number}</p>}
                                         </div>
 
                                         <div className="space-y-2 col-span-2">
@@ -654,12 +718,16 @@ export default function NgoServices() {
                                                         <textarea
                                                             rows={2}
                                                             placeholder="From..."
-                                                            className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all pl-11"
+                                                            className={`w-full bg-gray-50 border-2 rounded-xl px-4 py-3 outline-none transition-all pl-11 ${formErrors.pickup_address ? 'border-red-500 bg-red-50/10' : 'border-gray-200 focus:border-primary-500'}`}
                                                             value={bookingData.pickup_address}
-                                                            onChange={e => setBookingData({ ...bookingData, pickup_address: e.target.value })}
+                                                            onChange={e => {
+                                                                setBookingData({ ...bookingData, pickup_address: e.target.value })
+                                                                if (formErrors.pickup_address) setFormErrors({ ...formErrors, pickup_address: '' })
+                                                            }}
                                                         />
                                                         <MapPin className="w-5 h-5 absolute left-4 top-4 text-gray-400" />
                                                     </div>
+                                                    {formErrors.pickup_address && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{formErrors.pickup_address}</p>}
                                                 </div>
 
                                                 <div className="space-y-2 col-span-2">
@@ -668,12 +736,16 @@ export default function NgoServices() {
                                                         <textarea
                                                             rows={2}
                                                             placeholder="To..."
-                                                            className="w-full bg-gray-50 border-gray-200 border-2 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all pl-11"
+                                                            className={`w-full bg-gray-50 border-2 rounded-xl px-4 py-3 outline-none transition-all pl-11 ${formErrors.drop_address ? 'border-red-500 bg-red-50/10' : 'border-gray-200 focus:border-primary-500'}`}
                                                             value={bookingData.drop_address}
-                                                            onChange={e => setBookingData({ ...bookingData, drop_address: e.target.value })}
+                                                            onChange={e => {
+                                                                setBookingData({ ...bookingData, drop_address: e.target.value })
+                                                                if (formErrors.drop_address) setFormErrors({ ...formErrors, drop_address: '' })
+                                                            }}
                                                         />
                                                         <MapPin className="w-5 h-5 absolute left-4 top-4 text-gray-400" />
                                                     </div>
+                                                    {formErrors.drop_address && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{formErrors.drop_address}</p>}
                                                 </div>
                                             </>
                                         )}

@@ -80,6 +80,7 @@ function ServicesContent() {
     const [latestBookingId, setLatestBookingId] = useState<string | null>(null)
     const [showDonationPrompt, setShowDonationPrompt] = useState(false)
     const [donationAmount, setDonationAmount] = useState<string>('')
+    const [showCustomAmount, setShowCustomAmount] = useState(false)
     const [isDonating, setIsDonating] = useState(false)
     const [donationSuccess, setDonationSuccess] = useState(false)
     const { openRazorpay } = useRazorpay()
@@ -162,6 +163,16 @@ function ServicesContent() {
             const ageNum = parseInt(bookingData.age, 10)
             if (isNaN(ageNum) || ageNum <= 0 || ageNum > 120) {
                 errors.age = 'Please enter a valid age (1-120)'
+            }
+        }
+
+        // Pickup/Drop validation for specific services
+        if (selectedService?.slug === 'ambulance-booking' || selectedService?.slug === 'funeral-service') {
+            if (!bookingData.pickup_address.trim()) {
+                errors.pickup_address = 'Pickup point is required'
+            }
+            if (!bookingData.drop_address.trim()) {
+                errors.drop_address = 'Drop point is required'
             }
         }
 
@@ -430,51 +441,82 @@ function ServicesContent() {
                                                                 {['200', '500', '1000'].map(amt => (
                                                                     <button
                                                                         key={amt}
-                                                                        onClick={() => setDonationAmount(amt)}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setDonationAmount(amt)
+                                                                            setShowCustomAmount(false)
+                                                                        }}
                                                                         className={`px-8 py-3 rounded-2xl font-bold transition-all border-2
-                                                                            ${donationAmount === amt 
+                                                                            ${donationAmount === amt && !showCustomAmount
                                                                                 ? 'bg-primary-500 border-primary-500 text-white shadow-lg shadow-primary-500/20' 
                                                                                 : 'bg-white border-gray-200 text-navy-900 hover:border-primary-500'}`}
                                                                     >
                                                                         ₹{amt}
                                                                     </button>
                                                                 ))}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setShowCustomAmount(true)
+                                                                        setDonationAmount('')
+                                                                    }}
+                                                                    className={`px-8 py-3 rounded-2xl font-bold transition-all border-2
+                                                                        ${showCustomAmount
+                                                                            ? 'bg-primary-500 border-primary-500 text-white shadow-lg shadow-primary-500/20' 
+                                                                            : 'bg-white border-gray-200 text-navy-900 hover:border-primary-500'}`}
+                                                                >
+                                                                    Custom
+                                                                </button>
                                                             </div>
 
-                                                            <div className="relative mb-8">
-                                                                <input
-                                                                    type="number"
-                                                                    placeholder="Custom Amount"
-                                                                    value={donationAmount}
-                                                                    onChange={(e) => setDonationAmount(e.target.value)}
-                                                                    className="w-full bg-white border-2 border-gray-100 rounded-2xl px-6 py-4 focus:border-primary-500 outline-none font-bold text-lg"
-                                                                />
-                                                            </div>
-
-                                                            <div className="flex flex-col sm:flex-row gap-4">
+                                                            <AnimatePresence>
+                                                                {showCustomAmount && (
+                                                                    <motion.div 
+                                                                        initial={{ opacity: 0, height: 0 }}
+                                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                                        exit={{ opacity: 0, height: 0 }}
+                                                                        className="relative mb-8 overflow-hidden"
+                                                                    >
+                                                                        <input
+                                                                            type="number"
+                                                                            placeholder="Enter Custom Amount"
+                                                                            value={donationAmount}
+                                                                            onChange={(e) => setDonationAmount(e.target.value)}
+                                                                            className="w-full bg-white border-2 border-primary-500/30 rounded-2xl px-6 py-4 focus:border-primary-500 outline-none font-bold text-lg shadow-inner"
+                                                                            autoFocus
+                                                                        />
+                                                                        <span className="absolute right-6 top-1/2 -translate-y-1/2 font-bold text-gray-400">INR</span>
+                                                                    </motion.div>
+                                                                )}
+                                                            </AnimatePresence>
+                                                            
+                                                            <div className="space-y-4 pt-4 border-t border-gray-100">
                                                                 <button
                                                                     onClick={handleDonation}
                                                                     disabled={isDonating || !donationAmount}
-                                                                    className="flex-1 bg-navy-900 text-white py-5 rounded-2xl font-bold text-lg hover:bg-navy-800 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                                                                    className="w-full bg-primary-500 text-white py-5 rounded-[2rem] font-bold text-xl hover:bg-primary-600 transition-all shadow-xl shadow-primary-500/20 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95"
                                                                 >
                                                                     {isDonating ? (
-                                                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                                    ) : <Heart className="w-5 h-5" />}
-                                                                    Donate & Support
+                                                                        <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                                                                    ) : <Heart className="w-6 h-6 fill-white/20" />}
+                                                                    Donate & Support Our Mission
                                                                 </button>
-                                                                 <button
-                                                                    onClick={() => window.print()}
-                                                                    className="flex-1 bg-white text-navy-900 border-2 border-navy-900 py-5 rounded-2xl font-bold text-lg hover:bg-navy-50 transition-all flex items-center justify-center gap-3"
-                                                                >
-                                                                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2-2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                                                                    Download Service Form
-                                                                </button>
-                                                                <button
-                                                                    onClick={resetBooking}
-                                                                    className="px-8 py-5 text-gray-400 font-bold hover:text-navy-900 transition-all"
-                                                                >
-                                                                    Book Another Service
-                                                                </button>
+                                                                
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                                    <button
+                                                                        onClick={() => window.print()}
+                                                                        className="bg-white text-navy-900 border-2 border-navy-900 py-4 rounded-2xl font-bold hover:bg-navy-50 transition-all flex items-center justify-center gap-2 group"
+                                                                    >
+                                                                        <svg className="w-5 h-5 text-navy-900/50 group-hover:text-navy-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2-2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                                                        Download Form
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={resetBooking}
+                                                                        className="bg-navy-900 text-white py-4 rounded-2xl font-bold hover:bg-navy-800 transition-all text-center"
+                                                                    >
+                                                                        Book Another
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -640,20 +682,28 @@ function ServicesContent() {
                                                         <textarea
                                                             rows={2}
                                                             placeholder="Where to pick up?"
-                                                            className="w-full bg-white border-2 border-gray-100 rounded-2xl px-6 py-4 focus:border-primary-500 outline-none transition-all font-medium"
+                                                            className={`w-full bg-white border-2 rounded-2xl px-6 py-4 outline-none transition-all placeholder:text-gray-300 font-medium ${formErrors.pickup_address ? 'border-red-500 bg-red-50/10' : 'border-gray-100 focus:border-primary-500'}`}
                                                             value={bookingData.pickup_address}
-                                                            onChange={e => setBookingData({ ...bookingData, pickup_address: e.target.value })}
+                                                            onChange={e => {
+                                                                setBookingData({ ...bookingData, pickup_address: e.target.value })
+                                                                if (formErrors.pickup_address) setFormErrors({ ...formErrors, pickup_address: '' })
+                                                            }}
                                                         />
+                                                        {formErrors.pickup_address && <p className="text-red-500 text-xs font-bold mt-1 ml-2">{formErrors.pickup_address}</p>}
                                                     </div>
                                                     <div className="md:col-span-2 space-y-3">
                                                         <label className="text-sm font-black text-navy-900 uppercase tracking-wider">Drop Point</label>
                                                         <textarea
                                                             rows={2}
                                                             placeholder="Where to drop?"
-                                                            className="w-full bg-white border-2 border-gray-100 rounded-2xl px-6 py-4 focus:border-primary-500 outline-none transition-all font-medium"
+                                                            className={`w-full bg-white border-2 rounded-2xl px-6 py-4 outline-none transition-all placeholder:text-gray-300 font-medium ${formErrors.drop_address ? 'border-red-500 bg-red-50/10' : 'border-gray-100 focus:border-primary-500'}`}
                                                             value={bookingData.drop_address}
-                                                            onChange={e => setBookingData({ ...bookingData, drop_address: e.target.value })}
+                                                            onChange={e => {
+                                                                setBookingData({ ...bookingData, drop_address: e.target.value })
+                                                                if (formErrors.drop_address) setFormErrors({ ...formErrors, drop_address: '' })
+                                                            }}
                                                         />
+                                                        {formErrors.drop_address && <p className="text-red-500 text-xs font-bold mt-1 ml-2">{formErrors.drop_address}</p>}
                                                     </div>
                                                 </>
                                             )}
@@ -681,7 +731,6 @@ function ServicesContent() {
                                                         value={bookingData.gender}
                                                         onChange={e => setBookingData({ ...bookingData, gender: e.target.value })}
                                                     >
-                                                        <option value="">Select</option>
                                                         <option value="male">Male</option>
                                                         <option value="female">Female</option>
                                                         <option value="other">Other</option>
