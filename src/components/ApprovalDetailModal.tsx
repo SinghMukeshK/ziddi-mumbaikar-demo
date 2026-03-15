@@ -104,7 +104,7 @@ export default function ApprovalDetailModal({ isOpen, onClose, entityType, entit
                 <div>
                     <span className="block text-xs font-bold text-gray-500 uppercase">Motivation</span>
                     <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100 italic">
-                        "{v.motivation}"
+                        &quot;{v.motivation}&quot;
                     </p>
                 </div>
             )}
