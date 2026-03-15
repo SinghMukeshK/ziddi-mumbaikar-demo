@@ -8,6 +8,7 @@ import { approvalService, ApprovalRequest } from '@/services/approval.service'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import DecisionModal from '@/components/DecisionModal'
+import ApprovalDetailModal from '@/components/ApprovalDetailModal'
 
 export default function AdminApprovalsPage() {
     const { user, isLoggedIn } = useAuth()
@@ -27,6 +28,14 @@ export default function AdminApprovalsPage() {
     }>({
         isOpen: false,
         decision: null,
+        approval: null
+    })
+
+    const [detailModal, setDetailModal] = useState<{
+        isOpen: boolean;
+        approval: ApprovalRequest | null;
+    }>({
+        isOpen: false,
         approval: null
     })
 
@@ -160,6 +169,12 @@ export default function AdminApprovalsPage() {
                                             </div>
                                             <div className="flex gap-3 mt-2 md:mt-0">
                                                 <button
+                                                    onClick={() => setDetailModal({ isOpen: true, approval })}
+                                                    className="px-4 py-2 text-navy-600 font-bold text-sm hover:bg-navy-50 rounded-lg transition-colors"
+                                                >
+                                                    View
+                                                </button>
+                                                <button
                                                     onClick={() => openDecisionModal(approval, 'rejected')}
                                                     disabled={processingId !== null}
                                                     className="px-6 py-2 border-2 border-red-500 text-red-500 rounded-lg text-sm font-bold hover:bg-red-50 transition-colors disabled:opacity-50"
@@ -193,6 +208,13 @@ export default function AdminApprovalsPage() {
                     decision={modalConfig.decision}
                     title={modalConfig.approval?.title || ''}
                     loading={processingId !== null}
+                />
+                <ApprovalDetailModal
+                    isOpen={detailModal.isOpen}
+                    onClose={() => setDetailModal(prev => ({ ...prev, isOpen: false }))}
+                    entityType={detailModal.approval?.entity_type || ''}
+                    entityId={detailModal.approval?.entity_id || ''}
+                    title={detailModal.approval?.title || ''}
                 />
                 <Footer />
             </div>

@@ -30,6 +30,10 @@ class EventService {
         return apiV1.get<EventsResponse>('/events', { params });
     }
 
+    async getEventById(id: string): Promise<{ success: boolean; data: Event }> {
+        return apiV1.get<{ success: boolean; data: Event }>(`/events/${id}`);
+    }
+
     async createEvent(data: Partial<Event>): Promise<{ success: boolean; data: Event }> {
         return apiV1.post<{ success: boolean; data: Event }>('/events', data);
     }

@@ -66,6 +66,10 @@ class VolunteerService {
         return apiV1.get<ApiResponse<Volunteer[]>>('/volunteers', { params });
     }
 
+    async getVolunteer(id: string): Promise<ApiResponse<Volunteer>> {
+        return apiV1.get<ApiResponse<Volunteer>>(`/volunteers/${id}`);
+    }
+
     async updateVolunteerStatus(id: string, status: string): Promise<ApiResponse<Volunteer>> {
         return apiV1.patch<ApiResponse<Volunteer>>(`/volunteers/${id}/status`, { status });
     }
