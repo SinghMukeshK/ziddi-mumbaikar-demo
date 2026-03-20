@@ -53,14 +53,14 @@ export default function AdminBookings() {
     const fetchBookings = useCallback(async () => {
         setLoading(true)
         try {
-            const response = await ngoService.getBookings({
-                page,
-                limit: 10,
-                status: statusFilter || undefined
-            })
+            const params: any = { page, limit: 10 }
+            if (statusFilter) params.status = statusFilter
+            
+            const response = await ngoService.getBookings(params)
+            
             if (response.success) {
-                setBookings(response.data)
-                // Assuming paginated response has total, but update logic if needed
+                setBookings(response.data || [])
+                setTotal((response as any).pagination?.total || 0)
             }
         } catch (err) {
             console.error('Failed to fetch bookings:', err)
@@ -101,6 +101,12 @@ export default function AdminBookings() {
             </div>
         )
     }
+
+    const filteredBookings = bookings.filter(b => 
+        !searchTerm || 
+        b.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        b.phone?.includes(searchTerm)
+    );
 
     return (
         <div className="min-h-screen bg-gray-50 pt-28 pb-20">
@@ -143,7 +149,7 @@ export default function AdminBookings() {
 
                 {/* Bookings List */}
                 <div className="space-y-4">
-                    {bookings.length === 0 ? (
+                    {filteredBookings.length === 0 ? (
                         <div className="bg-white rounded-3xl p-20 text-center border border-dashed border-gray-300">
                             <div className="w-20 h-20 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <Calendar className="w-10 h-10" />
@@ -152,7 +158,7 @@ export default function AdminBookings() {
                             <p className="text-gray-500 mt-2">There are no service requests matching your current filters.</p>
                         </div>
                     ) : (
-                        bookings.map((booking) => (
+                        filteredBookings.map((booking) => (
                             <motion.div
                                 key={booking.id}
                                 layout

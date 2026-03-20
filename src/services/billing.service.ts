@@ -11,6 +11,8 @@ export interface Invoice {
     amount_remaining: number
     due_date: string
     created_at: string
+    createdAt?: string
+    invoice_pdf_url?: string
     currency: string
     billing_reason: string
 }

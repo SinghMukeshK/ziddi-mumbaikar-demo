@@ -170,7 +170,8 @@ export default function Header() {
                                                                 { href: "/admin/bookings", label: "Service Bookings" },
                                                                 { href: "/donations", label: "Donations" },
                                                                 { href: "/admin/approvals", label: "Approval Queue" },
-                                                                { href: "/admin/contact-inquiries", label: "Contact Inquiries" }
+                                                                { href: "/admin/contact-inquiries", label: "Contact Inquiries" },
+                                                                { href: "/admin/billing", label: "My Bills" }
                                                             ].map((link) => (
                                                                 <Link
                                                                     key={link.href}
@@ -381,6 +382,13 @@ export default function Header() {
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                             >
                                                 Organization Settings
+                                            </Link>
+                                            <Link
+                                                href="/admin/billing"
+                                                className="text-gray-700 hover:text-primary-600 font-bold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                                My Bills
                                             </Link>
                                         </>
                                     )}
