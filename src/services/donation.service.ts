@@ -65,6 +65,7 @@ export interface RazorpaySubscriptionRequest {
 
 export interface RazorpaySubscriptionResponse {
     subscription_id: string;
+    internal_subscription_id: string;
     short_url: string;
     amount: number;
     currency: string;
@@ -116,7 +117,7 @@ export const donationService = {
      * the user completes payment in the Razorpay popup.
      */
     verifyPayment: async (donationId: string, data: PaymentVerificationRequest) => {
-        return apiV1.post<any>(`/public/donations/${donationId}/verify`, data);
+        return apiV1.post<any>(`/donations/${donationId}/verify`, data);
     },
 
     /**

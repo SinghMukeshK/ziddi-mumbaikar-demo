@@ -109,10 +109,10 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                     throw new Error('Failed to initiate donation. Please try again.')
                 }
 
-                const { razorpay_order_id, key_id } = response.data
+                const { razorpay_order_id, key_id, donation_id } = response.data
 
                 // 2. Open Razorpay Checkout for One-time
-                await openRazorpay({
+                const rzpResponse = await openRazorpay({
                     key: key_id,
                     amount: finalAmount * 100, // Razorpay expects paise for orders
                     currency: 'INR',
@@ -126,6 +126,13 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                         contact: phone
                     },
                     theme: { color: '#f0750a' }
+                })
+
+                // 3. Verify Payment
+                await donationService.verifyPayment(donation_id, {
+                    razorpay_order_id,
+                    razorpay_payment_id: rzpResponse.razorpay_payment_id,
+                    razorpay_signature: rzpResponse.razorpay_signature
                 })
             } else {
                 // 1. Recurring Subscription
@@ -142,11 +149,11 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                     throw new Error('Failed to create subscription. Please try again.')
                 }
 
-                const { subscription_id, key_id } = response.data
-                setLastSubscriptionId(subscription_id)
+                const { subscription_id, key_id, internal_subscription_id } = response.data
+                setLastSubscriptionId(internal_subscription_id)
 
                 // 2. Open Razorpay Checkout for Subscriptions
-                await openRazorpay({
+                const rzpResponse = await openRazorpay({
                     key: key_id,
                     subscription_id: subscription_id,
                     name: 'Ziddi Mumbaikar',
@@ -158,6 +165,13 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                         contact: phone
                     },
                     theme: { color: '#f0750a' }
+                })
+
+                // 3. Verify Subscription
+                await donationService.verifyPayment(internal_subscription_id, {
+                    razorpay_subscription_id: subscription_id,
+                    razorpay_payment_id: rzpResponse.razorpay_payment_id,
+                    razorpay_signature: rzpResponse.razorpay_signature
                 })
             }
 
@@ -190,9 +204,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 throw new Error('Failed to initiate payment.')
             }
 
-            const { razorpay_order_id, key_id } = response.data
+            const { razorpay_order_id, key_id, donation_id } = response.data
 
-            await openRazorpay({
+            const rzpResponse = await openRazorpay({
                 key: key_id,
                 amount: finalAmount * 100,
                 currency: 'INR',
@@ -203,6 +217,14 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 prefill: { name, email, contact: phone },
                 theme: { color: '#f0750a' }
             })
+
+            // 3. Verify First Installment
+            await donationService.verifyPayment(donation_id, {
+                razorpay_order_id,
+                razorpay_payment_id: rzpResponse.razorpay_payment_id,
+                razorpay_signature: rzpResponse.razorpay_signature
+            })
+
             setPaidFirstInstallment(true)
             setStep('success')
         } catch (err: any) {
