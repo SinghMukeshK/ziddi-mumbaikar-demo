@@ -58,6 +58,18 @@ export default function NotificationsPage() {
         }
     }
 
+    const formatDate = (dateValue: any) => {
+        if (!dateValue) return '—'
+        const date = new Date(dateValue)
+        return isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-GB')
+    }
+
+    const formatTime = (dateValue: any) => {
+        if (!dateValue) return '—'
+        const date = new Date(dateValue)
+        return isNaN(date.getTime()) ? '—' : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+
     return (
         <ProtectedRoute>
             <div className="min-h-screen bg-slate-50 pt-24 pb-20">
@@ -150,7 +162,7 @@ export default function NotificationsPage() {
                         ) : (
                             <div className="grid gap-3">
                                 <AnimatePresence mode="popLayout">
-                                    {notifications.map((n, idx) => (
+                                    {notifications.map((n: any, idx) => (
                                         <motion.div
                                             layout
                                             initial={{ opacity: 0, y: 20 }}
@@ -172,7 +184,7 @@ export default function NotificationsPage() {
                                                         </h4>
                                                         <span className="shrink-0 flex items-center gap-1.5 text-[10px] font-black text-slate-300 uppercase">
                                                             <Clock className="w-3 h-3" />
-                                                            {new Date(n.created_at).toLocaleDateString()}
+                                                            {formatDate(n.created_at || n.createdAt)}
                                                         </span>
                                                     </div>
 
@@ -184,7 +196,7 @@ export default function NotificationsPage() {
                                                         <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
                                                             <span className="flex items-center gap-1">
                                                                 <Calendar className="w-3 h-3" />
-                                                                {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                {formatTime(n.created_at || n.createdAt)}
                                                             </span>
                                                         </div>
 

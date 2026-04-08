@@ -1,10 +1,11 @@
-
 'use client'
 
 import { useState, useEffect } from 'react'
+import { FileText, ExternalLink } from 'lucide-react'
 import { volunteerService } from '@/services/volunteer.service'
 import { fundraiserService } from '@/services/fundraiser.service'
 import { eventService } from '@/services/event.service'
+import { ngoService } from '@/services/ngoService.service'
 
 interface ApprovalDetailModalProps {
     isOpen: boolean;
@@ -37,6 +38,10 @@ export default function ApprovalDetailModal({ isOpen, onClose, entityType, entit
                         break
                     case 'event':
                         response = await eventService.getEventById(entityId)
+                        break
+                    case 'service_book':
+                    case 'ngo_service_booking':
+                        response = await ngoService.getBookingById(entityId)
                         break
                     default:
                         throw new Error(`Detail view not implemented for ${entityType}`)
@@ -169,6 +174,102 @@ export default function ApprovalDetailModal({ isOpen, onClose, entityType, entit
         </div>
     )
 
+    const renderServiceBookingDetails = (b: any) => (
+        <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <div>
+                    <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Requester</span>
+                    <span className="text-navy-900 font-bold block">{b.name}</span>
+                    <span className="text-xs text-gray-500">{b.phone}</span>
+                </div>
+                <div>
+                    <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Service</span>
+                    <span className="text-primary-600 font-bold block">{b.service?.name || 'NGO Service'}</span>
+                    <span className="text-xs text-gray-500">{b.booking_date ? new Date(b.booking_date).toLocaleDateString() : '—'} at {b.booking_time || '—'}</span>
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <h4 className="text-[10px] font-black text-navy-900 uppercase tracking-widest border-b pb-1">Patient Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <span className="block text-xs font-bold text-gray-400">Age</span>
+                        <span className="text-gray-900">{b.age || '—'}</span>
+                    </div>
+                    <div>
+                        <span className="block text-xs font-bold text-gray-400">Gender</span>
+                        <span className="text-gray-900 capitalize">{b.gender || '—'}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <h4 className="text-[10px] font-black text-navy-900 uppercase tracking-widest border-b pb-1">Locations</h4>
+                <div className="space-y-2">
+                    <div>
+                        <span className="block text-xs font-bold text-gray-400">Home Address</span>
+                        <p className="text-sm text-gray-700 leading-relaxed">{b.address}</p>
+                    </div>
+                    {b.pickup_address && (
+                        <div>
+                            <span className="block text-xs font-bold text-gray-400">Pick-up Location</span>
+                            <p className="text-sm text-gray-700 leading-relaxed">{b.pickup_address}</p>
+                        </div>
+                    )}
+                    {b.drop_address && (
+                        <div>
+                            <span className="block text-xs font-bold text-gray-400">Drop-off Location</span>
+                            <p className="text-sm text-gray-700 leading-relaxed">{b.drop_address}</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <h4 className="text-[10px] font-black text-navy-900 uppercase tracking-widest border-b pb-1">Reference Info</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <span className="block text-xs font-bold text-gray-400">Name</span>
+                        <span className="text-gray-900">{b.reference_name || '—'}</span>
+                    </div>
+                    <div>
+                        <span className="block text-xs font-bold text-gray-400">Phone</span>
+                        <span className="text-gray-900">{b.reference_number || '—'}</span>
+                    </div>
+                </div>
+            </div>
+
+            {b.notes && (
+                <div className="space-y-2">
+                    <h4 className="text-[10px] font-black text-navy-900 uppercase tracking-widest border-b pb-1">Notes</h4>
+                    <p className="text-sm text-gray-600 italic bg-white border border-dashed p-3 rounded-lg leading-relaxed">&quot;{b.notes}&quot;</p>
+                </div>
+            )}
+
+            {b.attachment_url && (
+                <div className="space-y-3">
+                    <h4 className="text-[10px] font-black text-navy-900 uppercase tracking-widest border-b pb-1">Supporting Documents</h4>
+                    <a
+                        href={b.attachment_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-4 bg-primary-50 border border-primary-100 rounded-xl hover:bg-primary-100 transition-colors group"
+                    >
+                        <div className="p-2 bg-white rounded-lg shadow-sm text-primary-600 group-hover:scale-110 transition-transform">
+                            <FileText className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1">
+                            <span className="block font-bold text-navy-900 text-sm">View Attached Document</span>
+                            <span className="text-xs text-primary-600 flex items-center gap-1">
+                                Click to open in a new tab <ExternalLink className="w-3 h-3" />
+                            </span>
+                        </div>
+                    </a>
+                </div>
+            )}
+        </div>
+    )
+
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-navy-900/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -200,7 +301,8 @@ export default function ApprovalDetailModal({ isOpen, onClose, entityType, entit
                             {entityType === 'volunteer' && renderVolunteerDetails(data)}
                             {(entityType === 'campaign' || entityType === 'fundraiser') && renderFundraiserDetails(data)}
                             {entityType === 'event' && renderEventDetails(data)}
-                            {!['volunteer', 'campaign', 'fundraiser', 'event'].includes(entityType) && (
+                            {(entityType === 'service_book' || entityType === 'ngo_service_booking') && renderServiceBookingDetails(data)}
+                            {!['volunteer', 'campaign', 'fundraiser', 'event', 'service_book', 'ngo_service_booking'].includes(entityType) && (
                                 <div className="text-center py-10 text-gray-500">
                                     No preview available for this entity type.
                                 </div>

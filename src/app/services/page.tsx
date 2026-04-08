@@ -31,6 +31,9 @@ import {
     Paperclip,
     FileText,
     Upload,
+    Link as LinkIcon,
+    Share2,
+    Copy,
     X
 } from 'lucide-react'
 
@@ -283,6 +286,12 @@ function ServicesContent() {
             age: '', gender: '', reference_name: '', reference_number: ''
         })
     }
+ 
+    const handleCopyLink = (slug: string) => {
+        const url = `${window.location.origin}/services/book/${slug}`
+        navigator.clipboard.writeText(url)
+        alert(`Direct link for ${slug.replace('-', ' ')} copied to clipboard!\n\n${url}`)
+    }
 
     if (loading) return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -350,15 +359,27 @@ function ServicesContent() {
                                             ${selectedService?.id === service.id ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-primary-100 group-hover:text-primary-500'}`}>
                                             {getIcon(service.icon)}
                                         </div>
-                                        <div className="flex-grow">
-                                            <h3 className={`text-sm font-bold transition-colors ${selectedService?.id === service.id ? 'text-primary-900' : 'text-gray-900'}`}>
+                                        <div className="flex-grow min-w-0">
+                                            <h3 className={`text-sm font-bold truncate transition-colors ${selectedService?.id === service.id ? 'text-primary-900' : 'text-gray-900'}`}>
                                                 {service.name}
                                             </h3>
-                                            <p className="text-[10px] text-gray-500 mt-0.5 uppercase tracking-wider font-bold">
-                                                {service.is_free ? 'Free of Cost' : 'Available'}
-                                            </p>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+                                                    {service.is_free ? 'Free of Cost' : 'Available'}
+                                                </p>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleCopyLink(service.slug)
+                                                    }}
+                                                    className="flex items-center gap-1 text-[10px] text-primary-500 font-bold hover:text-primary-700 transition-colors"
+                                                >
+                                                    <LinkIcon className="w-2.5 h-2.5" />
+                                                    Copy Link
+                                                </button>
+                                            </div>
                                         </div>
-                                        <ChevronRight className={`w-4 h-4 text-primary-500 transition-all duration-300 ${selectedService?.id === service.id ? 'opacity-100' : '-translate-x-2 opacity-0'}`} />
+                                        <ChevronRight className={`w-4 h-4 text-primary-500 shrink-0 transition-all duration-300 ${selectedService?.id === service.id ? 'opacity-100' : '-translate-x-2 opacity-0'}`} />
                                     </button>
                                 ))}
                             </div>
@@ -815,82 +836,120 @@ function ServicesContent() {
                 </section>
             </main>
 
-            {/* Print Template */}
+            {/* Print Template - High Fidelity Version */}
             {selectedService && latestBookingId && (
-                <div className="hidden print-block fixed inset-0 bg-white text-black font-sans w-[210mm] mx-auto p-8">
+                <div className="hidden print-block fixed inset-0 bg-white text-black font-sans w-[190mm] mx-auto p-0 z-[300] overflow-hidden">
                     <style dangerouslySetInnerHTML={{
                         __html: `
-                @media print {
-                    html, body { height: auto; overflow: visible !important; }
-                    body > :not(.print-block) { display: none !important; }
-                    .print-block { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: auto; z-index: 999999; }
-                    @page { size: portrait; margin: 10mm; }
-                }
-            ` }} />
-                    <div className="print-form-container bg-white w-full h-full">
-                        <div className="text-center mb-4">
-                            <img src="/logo.webp" alt="Ziddi Mumbaikar" className="w-20 h-20 mx-auto object-contain" />
-                        </div>
-                        <div className="border border-gray-300 rounded-sm shadow-sm text-[12px]">
-                            <div className="bg-gray-50 border-b border-gray-300 py-2 px-4">
-                                <h2 className="text-[16px] font-bold text-gray-900 m-0">
-                                    {selectedService.name} Form : Entry # {String(latestBookingId).substring(0, 8).toUpperCase()}
-                                </h2>
+                        @media print {
+                            @page { size: portrait; margin: 5mm; }
+                            body { visibility: hidden; background: white !important; height: 100%; overflow: hidden !important; }
+                            .print-block, .print-block * { visibility: visible; }
+                            .print-block { 
+                                display: block !important; 
+                                position: absolute; 
+                                left: 50%;
+                                transform: translateX(-50%);
+                                top: 0; 
+                                width: 190mm; 
+                                height: 280mm; 
+                                z-index: 9999;
+                                padding: 0 !important;
+                                margin: 0 !important;
+                                overflow: hidden !important;
+                                page-break-after: avoid;
+                                page-break-before: avoid;
+                            }
+                            footer, header, main, nav, .no-print { display: none !important; }
+                        }
+                    ` }} />
+                    <div className="print-block print-form-container bg-white w-full h-full border-2 border-gray-900 p-1">
+                        <div className="border border-gray-300 p-6 md:p-8">
+                            <div className="text-center mb-6">
+                                <img src="/logo.webp" alt="Ziddi Mumbaikar" className="w-20 h-20 mx-auto object-contain mb-3" />
+                                <h1 className="text-xl font-black uppercase tracking-tighter">Ziddi Mumbaikar NGO</h1>
+                                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-gray-500">Emergency Support Service Registration</p>
                             </div>
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Patient / Requester Full Name</p>
-                                <p className="text-gray-700 ml-4">{bookingData.name || '—'}</p>
-                            </div>
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Mobile Number</p>
-                                <p className="text-gray-700 ml-4">{bookingData.phone || '—'}</p>
-                            </div>
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Email Address</p>
-                                <p className="text-blue-600 underline ml-4">{bookingData.email || '—'}</p>
-                            </div>
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Patient Details</p>
-                                <p className="text-gray-700 ml-4">
-                                    Age: {bookingData.age || '—'} | Gender: {bookingData.gender ? bookingData.gender.charAt(0).toUpperCase() + bookingData.gender.slice(1) : '—'}
-                                </p>
-                            </div>
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Reference Info</p>
-                                <p className="text-gray-700 ml-4">
-                                    Name: {bookingData.reference_name || '—'} | Phone: {bookingData.reference_number || '—'}
-                                </p>
-                            </div>
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Service Location (Home Address)</p>
-                                <p className="text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.address || '—'}</p>
-                            </div>
-                            {(selectedService.slug === 'ambulance-booking' || selectedService.slug === 'funeral-service') && (
-                                <>
-                                    <div className="border-b border-gray-200 py-2 px-4">
-                                        <p className="font-bold text-gray-800 mb-1">Pick Up Address</p>
-                                        <p className="text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.pickup_address || '—'}</p>
+
+                            <div className="space-y-0 text-[12px]">
+                                <div className="bg-navy-900 text-white py-2.5 px-5 flex justify-between items-center mb-5">
+                                    <h2 className="font-black uppercase tracking-tight m-0 text-sm">{selectedService.name}</h2>
+                                    <span className="font-mono text-xs underline decoration-primary-500 underline-offset-4">Ref ID: {String(latestBookingId).substring(0, 10).toUpperCase()}</span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-0 border-t border-l border-gray-200">
+                                    <div className="border-r border-b border-gray-200 p-3">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Full Name</p>
+                                        <p className="font-bold text-navy-900 uppercase">{bookingData.name || '—'}</p>
                                     </div>
-                                    <div className="border-b border-gray-200 py-2 px-4">
-                                        <p className="font-bold text-gray-800 mb-1">Drop Off Address</p>
-                                        <p className="text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.drop_address || '—'}</p>
+                                    <div className="border-r border-b border-gray-200 p-3">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Contact Details</p>
+                                        <p className="font-bold text-navy-900">{bookingData.phone || '—'}</p>
+                                        {bookingData.email && <p className="text-[10px] font-medium text-gray-500">{bookingData.email}</p>}
                                     </div>
-                                </>
-                            )}
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Booking Date & Time</p>
-                                <p className="text-gray-700 ml-4">
-                                    {bookingData.booking_date ? new Date(bookingData.booking_date).toLocaleDateString('en-GB') : '—'}
-                                    {bookingData.booking_time ? ` at ${bookingData.booking_time}` : ''}
-                                </p>
+                                    <div className="border-r border-b border-gray-200 p-3">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Patient Vitals</p>
+                                        <p className="font-bold text-navy-900 uppercase">
+                                            {bookingData.age ? `${bookingData.age} Yrs` : 'Age N/A'} • {bookingData.gender.toUpperCase()}
+                                        </p>
+                                    </div>
+                                    <div className="border-r border-b border-gray-200 p-3">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Booking Schedule</p>
+                                        <p className="font-bold text-navy-900 uppercase">
+                                            {new Date(bookingData.booking_date).toLocaleDateString('en-GB')}
+                                            <span className="text-gray-400 font-medium ml-2">@{bookingData.booking_time}</span>
+                                        </p>
+                                    </div>
+                                    <div className="col-span-2 border-r border-b border-gray-200 p-3">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Reference & Help</p>
+                                        <p className="font-bold text-navy-900 uppercase">
+                                            {bookingData.reference_name || 'Direct Walk-in'} 
+                                            {bookingData.reference_number && <span className="text-gray-400 font-medium ml-2">• {bookingData.reference_number}</span>}
+                                        </p>
+                                    </div>
+                                    <div className="col-span-2 border-r border-b border-gray-200 p-3 min-h-[60px]">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Primary Location Address</p>
+                                        <p className="font-bold text-navy-900 leading-relaxed uppercase text-[12px]">{bookingData.address || '—'}</p>
+                                    </div>
+                                    {(selectedService.slug === 'ambulance-booking' || selectedService.slug === 'funeral-service') && (
+                                        <>
+                                            <div className="border-r border-b border-gray-200 p-3">
+                                                <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Pickup Address</p>
+                                                <p className="font-bold text-navy-900 uppercase text-[11px]">{bookingData.pickup_address || '—'}</p>
+                                            </div>
+                                            <div className="border-r border-b border-gray-200 p-3">
+                                                <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Drop Address</p>
+                                                <p className="font-bold text-navy-900 uppercase text-[11px]">{bookingData.drop_address || '—'}</p>
+                                            </div>
+                                        </>
+                                    )}
+                                    <div className="col-span-2 border-r border-b border-gray-200 p-3 bg-gray-50/50 min-h-[50px]">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Additional Notes</p>
+                                        <p className="text-gray-700 italic text-[11px] leading-relaxed">{bookingData.notes || 'No additional instructions provided.'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 flex justify-between items-end">
+                                    <div className="space-y-2">
+                                        <div className="w-20 h-20 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-300 text-[7px] text-center p-2 uppercase font-black">
+                                            NGO Seal /<br />Stamp Area
+                                        </div>
+                                        <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Authorized Registration Copy</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest mb-4">Signature of Requester</p>
+                                        <div className="w-32 border-t border-navy-900 pt-1">
+                                            <p className="text-[9px] font-black uppercase text-navy-900">{bookingData.name}</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="py-2 px-4 bg-gray-50/50">
-                                <p className="font-bold text-gray-800 mb-1">Additional Notes</p>
-                                <p className="text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.notes || '—'}</p>
+
+                            <div className="mt-8 pt-4 border-t border-gray-100 flex justify-between items-center text-[7px] font-bold uppercase tracking-widest text-gray-400">
+                                <span>Generated: {new Date().toLocaleString()}</span>
+                                <span>Support Helpline: +91 97733 44447</span>
+                                <span>www.ziddimumbaikarngo.com</span>
                             </div>
-                        </div>
-                        <div className="mt-8 text-center text-gray-400 text-xs font-semibold tracking-widest uppercase">
-                            Ziddi Mumbaikar NGO • Free Service
                         </div>
                     </div>
                 </div>

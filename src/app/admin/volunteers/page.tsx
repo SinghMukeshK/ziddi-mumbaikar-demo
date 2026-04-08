@@ -62,116 +62,101 @@ function IDCardFront({ v, index }: { v: Volunteer; index: number }) {
 
     return (
         <div
-            className="id-card-front relative overflow-hidden rounded-lg border border-gray-300 select-none bg-white"
+            className="id-card-front relative overflow-hidden rounded-xl border border-gray-200 select-none bg-white shadow-md shadow-orange-500/5"
             style={{
                 width: '340px',
                 height: '214px',
-                fontFamily: 'Arial, sans-serif',
+                fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
                 flexShrink: 0,
             }}
         >
             <WatermarkPattern />
 
-            {/* ── Header: NGO Name + Logo ─────────────────────────────────────── */}
-            <div className="flex items-center gap-2 px-2 pt-1.5 pb-1 relative z-10" style={{ background: 'transparent' }}>
-                {/* Logo circle */}
-                <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden border-2 border-yellow-400 shadow-md bg-white">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/logo.webp" alt="Logo" className="w-full h-full object-cover" />
-                </div>
-                {/* Title */}
-                <div className="flex-1 flex items-baseline justify-center gap-1.5 leading-tight" style={{ marginRight: '8px' }}>
-                    <span
-                        className="font-black leading-none whitespace-nowrap"
-                        style={{
-                            fontSize: '18px',
-                            color: '#FFD700',
-                            WebkitTextStroke: '0.8px #1a4fa0',
-                            textShadow: '1px 1px 0 #1a4fa0, -0.5px -0.5px 0 #1a4fa0',
-                            letterSpacing: '0.5px',
-                        }}
-                    >
-                        ZIDDI MUMBAIKAR (NGO)
-                    </span>
+            {/* ── Orange Header Section ────────────────────────────────────────── */}
+            <div className="absolute top-0 left-0 right-0 h-14 bg-[#FF8A00] relative z-10 overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-full bg-orange-600/20 transform skew-x-[35deg] translate-x-12"></div>
+                <div className="flex items-center gap-2.5 px-3 py-2 h-full">
+                    {/* NGO Logo */}
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white p-0.5 shadow-sm border border-orange-500/20 flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo.webp" alt="Logo" className="w-full h-full object-contain" />
+                    </div>
+                    {/* Title & Registration */}
+                    <div className="flex flex-col">
+                        <span className="font-extrabold text-white leading-none tracking-tight" style={{ fontSize: '13px' }}>
+                            ZIDDI MUMBAIKAR (NGO)
+                        </span>
+                        <span className="text-white/80 font-bold mt-1" style={{ fontSize: '6px' }}>
+                            Reg No: {NGO_REG}
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            {/* ── Registration bar ────────────────────────────────────────────── */}
-            <div
-                className="text-center py-0.5 px-2 relative z-10"
-                style={{ backgroundColor: '#1a4fa0' }}
-            >
-                <p className="text-white font-bold" style={{ fontSize: '7px', letterSpacing: '0.2px' }}>
-                    Registration No. : {NGO_REG}
-                </p>
-            </div>
-
-            {/* ── Office address strip ─────────────────────────────────────────── */}
-            <div className="text-center px-2 py-0.5 relative z-10">
-                <p className="text-gray-700" style={{ fontSize: '6.5px', lineHeight: '1.3' }}>
+            {/* ── Contact Bar ──────────────────────────────────────────────────── */}
+            <div className="absolute top-14 left-0 right-0 py-1 bg-navy-900 z-10 text-center">
+                <p className="text-white/90 font-medium px-2 leading-tight" style={{ fontSize: '5.5px', letterSpacing: '0.05em' }}>
                     {NGO_ADDRESS}
                 </p>
             </div>
 
-            {/* ── Main body: Photo + Fields ─────────────────────────────────────── */}
-            <div className="flex gap-3 px-2 pt-1 relative z-10" style={{ height: '112px' }}>
-                {/* Photo */}
-                <div
-                    className="flex-shrink-0 border border-gray-400 overflow-hidden bg-gray-100 flex items-center justify-center"
-                    style={{ width: '78px', height: '100px', borderRadius: '2px' }}
-                >
-                    {v.photo_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={fixImageUrl(v.photo_url)} alt={fullName} className="w-full h-full object-cover object-top" />
-                    ) : (
-                        <div className="w-full h-full bg-blue-50 flex flex-col items-center justify-center">
-                            <span className="text-3xl font-black text-blue-300">{initials}</span>
-                            <span className="text-[7px] text-blue-200 mt-1">PHOTO</span>
-                        </div>
-                    )}
+            {/* ── Body Content ─────────────────────────────────────────────────── */}
+            <div className="relative z-10 mt-2 flex gap-4 px-3 pt-6 h-[calc(214px-60px)]">
+                {/* Profile Photo */}
+                <div className="flex-shrink-0 relative group">
+                    <div
+                        className="border-2 border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center shadow-lg"
+                        style={{ width: '82px', height: '102px', borderRadius: '12px' }}
+                    >
+                        {v.photo_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={fixImageUrl(v.photo_url)} alt={fullName} className="w-full h-full object-cover object-top" />
+                        ) : (
+                            <div className="w-full h-full bg-orange-50 flex flex-col items-center justify-center">
+                                <span className="text-2xl font-black text-orange-200">{initials}</span>
+                                <span className="text-[6px] font-black text-orange-200 mt-1 uppercase">Passport Photo</span>
+                            </div>
+                        )}
+                    </div>
+                    {/* Status badge Overlay */}
+                    <div className="absolute -bottom-1 -right-1 bg-green-500 text-white font-black px-2 py-0.5 rounded-full border border-white" style={{ fontSize: '5px' }}>
+                        CERTIFIED
+                    </div>
                 </div>
 
-                {/* Fields */}
-                <div className="flex-1 space-y-2.5 pt-1.5">
-                    {/* Name */}
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-gray-700 font-semibold" style={{ fontSize: '9.5px', minWidth: '46px' }}>Name :</span>
-                        <span className="font-black text-gray-900 leading-tight" style={{ fontSize: '11px', letterSpacing: '0.3px' }}>{fullName}</span>
+                {/* Information Grid */}
+                <div className="flex-1 flex flex-col gap-2.5 pt-1">
+                    <div className="space-y-0.5">
+                        <p className="text-gray-400 font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>Volunteer Name</p>
+                        <p className="text-navy-900 font-black tracking-tight leading-tight" style={{ fontSize: '13px' }}>{fullName}</p>
                     </div>
 
-                    {/* DOB + ID */}
-                    <div className="flex items-baseline gap-2">
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-gray-700 font-semibold" style={{ fontSize: '9.5px', minWidth: '46px' }}>DOB :</span>
-                            <span className="font-bold text-gray-900" style={{ fontSize: '11px' }}>{formatDOB(v.date_of_birth)}</span>
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-0.5">
+                            <p className="text-gray-400 font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>Date of Birth</p>
+                            <p className="text-navy-900 font-bold" style={{ fontSize: '10px' }}>{formatDOB(v.date_of_birth)}</p>
                         </div>
-                        <div className="flex items-baseline gap-1 ml-auto pr-2">
-                            <span className="text-gray-700 font-semibold" style={{ fontSize: '9.5px' }}>ID No. :</span>
-                            <span className="font-black text-blue-800" style={{ fontSize: '11px' }}>{formatIdNo(v.id)}</span>
+                        <div className="space-y-0.5">
+                            <p className="text-[#FF8A00] font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>Volunteer ID</p>
+                            <p className="text-[#FF8A00] font-black" style={{ fontSize: '10px' }}>{formatIdNo(v.id)}</p>
                         </div>
                     </div>
 
-                    {/* Gender */}
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-gray-700 font-semibold" style={{ fontSize: '9.5px', minWidth: '46px' }}>Gender :</span>
-                        <span className="font-bold text-gray-900 uppercase" style={{ fontSize: '11px' }}>{v.gender || '—'}</span>
-                    </div>
-
-                    {/* Mobile */}
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-gray-700 font-semibold" style={{ fontSize: '9.5px', minWidth: '46px' }}>Mobile :</span>
-                        <span className="font-black text-gray-900" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>{v.phone}</span>
-                    </div>
-
-                    {/* Skills (small, if available) */}
-                    {/* {v.skills && v.skills.length > 0 && (
-                        <div className="flex items-baseline gap-1 pb-1">
-                            <span className="text-gray-700 font-semibold" style={{ fontSize: '8.5px', minWidth: '42px' }}>Skills :</span>
-                            <span className="text-gray-800 font-bold" style={{ fontSize: '9.5px' }}>{v.skills.slice(0, 3).join(', ')}</span>
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-0.5">
+                            <p className="text-gray-400 font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>Gender</p>
+                            <p className="text-navy-900 font-bold uppercase" style={{ fontSize: '10px' }}>{v.gender || '—'}</p>
                         </div>
-                    )} */}
+                        <div className="space-y-0.5">
+                            <p className="text-gray-400 font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>Contact</p>
+                            <p className="text-navy-900 font-bold" style={{ fontSize: '10px' }}>{v.phone}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {/* Bottom Tagline */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#FF8A00]"></div>
         </div>
     )
 }
@@ -182,93 +167,76 @@ function IDCardBack({ v }: { v: Volunteer }) {
 
     return (
         <div
-            className="id-card-back relative overflow-hidden rounded-lg border border-gray-300 select-none bg-white"
+            className="id-card-back relative overflow-hidden rounded-xl border border-gray-200 select-none bg-white shadow-md"
             style={{
                 width: '340px',
                 height: '214px',
-                fontFamily: 'Arial, sans-serif',
+                fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
                 flexShrink: 0,
             }}
         >
             <WatermarkPattern />
 
-            {/* ── Watermark logo in center ──────────────────────────────────────── */}
-            <div
-                className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
-                style={{ opacity: 0.2 }}
-            >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* Logo Watermark */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none grayscale">
                 <img src="/logo.webp" alt="" className="w-32 h-32 object-contain" />
             </div>
 
-            {/* ── Content ───────────────────────────────────────────────────────── */}
-            <div className="relative z-10 h-full flex flex-col justify-between px-4 py-3 bg-white/40">
-
-                {/* Address block */}
-                <div>
-                    <p className="text-gray-900 font-bold" style={{ fontSize: '8px', letterSpacing: '0.3px' }}>
-                        <span className="font-black" style={{ fontSize: '8.5px' }}>ADDRESS : </span>
+            <div className="relative z-10 h-full flex flex-col p-4">
+                {/* Header Back */}
+                <div className="mb-4">
+                    <p className="text-navy-900 font-black text-[9px] uppercase tracking-widest mb-1">Permanent Address</p>
+                    <p className="text-gray-600 font-medium leading-relaxed" style={{ fontSize: '9px' }}>
                         {fullAddress || NGO_ADDRESS_FULL}
                     </p>
                 </div>
 
-                {/* Occupation / Role */}
-                {(v.occupation || v.availability) && (
-                    <div className="space-y-0.5">
-                        {v.occupation && (
-                            <p className="text-gray-800 font-semibold" style={{ fontSize: '8px' }}>
-                                <span className="font-black">Occupation : </span>{v.occupation}
-                            </p>
-                        )}
-                        {v.availability && (
-                            <p className="text-gray-800 font-semibold" style={{ fontSize: '8px' }}>
-                                <span className="font-black">Availability : </span>{v.availability}
-                            </p>
-                        )}
+                <div className="grid grid-cols-2 gap-4 mb-auto">
+                    <div>
+                        <p className="text-navy-900 font-black text-[8px] uppercase tracking-widest mb-1">Occupation</p>
+                        <p className="text-gray-700 font-bold uppercase" style={{ fontSize: '9px' }}>{v.occupation || 'Volunteer'}</p>
                     </div>
-                )}
+                    <div>
+                        <p className="text-navy-900 font-black text-[8px] uppercase tracking-widest mb-1">Availability</p>
+                        <p className="text-gray-700 font-bold uppercase" style={{ fontSize: '9px' }}>{v.availability || 'Weekends'}</p>
+                    </div>
+                </div>
 
-                {/* Bottom row: Social handles + Signature */}
-                <div className="flex items-end justify-between">
-                    {/* Social handles */}
-                    <div className="space-y-0.5">
-                        <div className="flex items-center gap-1">
-                            <svg className="w-2.5 h-2.5 text-pink-600" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-                            </svg>
-                            <span className="text-gray-700 font-medium" style={{ fontSize: '7px' }}>ziddi_mumbaikar_ngo</span>
+                {/* Footer Section */}
+                <div className="flex items-end justify-between border-t border-gray-100 pt-3 mt-4">
+                    {/* Social links */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-pink-50 rounded flex items-center justify-center">
+                                <svg className="w-2 h-2 text-pink-600" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z" />
+                                </svg>
+                            </div>
+                            <span className="text-gray-500 font-bold tracking-tighter" style={{ fontSize: '7px' }}>ziddi_mumbaikar_ngo</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <svg className="w-2.5 h-2.5 text-blue-700" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                            </svg>
-                            <span className="text-gray-700 font-medium" style={{ fontSize: '7px' }}>ziddimumbaikarngo</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <svg className="w-2.5 h-2.5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-1.25 16.518l-4.5-4.319 1.396-1.435 3.078 2.937 6.105-6.218 1.421 1.408-7.5 7.627z" />
-                            </svg>
-                            <span className="text-gray-700 font-medium" style={{ fontSize: '7px' }}>www.ziddimumbaikarngo.com</span>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-blue-50 rounded flex items-center justify-center">
+                                <svg className="w-2 h-2 text-blue-700" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                </svg>
+                            </div>
+                            <span className="text-gray-500 font-bold tracking-tighter" style={{ fontSize: '7px' }}>ziddimumbaikarngo</span>
                         </div>
                     </div>
 
-                    {/* Signature box */}
-                    <div className="text-center" style={{ minWidth: '110px' }}>
-                        <div
-                            className="border-b border-gray-400 mb-1"
-                            style={{ height: '36px', borderLeft: 'none', borderRight: 'none', borderTop: 'none' }}
-                        >
-                            {/* Signature placeholder – italic stylised text */}
-                            <p className="text-gray-400 italic" style={{ fontSize: '7.5px', paddingTop: '20px', fontFamily: 'Georgia, serif' }}>
-                                _____________________
-                            </p>
+                    {/* Signature */}
+                    <div className="relative text-center pb-2">
+                        <div className="h-10 w-24 border-b border-navy-900/20 mb-1 flex items-end justify-center">
+                             {/* Stylish italic placeholder for signature */}
+                             <span className="text-navy-900/30 font-medium italic" style={{ fontSize: '8px' }}>Authorized Sign</span>
                         </div>
-                        <p className="font-black text-gray-700 uppercase tracking-wider" style={{ fontSize: '7px', letterSpacing: '0.5px' }}>
-                            PRESIDENT SIGNATURE
-                        </p>
+                        <p className="text-navy-900 font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>President Signature</p>
                     </div>
                 </div>
             </div>
+            {/* Bottom Accent */}
+            <div className="absolute top-0 right-0 w-20 h-2 bg-orange-500 rounded-bl-full"></div>
+            <div className="absolute bottom-0 left-0 w-20 h-2 bg-navy-900 rounded-tr-full"></div>
         </div>
     )
 }
@@ -326,24 +294,24 @@ function VolunteerIDCardPair({ v, index, selected, onToggle, onPrintSingle }: {
             </div>
 
             {/* ── Card faces ── */}
-            <div className={`flex flex-row gap-0 border border-t-0 rounded-b-2xl overflow-hidden divide-x divide-gray-100 ${selected ? 'border-primary-200' : 'border-gray-200'
+            <div className={`flex flex-col lg:flex-row gap-0 border border-t-0 rounded-b-2xl overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-gray-100 ${selected ? 'border-primary-200' : 'border-gray-200'
                 }`}>
                 {/* Front Section */}
-                <div className="flex-1 bg-gray-50 pb-4">
+                <div className="flex-1 bg-gray-50 pb-4 overflow-x-auto custom-scrollbar">
                     <div className="px-4 pt-3 pb-1">
                         <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Front</p>
                     </div>
-                    <div className="px-4">
+                    <div className="px-4 min-w-fit">
                         <IDCardFront v={v} index={index} />
                     </div>
                 </div>
 
                 {/* Back Section */}
-                <div className="flex-1 bg-gray-50 pb-4">
+                <div className="flex-1 bg-gray-50 pb-4 overflow-x-auto custom-scrollbar">
                     <div className="px-4 pt-3 pb-1">
                         <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Back</p>
                     </div>
-                    <div className="px-4">
+                    <div className="px-4 min-w-fit">
                         <IDCardBack v={v} />
                     </div>
                 </div>
@@ -1136,9 +1104,9 @@ function VolunteersPageContent() {
             <div className="hidden print:block">
                 <style>{`
           @page { size: A4; margin: 10mm; }
-          body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .print-container { display: flex; flex-direction: column; gap: 15mm; align-items: center; }
-          .card-pair { display: flex; gap: 5mm; break-inside: avoid; }
+          body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; }
+          .print-container { width: 100%; display: flex; flex-direction: column; gap: 10mm; align-items: center; padding: 5mm 0; }
+          .card-pair { display: flex; gap: 5mm; break-inside: avoid; justify-content: center; width: 100%; }
         `}</style>
                 <div className="print-container">
                     {printTargets.map((v) => (

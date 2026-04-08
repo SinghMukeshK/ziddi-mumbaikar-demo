@@ -222,7 +222,7 @@ export default function VolunteerPage() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col pt-24">
             {/* Hero Header */}
-            <div className="bg-navy-900 text-white py-20 relative overflow-hidden">
+            <div className="bg-navy-900 text-white pt-20 pb-28 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-primary-600/20 rounded-full blur-3xl -mr-32 -mt-32"></div>
                 <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary-900/40 rounded-full blur-3xl -ml-32 -mb-32"></div>
 
@@ -232,35 +232,35 @@ export default function VolunteerPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="max-w-3xl"
                     >
-                        <span className="bg-primary-500/20 text-primary-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-primary-500/30 mb-6 inline-block">
+                        <span className="bg-primary-500/20 text-primary-400 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-primary-500/30 mb-4 inline-block">
                             Be a Change Maker
                         </span>
-                        <h1 className="text-5xl sm:text-7xl font-black mb-8 leading-[1.1] tracking-tight">
+                        <h1 className="text-4xl sm:text-6xl font-black mb-6 leading-[1.1] tracking-tight">
                             Join the <span className="text-primary-500 underline decoration-primary-500/30">Force</span> for Good.
                         </h1>
-                        <p className="text-xl text-gray-300 leading-relaxed font-medium">
-                            Your time and skills can transform lives. Become a Ziddi Mumbaikar volunteer today and help us serve those who need it most.
+                        <p className="text-lg text-gray-300 leading-relaxed font-medium">
+                            Your time and skills can transform lives. Become a volunteer today and help us serve those who need it most.
                         </p>
                     </motion.div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 pb-20 relative z-10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 pb-20 relative z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                     {/* Volunteer Form */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="lg:col-span-8 bg-white rounded-[3rem] p-8 sm:p-12 shadow-2xl shadow-gray-200 border border-gray-100"
+                        className="lg:col-span-8 bg-white rounded-[2.5rem] p-6 sm:p-10 shadow-2xl shadow-gray-200 border border-gray-100"
                     >
-                        <div className="flex items-center gap-4 mb-10">
-                            <div className="w-12 h-12 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-500">
-                                <Users className="w-6 h-6" />
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center text-primary-500">
+                                <Users className="w-5 h-5" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black text-navy-900 uppercase tracking-tight">Registration Form</h2>
-                                <p className="text-gray-500 text-sm">Please provide your details to apply</p>
+                                <h2 className="text-xl font-black text-navy-900 uppercase tracking-tight">Registration Form</h2>
+                                <p className="text-gray-500 text-xs">Please provide your details to apply</p>
                             </div>
                         </div>
 
@@ -275,13 +275,13 @@ export default function VolunteerPage() {
                             </motion.div>
                         )}
 
-                        <form onSubmit={handleSubmit} className="space-y-8">
+                        <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Personal Information */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">First Name *</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">First Name *</label>
                                     <div className="relative">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                         <input
                                             type="text"
                                             name="first_name"
@@ -293,32 +293,32 @@ export default function VolunteerPage() {
                                                 }
                                             }}
                                             placeholder="First Name"
-                                            className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 rounded-[1.5rem] focus:bg-white focus:outline-none transition-all font-medium text-navy-900 ${validationErrors.first_name ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
+                                            className={`w-full pl-11 pr-4 py-3 bg-gray-50 border-2 rounded-2xl focus:bg-white focus:outline-none transition-all font-medium text-navy-900 text-sm ${validationErrors.first_name ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
                                                 }`}
                                         />
                                         {validationErrors.first_name && (
-                                            <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.first_name}</p>
+                                            <p className="text-[9px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.first_name}</p>
                                         )}
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Last Name</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Last Name</label>
                                     <div className="relative">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                         <input
                                             type="text"
                                             name="last_name"
                                             value={formData.last_name}
                                             onChange={handleInputChange}
                                             placeholder="Last Name"
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
+                                            className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900 text-sm"
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Email *</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Email *</label>
                                     <div className="relative">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                         <input
                                             type="email"
                                             name="email"
@@ -329,19 +329,19 @@ export default function VolunteerPage() {
                                                     setValidationErrors(prev => ({ ...prev, email: '' }))
                                                 }
                                             }}
-                                            placeholder="[EMAIL_ADDRESS]"
-                                            className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 rounded-[1.5rem] focus:bg-white focus:outline-none transition-all font-medium text-navy-900 ${validationErrors.email ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
+                                            placeholder="Email Address"
+                                            className={`w-full pl-11 pr-4 py-3 bg-gray-50 border-2 rounded-2xl focus:bg-white focus:outline-none transition-all font-medium text-navy-900 text-sm ${validationErrors.email ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
                                                 }`}
                                         />
                                         {validationErrors.email && (
-                                            <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.email}</p>
+                                            <p className="text-[9px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.email}</p>
                                         )}
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Phone *</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Phone *</label>
                                     <div className="relative">
-                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                         <input
                                             type="tel"
                                             name="phone"
@@ -353,176 +353,188 @@ export default function VolunteerPage() {
                                                 }
                                             }}
                                             placeholder="+91 XXXXX XXXXX"
-                                            className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 rounded-[1.5rem] focus:bg-white focus:outline-none transition-all font-medium text-navy-900 ${validationErrors.phone ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
+                                            className={`w-full pl-11 pr-4 py-3 bg-gray-50 border-2 rounded-2xl focus:bg-white focus:outline-none transition-all font-medium text-navy-900 text-sm ${validationErrors.phone ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
                                                 }`}
                                         />
                                         {validationErrors.phone && (
-                                            <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.phone}</p>
+                                            <p className="text-[9px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.phone}</p>
                                         )}
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Date of Birth</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Date of Birth</label>
                                     <div className="relative">
-                                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                         <input
                                             type="date"
                                             name="date_of_birth"
                                             value={formData.date_of_birth}
                                             onChange={handleInputChange}
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
+                                            className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900 text-sm"
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Gender</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Gender</label>
                                     <div className="relative">
                                         <select
                                             name="gender"
                                             value={formData.gender}
                                             onChange={handleInputChange}
-                                            className="w-full pl-6 pr-10 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none appearance-none transition-all font-medium text-navy-900"
+                                            className="w-full pl-4 pr-10 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-primary-500 focus:outline-none appearance-none transition-all font-medium text-navy-900 text-sm"
                                         >
                                             <option value="male">Male</option>
                                             <option value="female">Female</option>
                                             <option value="other">Other</option>
                                         </select>
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                            <ChevronRight className="w-5 h-5 text-gray-400 rotate-90" />
+                                            <ChevronRight className="w-4 h-4 text-gray-400 rotate-90" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Professional Information */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Occupation</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-2">
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Occupation</label>
                                     <div className="relative">
-                                        <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
-                                        <input
-                                            type="text"
+                                        <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                                        <select
                                             name="occupation"
                                             value={formData.occupation}
                                             onChange={handleInputChange}
-                                            placeholder="e.g. Student, Software Engineer"
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
-                                        />
+                                            className="w-full pl-11 pr-10 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-primary-500 focus:outline-none appearance-none transition-all font-medium text-navy-900 text-sm"
+                                        >
+                                            <option value="">Select Occupation</option> 
+                                            <option value="Student">Student</option>
+                                            <option value="Working Professional">Working Professional</option>
+                                            <option value="Business / Self-Employed">Business / Self-Employed</option>
+                                            <option value="Retired">Retired</option>
+                                            <option value="Homemaker">Homemaker</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <ChevronRight className="w-4 h-4 text-gray-400 rotate-90" />
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Availability</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Availability</label>
                                     <div className="relative">
-                                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
-                                        <input
-                                            type="text"
+                                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                                        <select
                                             name="availability"
                                             value={formData.availability}
                                             onChange={handleInputChange}
-                                            placeholder="Weekends, Evenings, etc."
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
-                                        />
+                                            className="w-full pl-11 pr-10 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-primary-500 focus:outline-none appearance-none transition-all font-medium text-navy-900 text-sm"
+                                        >
+                                            <option value="">Select Availability</option>
+                                            <option value="Weekends Only">Weekends Only</option>
+                                            <option value="Weekdays Only">Weekdays Only</option>
+                                            <option value="Evenings (After 6 PM)">Evenings (After 6 PM)</option>
+                                            <option value="Flexible / Full-time">Flexible / Full-time</option>
+                                            <option value="Specific Days">Specific Days</option>
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <ChevronRight className="w-4 h-4 text-gray-400 rotate-90" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Skills */}
-                            <div className="space-y-4 pt-4">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Skills & Interests (Press Enter to add)</label>
+                            <div className="space-y-3 pt-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Skills & Interests (Press Enter to add)</label>
                                 <div className="relative">
-                                    <Wrench className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                    <Wrench className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                     <input
                                         type="text"
                                         value={skillInput}
                                         onChange={(e) => setSkillInput(e.target.value)}
                                         onKeyDown={handleAddSkill}
                                         placeholder="e.g. First Aid, Teaching, Driving..."
-                                        className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
+                                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900 text-sm"
                                     />
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                    <AnimatePresence>
-                                        {formData.skills?.map((skill) => (
-                                            <motion.button
-                                                key={skill}
-                                                initial={{ scale: 0.8, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                exit={{ scale: 0.8, opacity: 0 }}
-                                                onClick={() => removeSkill(skill)}
-                                                type="button"
-                                                className="group flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-600 rounded-xl text-xs font-bold border border-primary-100 hover:bg-primary-500 hover:text-white hover:border-primary-500 transition-all"
-                                            >
-                                                {skill}
-                                                <span className="text-primary-300 group-hover:text-white">×</span>
-                                            </motion.button>
-                                        ))}
-                                    </AnimatePresence>
+                                    {formData.skills?.map((skill) => (
+                                        <motion.button
+                                            key={skill}
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            onClick={() => removeSkill(skill)}
+                                            type="button"
+                                            className="group flex items-center gap-2 px-3 py-1.5 bg-primary-50 text-primary-600 rounded-lg text-[11px] font-bold border border-primary-100 hover:bg-primary-500 hover:text-white transition-all"
+                                        >
+                                            {skill}
+                                        <span className="text-primary-300 group-hover:text-white">×</span>
+                                        </motion.button>
+                                    ))}
                                 </div>
                             </div>
 
                             {/* Location */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">City</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-2">
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">City</label>
                                     <div className="relative">
-                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                         <input
                                             type="text"
                                             name="city"
                                             value={formData.city}
                                             onChange={handleInputChange}
                                             placeholder="Mumbai"
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
+                                            className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900 text-sm"
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Ward</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Ward</label>
                                     <div className="relative">
-                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                         <input
                                             type="text"
                                             name="ward"
                                             value={formData.ward}
                                             onChange={handleInputChange}
                                             placeholder="e.g. Ward A, Ward K-West"
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
+                                            className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900 text-sm"
                                         />
                                     </div>
                                 </div>
                             </div>
-                            <div className="space-y-2 pt-4">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Address</label>
+                            <div className="space-y-1.5 pt-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Address</label>
                                 <div className="relative">
-                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                     <input
                                         type="text"
                                         name="address"
                                         value={formData.address}
                                         onChange={handleInputChange}
                                         placeholder="Street, Building, Flat No."
-                                        className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-[1.5rem] focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900"
+                                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900 text-sm"
                                     />
                                 </div>
                             </div>
 
                             {/* Documents Upload */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">ID Proof (Aadhar/PAN/etc.) *</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-2">
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">ID Proof (Aadhar/PAN) *</label>
                                     <div className="relative group">
-                                        <div className={`w-full px-4 py-4 bg-gray-50 border-2 border-dashed rounded-[1.5rem] group-hover:border-primary-300 transition-all flex items-center gap-3 relative ${validationErrors.id_proof ? 'border-red-400' : 'border-gray-200'
+                                        <div className={`w-full px-3 py-3 bg-gray-50 border-2 border-dashed rounded-2xl group-hover:border-primary-300 transition-all flex items-center gap-3 relative ${validationErrors.id_proof ? 'border-red-400' : 'border-gray-200'
                                             }`}>
-                                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-gray-400 shadow-sm">
-                                                <FileText className="w-5 h-5" />
+                                            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-gray-400 shadow-sm shrink-0">
+                                                <FileText className="w-4 h-4" />
                                             </div>
                                             <div className="flex-1 overflow-hidden">
-                                                <p className="text-sm font-bold text-navy-900 truncate">
-                                                    {idProofFile ? idProofFile.name : 'Click to upload document'}
+                                                <p className="text-xs font-bold text-navy-900 truncate">
+                                                    {idProofFile ? idProofFile.name : 'Upload ID Proof'}
                                                 </p>
-                                                <p className="text-[10px] text-gray-400 uppercase tracking-wider">PDF, JPG, PNG (Max 5MB)</p>
                                             </div>
-                                            <Upload className="w-5 h-5 text-gray-300" />
                                             <input
                                                 type="file"
                                                 accept="image/*,.pdf"
@@ -541,25 +553,23 @@ export default function VolunteerPage() {
                                             />
                                         </div>
                                         {validationErrors.id_proof && (
-                                            <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.id_proof}</p>
+                                            <p className="text-[9px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.id_proof}</p>
                                         )}
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Passport Size Photo *</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Passport Photo *</label>
                                     <div className="relative group">
-                                        <div className={`w-full px-4 py-4 bg-gray-50 border-2 border-dashed rounded-[1.5rem] group-hover:border-primary-300 transition-all flex items-center gap-3 relative ${validationErrors.photo ? 'border-red-400' : 'border-gray-200'
+                                        <div className={`w-full px-3 py-3 bg-gray-50 border-2 border-dashed rounded-2xl group-hover:border-primary-300 transition-all flex items-center gap-3 relative ${validationErrors.photo ? 'border-red-400' : 'border-gray-200'
                                             }`}>
-                                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-gray-400 shadow-sm">
-                                                <ImageIcon className="w-5 h-5" />
+                                            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-gray-400 shadow-sm shrink-0">
+                                                <ImageIcon className="w-4 h-4" />
                                             </div>
                                             <div className="flex-1 overflow-hidden">
-                                                <p className="text-sm font-bold text-navy-900 truncate">
-                                                    {photoFile ? photoFile.name : 'Click to upload photo'}
+                                                <p className="text-xs font-bold text-navy-900 truncate">
+                                                    {photoFile ? photoFile.name : 'Upload Photo'}
                                                 </p>
-                                                <p className="text-[10px] text-gray-400 uppercase tracking-wider">JPG, PNG (Max 2MB)</p>
                                             </div>
-                                            <Upload className="w-5 h-5 text-gray-300" />
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -574,16 +584,43 @@ export default function VolunteerPage() {
                                             />
                                         </div>
                                         {validationErrors.photo && (
-                                            <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.photo}</p>
+                                            <p className="text-[9px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.photo}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Motivation & Extra Docs */}
+                            <div className="space-y-4 pt-2">
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Why do you want to volunteer? *</label>
+                                    <div className="relative">
+                                        <MessageSquare className="absolute left-4 top-4 w-4 h-4 text-gray-300" />
+                                        <textarea
+                                            name="motivation"
+                                            value={formData.motivation}
+                                            onChange={(e) => {
+                                                handleInputChange(e)
+                                                if (validationErrors.motivation) {
+                                                    setValidationErrors(prev => ({ ...prev, motivation: '' }))
+                                                }
+                                            }}
+                                            placeholder="Tell us about your motivation..."
+                                            rows={2}
+                                            className={`w-full pl-11 pr-4 py-3 bg-gray-50 border-2 rounded-2xl focus:bg-white focus:outline-none transition-all font-medium text-navy-900 text-sm resize-none ${validationErrors.motivation ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
+                                                }`}
+                                        ></textarea>
+                                        {validationErrors.motivation && (
+                                            <p className="text-[9px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.motivation}</p>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
                             {/* Extra Documents */}
-                            <div className="space-y-4 pt-4">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Additional Documents (Certificates, Experience Letters, etc.)</label>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-3 pt-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Additional Documents (Certificates/Experience)</label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <AnimatePresence>
                                         {extraDocuments.map((file, idx) => (
                                             <motion.div
@@ -591,19 +628,18 @@ export default function VolunteerPage() {
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.9 }}
-                                                className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-2xl group relative"
+                                                className="flex items-center gap-3 p-2 bg-gray-50 border border-gray-100 rounded-xl group relative"
                                             >
-                                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary-500 shadow-sm">
-                                                    <Paperclip className="w-5 h-5" />
+                                                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary-500 shadow-sm shrink-0">
+                                                    <Paperclip className="w-4 h-4" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-bold text-navy-900 truncate">{file.name}</p>
-                                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest">{(file.size / 1024).toFixed(0)} KB</p>
+                                                    <p className="text-[10px] font-bold text-navy-900 truncate">{file.name}</p>
                                                 </div>
                                                 <button
                                                     type="button"
                                                     onClick={() => setExtraDocuments(prev => prev.filter((_, i) => i !== idx))}
-                                                    className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"
+                                                    className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"
                                                 >
                                                     <XIcon className="w-4 h-4" />
                                                 </button>
@@ -611,10 +647,10 @@ export default function VolunteerPage() {
                                         ))}
                                     </AnimatePresence>
 
-                                    <div className="relative group min-h-[66px]">
-                                        <div className="w-full h-full px-4 py-3 bg-primary-50 border-2 border-dashed border-primary-100 rounded-2xl group-hover:border-primary-300 transition-all flex items-center justify-center gap-3 relative cursor-pointer">
-                                            <PlusCircle className="w-5 h-5 text-primary-500" />
-                                            <span className="text-xs font-black text-primary-600 uppercase tracking-widest">Add Document</span>
+                                    <div className="relative group min-h-[44px]">
+                                        <div className="w-full h-full px-4 py-2 bg-primary-50 border-2 border-dashed border-primary-100 rounded-xl group-hover:border-primary-300 transition-all flex items-center justify-center gap-3 relative cursor-pointer">
+                                            <PlusCircle className="w-4 h-4 text-primary-500" />
+                                            <span className="text-[10px] font-black text-primary-600 uppercase tracking-widest">Add Document</span>
                                             <input
                                                 type="file"
                                                 multiple
@@ -629,42 +665,17 @@ export default function VolunteerPage() {
                                 </div>
                             </div>
 
-                            {/* Motivation */}
-                            <div className="space-y-2 pt-4">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Why do you want to volunteer? *</label>
-                                <div className="relative">
-                                    <MessageSquare className="absolute left-4 top-6 w-5 h-5 text-gray-300" />
-                                    <textarea
-                                        name="motivation"
-                                        value={formData.motivation}
-                                        onChange={(e) => {
-                                            handleInputChange(e)
-                                            if (validationErrors.motivation) {
-                                                setValidationErrors(prev => ({ ...prev, motivation: '' }))
-                                            }
-                                        }}
-                                        placeholder="Tell us about your motivation..."
-                                        rows={4}
-                                        className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 rounded-[1.5rem] focus:bg-white focus:outline-none transition-all font-medium text-navy-900 resize-none ${validationErrors.motivation ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-primary-500'
-                                            }`}
-                                    ></textarea>
-                                    {validationErrors.motivation && (
-                                        <p className="text-[10px] text-red-500 font-bold mt-1 ml-4 uppercase tracking-wider">{validationErrors.motivation}</p>
-                                    )}
-                                </div>
-                            </div>
-
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-5 bg-primary-500 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-sm hover:bg-primary-600 transition-all shadow-xl shadow-primary-500/20 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 group"
+                                className="w-full py-4 bg-primary-500 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-primary-600 transition-all shadow-xl shadow-primary-500/20 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 group mt-4"
                             >
                                 {loading ? (
-                                    <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
                                 ) : (
                                     <>
                                         Submit Application
-                                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                     </>
                                 )}
                             </button>

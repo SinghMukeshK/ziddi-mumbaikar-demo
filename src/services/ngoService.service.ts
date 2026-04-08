@@ -75,6 +75,10 @@ export const ngoService = {
         return apiV1.get<ApiResponse<NgoServiceBooking[]>>('/services/bookings', { params });
     },
 
+    getBookingById: async (id: string): Promise<ApiResponse<NgoServiceBooking>> => {
+        return apiV1.get<ApiResponse<NgoServiceBooking>>(`/services/bookings/${id}`);
+    },
+
     updateBookingStatus: async (id: string, status: string): Promise<ApiResponse<NgoServiceBooking>> => {
         return apiV1.patch<ApiResponse<NgoServiceBooking>>(`/services/bookings/${id}/status`, { status });
     },

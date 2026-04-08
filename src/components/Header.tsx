@@ -165,11 +165,11 @@ export default function Header() {
                                                         </div>
                                                         <div className="grid grid-cols-1 gap-1">
                                                             {[
-                                                                { href: "/admin/events", label: "Events & Gallery" },
-                                                                { href: "/admin/volunteers", label: "Volunteers" },
                                                                 { href: "/admin/bookings", label: "Service Bookings" },
-                                                                { href: "/donations", label: "Donations" },
+                                                                { href: "/admin/volunteers", label: "Volunteers" },
                                                                 { href: "/admin/approvals", label: "Approval Queue" },
+                                                                { href: "/donations", label: "Donations" },
+                                                                { href: "/admin/events", label: "Events & Gallery" },
                                                                 { href: "/admin/contact-inquiries", label: "Contact Inquiries" },
                                                                 { href: "/admin/billing", label: "My Bills" }
                                                             ].map((link) => (
@@ -328,70 +328,33 @@ export default function Header() {
                                     >
                                         My Profile
                                     </Link>
-
                                     {(user?.role === 'admin' || user?.role === 'super_admin') && (
                                         <>
-                                            <p className="px-3 py-1.5 mt-2 text-[10px] font-black uppercase tracking-widest text-primary-500">Operations</p>
-                                            <Link
-                                                href="/admin/events"
-                                                className="text-gray-700 hover:text-primary-600 font-bold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                            >
-                                                Manage Events
-                                            </Link>
-                                            <Link
-                                                href="/admin/contact-inquiries"
-                                                className="text-gray-700 hover:text-primary-600 font-bold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                            >
-                                                Contact Inquiries
-                                            </Link>
-                                            <Link
-                                                href="/admin/volunteers"
-                                                className="text-gray-700 hover:text-primary-600 font-bold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                            >
-                                                Manage Volunteers
-                                            </Link>
-                                            <Link
-                                                href="/donations"
-                                                className="text-gray-700 hover:text-primary-600 font-bold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                            >
-                                                View Donations
-                                            </Link>
-
-                                            <p className="px-3 py-1.5 mt-4 text-[10px] font-black uppercase tracking-widest text-primary-500">System & Administration</p>
-                                            <Link
-                                                href="/admin/analytics"
-                                                className="text-gray-700 hover:text-primary-600 font-bold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                            >
-                                                Impact Analytics
-                                            </Link>
-                                            <Link
-                                                href="/admin/approvals"
-                                                className="text-gray-700 hover:text-primary-600 font-bold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                            >
-                                                Review Approvals
-                                            </Link>
-                                            <Link
-                                                href="/admin/tenant"
-                                                className="text-gray-700 hover:text-primary-600 font-bold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                            >
-                                                Organization Settings
-                                            </Link>
-                                            <Link
-                                                href="/admin/billing"
-                                                className="text-gray-700 hover:text-primary-600 font-bold py-2 px-3 rounded-md hover:bg-gray-50 transition-colors"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                            >
-                                                My Bills
-                                            </Link>
+                                            <p className="px-3 py-1.5 mt-4 text-[10px] font-black uppercase tracking-widest text-primary-500">Operations Panel</p>
+                                            {[
+                                                { href: "/admin/bookings", label: "Service Bookings" },
+                                                { href: "/admin/volunteers", label: "Volunteers" },
+                                                { href: "/admin/approvals", label: "Approval Queue" },
+                                                { href: "/donations", label: "Donations" },
+                                                { href: "/admin/events", label: "Events & Gallery" },
+                                                { href: "/admin/contact-inquiries", label: "Contact Inquiries" },
+                                                { href: "/admin/billing", label: "My Bills" }
+                                            ].map((link) => (
+                                                <Link
+                                                    key={link.href}
+                                                    href={link.href}
+                                                    className="text-gray-700 hover:text-primary-600 font-bold py-2.5 px-3 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-between group"
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                >
+                                                    {link.label}
+                                                    <svg className="w-4 h-4 text-gray-300 group-hover:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                </Link>
+                                            ))}
                                         </>
                                     )}
+
                                     <hr className="my-2" />
                                 </>
                             )}

@@ -21,9 +21,14 @@ import {
     Clock as ClockIcon,
     Check,
     Printer,
-    FileText
+    FileText,
+    Download,
+    Eye
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import * as XLSX from 'xlsx'
+import { toast } from 'react-hot-toast'
+import ApprovalDetailModal from '@/components/ApprovalDetailModal'
 
 export default function AdminBookings() {
     const { user, isLoggedIn } = useAuth()
@@ -36,6 +41,7 @@ export default function AdminBookings() {
     const [total, setTotal] = useState(0)
     const [searchTerm, setSearchTerm] = useState('')
     const [printingBooking, setPrintingBooking] = useState<NgoServiceBooking | null>(null)
+    const [viewingBooking, setViewingBooking] = useState<NgoServiceBooking | null>(null)
 
     const handlePrint = (booking: NgoServiceBooking) => {
         setPrintingBooking(booking)
@@ -84,6 +90,47 @@ export default function AdminBookings() {
         }
     }
 
+    const handleExportExcel = async () => {
+        const tid = toast.loading('Fetching all records for export...');
+        try {
+            // Fetch all records without filters and with a large limit
+            const response = await ngoService.getBookings({ limit: 10000 });
+            
+            if (!response.success || !response.data) {
+                toast.error('Failed to fetch data for export', { id: tid });
+                return;
+            }
+
+            const dataToExport = response.data.map(b => ({
+                'Booking ID': b.id,
+                'Name': b.name,
+                'Phone': b.phone,
+                'Email': (b as any).email || '—',
+                'Service': (b as any).service?.name || 'Service Request',
+                'Booking Date': b.booking_date ? new Date(b.booking_date).toLocaleDateString() : '—',
+                'Booking Time': b.booking_time || '—',
+                'Address': b.address,
+                'Pickup': (b as any).pickup_address || '—',
+                'Drop': (b as any).drop_address || '—',
+                'Age': (b as any).age || '—',
+                'Gender': (b as any).gender || '—',
+                'Reference': (b as any).reference_name || '—',
+                'Status': b.status.toUpperCase(),
+                'Notes': b.notes || '—'
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'All Bookings');
+            
+            XLSX.writeFile(workbook, `all_bookings_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+            toast.success('Excel downloaded successfully', { id: tid });
+        } catch (err) {
+            console.error('Export failed:', err);
+            toast.error('An error occurred during export', { id: tid });
+        }
+    };
+
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
@@ -131,148 +178,178 @@ export default function AdminBookings() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <div className="flex gap-2 shrink-0 overflow-x-auto pb-2 md:pb-0">
-                        {['', 'pending', 'confirmed', 'completed', 'cancelled'].map((s) => (
-                            <button
-                                key={s}
-                                onClick={() => setStatusFilter(s)}
-                                className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border ${statusFilter === s
-                                    ? 'bg-primary-500 text-white border-primary-500 shadow-lg shadow-primary-500/20'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
-                                    }`}
-                            >
-                                {s === '' ? 'All Requests' : s.charAt(0).toUpperCase() + s.slice(1)}
-                            </button>
-                        ))}
+                    <div className="flex flex-wrap gap-2 shrink-0 items-center">
+                        <div className="flex gap-2 shrink-0 overflow-x-auto pb-2 md:pb-0">
+                            {['', 'pending', 'confirmed', 'completed', 'cancelled'].map((s) => (
+                                <button
+                                    key={s}
+                                    onClick={() => setStatusFilter(s)}
+                                    className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border ${statusFilter === s
+                                        ? 'bg-primary-500 text-white border-primary-500 shadow-lg shadow-primary-500/20'
+                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                                        }`}
+                                >
+                                    {s === '' ? 'All Requests' : s.charAt(0).toUpperCase() + s.slice(1)}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="hidden md:block w-px h-8 bg-gray-200 mx-2" />
+                        <button
+                            onClick={handleExportExcel}
+                            className="flex items-center gap-2 px-4 py-2 bg-navy-900 text-white rounded-xl text-sm font-bold hover:bg-navy-800 transition-all shadow-lg shadow-navy-900/10 shrink-0"
+                        >
+                            <Download className="w-4 h-4" />
+                            Download Excel
+                        </button>
                     </div>
                 </div>
 
-                {/* Bookings List */}
-                <div className="space-y-4">
-                    {filteredBookings.length === 0 ? (
-                        <div className="bg-white rounded-3xl p-20 text-center border border-dashed border-gray-300">
-                            <div className="w-20 h-20 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <Calendar className="w-10 h-10" />
-                            </div>
-                            <h3 className="text-xl font-bold text-navy-900">No bookings found</h3>
-                            <p className="text-gray-500 mt-2">There are no service requests matching your current filters.</p>
-                        </div>
-                    ) : (
-                        filteredBookings.map((booking) => (
-                            <motion.div
-                                key={booking.id}
-                                layout
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col lg:flex-row gap-6 hover:shadow-md transition-shadow"
-                            >
-                                {/* Left Info */}
-                                <div className="flex-1 space-y-4">
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <h3 className="text-xl font-bold text-navy-900">{booking.name}</h3>
-                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(booking.status)}`}>
+                {/* Bookings Table */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-200">
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-500">Requester</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-500">Service & Date</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-500">Location</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Status</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-500 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {filteredBookings.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-20 text-center">
+                                            <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <Calendar className="w-8 h-8" />
+                                            </div>
+                                            <h3 className="text-lg font-bold text-navy-900">No bookings found</h3>
+                                            <p className="text-gray-500 text-sm mt-1">There are no service requests matching your current filters.</p>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredBookings.map((booking) => (
+                                        <motion.tr
+                                            key={booking.id}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="hover:bg-gray-50/50 transition-colors group"
+                                        >
+                                            <td className="px-6 py-4 align-top">
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-navy-900">{booking.name}</span>
+                                                    <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                                                        <Phone className="w-3 h-3" /> {booking.phone}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 align-top">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-black text-primary-600 uppercase tracking-tight">
+                                                        {(booking as any).service?.name || 'Service Request'}
+                                                    </span>
+                                                    <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
+                                                        <Calendar className="w-3 h-3" />
+                                                        <span>{formatDate(booking.booking_date)}</span>
+                                                        {booking.booking_time && (
+                                                            <>
+                                                                <span className="text-gray-300">•</span>
+                                                                <ClockIcon className="w-3 h-3" />
+                                                                <span>{booking.booking_time}</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 align-top">
+                                                <div className="flex items-start gap-1.5 max-w-[200px]">
+                                                    <MapPin className="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
+                                                    <span className="text-xs text-gray-600 line-clamp-2" title={booking.address}>
+                                                        {booking.address}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 align-top text-center">
+                                                <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(booking.status)}`}>
                                                     {booking.status}
                                                 </span>
-                                            </div>
-                                            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                                                <span className="flex items-center gap-1.5">
-                                                    <Phone className="w-4 h-4" /> {booking.phone}
-                                                </span>
-                                                <span className="flex items-center gap-1.5">
-                                                    <MapPin className="w-4 h-4" /> {booking.address}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                            </td>
+                                            <td className="px-6 py-4 align-top">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => setViewingBooking(booking)}
+                                                        className="p-1.5 border border-gray-200 text-gray-400 rounded-lg hover:bg-white hover:text-primary-600 hover:border-primary-200 transition-all shadow-sm"
+                                                        title="View Details"
+                                                    >
+                                                        <Eye className="w-3.5 h-3.5" />
+                                                    </button>
 
-                                    {booking.notes && (
-                                        <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-600 italic">
-                                            &quot;{booking.notes}&quot;
-                                        </div>
-                                    )}
-                                </div>
+                                                    <button
+                                                        onClick={() => handlePrint(booking)}
+                                                        className="p-1.5 border border-gray-200 text-gray-400 rounded-lg hover:bg-white hover:text-primary-600 hover:border-primary-200 transition-all shadow-sm"
+                                                        title="Print Form"
+                                                    >
+                                                        <Printer className="w-3.5 h-3.5" />
+                                                    </button>
 
-                                {/* Right Action/System Info */}
-                                <div className="lg:w-72 lg:border-l lg:pl-6 flex flex-col justify-between gap-4">
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                                            <Calendar className="w-4 h-4 text-primary-500" />
-                                            <span>{formatDate(booking.booking_date)}</span>
-                                        </div>
-                                        {booking.booking_time && (
-                                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                <ClockIcon className="w-4 h-4 text-primary-500" />
-                                                <span>{booking.booking_time}</span>
-                                            </div>
-                                        )}
-                                        <div className="mt-2 text-xs font-bold text-navy-900 bg-gray-100 px-3 py-1 rounded-lg inline-block">
-                                            {/* We need to get the service name, might need to populate it on backend */}
-                                            {(booking as any).service?.name || 'Service Request'}
-                                        </div>
-                                    </div>
+                                                    {booking.attachment_url && (
+                                                        <a
+                                                            href={booking.attachment_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="p-1.5 border border-gray-200 text-gray-400 rounded-lg hover:bg-white hover:text-primary-600 hover:border-primary-200 transition-all shadow-sm"
+                                                            title="View Attachment"
+                                                        >
+                                                            <FileText className="w-3.5 h-3.5" />
+                                                        </a>
+                                                    )}
 
-                                    {/* Action Buttons */}
-                                    <div className="flex flex-wrap items-center gap-2 mt-auto">
-                                        <button
-                                            onClick={() => handlePrint(booking)}
-                                            className="p-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-primary-50 hover:text-primary-600 transition-colors"
-                                            title="Print Form"
-                                        >
-                                            <Printer className="w-4 h-4" />
-                                        </button>
-                                        
-                                        {booking.attachment_url && (
-                                            <a
-                                                href={booking.attachment_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="p-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-primary-50 hover:text-primary-600 transition-colors"
-                                                title="View Attachment"
-                                            >
-                                                <FileText className="w-4 h-4" />
-                                            </a>
-                                        )}
-                                        {booking.status === 'pending' && (
-                                            <>
-                                                <button
-                                                    onClick={() => handleStatusUpdate(booking.id, 'confirmed')}
-                                                    className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-blue-700 transition-colors"
-                                                >
-                                                    <Check className="w-3 h-3" /> Confirm
-                                                </button>
-                                                <button
-                                                    onClick={() => handleStatusUpdate(booking.id, 'cancelled')}
-                                                    className="p-2 border border-gray-200 rounded-xl text-red-500 hover:bg-red-50 transition-colors"
-                                                >
-                                                    <XCircle className="w-4 h-4" />
-                                                </button>
-                                            </>
-                                        )}
-                                        {booking.status === 'confirmed' && (
-                                            <button
-                                                onClick={() => handleStatusUpdate(booking.id, 'completed')}
-                                                className="w-full bg-green-600 text-white py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-green-700 transition-colors"
-                                            >
-                                                <CheckCircle className="w-3 h-3" /> Mark Completed
-                                            </button>
-                                        )}
-                                        {booking.status === 'completed' && (
-                                            <div className="w-full text-center text-green-600 font-bold text-xs py-2">
-                                                Service Delivered
-                                            </div>
-                                        )}
-                                        {booking.status === 'cancelled' && (
-                                            <div className="w-full text-center text-red-600 font-bold text-xs py-2">
-                                                Request Cancelled
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))
-                    )}
+                                                    <div className="h-4 w-[1px] bg-gray-200 mx-1" />
+
+                                                    {booking.status === 'pending' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(booking.id, 'confirmed')}
+                                                                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
+                                                            >
+                                                                Confirm
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(booking.id, 'cancelled')}
+                                                                className="p-1.5 border border-gray-200 text-red-400 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                                                                title="Cancel Request"
+                                                            >
+                                                                <XCircle className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {booking.status === 'confirmed' && (
+                                                        <button
+                                                            onClick={() => handleStatusUpdate(booking.id, 'completed')}
+                                                            className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-colors shadow-sm shadow-green-200 flex items-center gap-1.5"
+                                                        >
+                                                            <CheckCircle className="w-3 h-3" /> Complete
+                                                        </button>
+                                                    )}
+                                                    {booking.status === 'completed' && (
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-green-600 px-2">
+                                                            Delivered
+                                                        </span>
+                                                    )}
+                                                    {booking.status === 'cancelled' && (
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-red-400 px-2">
+                                                            Cancelled
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 {/* Pagination */}
@@ -299,91 +376,131 @@ export default function AdminBookings() {
 
             {/* PRINT COMPONENT */}
             {printingBooking && (
-                <div className="hidden print:block fixed inset-0 bg-white z-[99999] text-black font-sans w-[210mm] mx-auto p-8">
+                <div className="hidden print:block fixed inset-0 bg-white z-[99999] text-black font-sans w-[190mm] mx-auto p-0 overflow-hidden">
                     <style dangerouslySetInnerHTML={{
                         __html: `
-                @media print {
-                    body * { visibility: hidden; }
-                    .print-form-container, .print-form-container * { visibility: visible; }
-                    .print-form-container { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; box-sizing: border-box; background: white !important; }
-                    @page { size: portrait; margin: 10mm; }
-                }
-            ` }} />
-                    <div className="print-form-container bg-white w-full h-full">
-                        <div className="text-center mb-4">
-                            <img src="/logo.webp" alt="Ziddi Mumbaikar" className="w-20 h-20 mx-auto object-contain" />
-                        </div>
-
-                        <div className="border border-gray-300 rounded-sm shadow-sm text-[12px]">
-                            <div className="bg-gray-50 border-b border-gray-300 py-2 px-4 flex justify-between items-center">
-                                <h2 className="text-[16px] font-bold text-gray-900 m-0">
-                                    {(printingBooking as any).service?.name || 'Service Request'} Form
-                                </h2>
-                                <span className="font-mono bg-gray-200 px-2 py-1 rounded text-[10px]">
-                                    #{String(printingBooking.id).substring(0, 8).toUpperCase()}
-                                </span>
+                        @media print {
+                            @page { size: portrait; margin: 5mm; }
+                            body { visibility: hidden; background: white !important; height: 100%; overflow: hidden !important; }
+                            .print-block, .print-block * { visibility: visible; }
+                            .print-block { 
+                                display: block !important; 
+                                position: absolute; 
+                                left: 50%;
+                                transform: translateX(-50%);
+                                top: 0; 
+                                width: 190mm; 
+                                height: 280mm; 
+                                z-index: 9999;
+                                padding: 0 !important;
+                                margin: 0 !important;
+                                overflow: hidden !important;
+                                page-break-after: avoid;
+                                page-break-before: avoid;
+                            }
+                            footer, header, main, nav, .no-print, .ApprovalDetailModal { display: none !important; }
+                        }
+                    ` }} />
+                    <div className="print-block print-form-container bg-white w-full h-full border-2 border-gray-900 p-1">
+                        <div className="border border-gray-300 p-8">
+                            <div className="text-center mb-8">
+                                <img src="/logo.webp" alt="Ziddi Mumbaikar" className="w-24 h-24 mx-auto object-contain mb-4" />
+                                <h1 className="text-2xl font-black uppercase tracking-tighter">Ziddi Mumbaikar NGO</h1>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500">Emergency Support Service Registration</p>
                             </div>
 
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Requester Full Name</p>
-                                <p className="text-gray-700 ml-4">{printingBooking.name || '—'}</p>
+                            <div className="space-y-0 text-[13px]">
+                                <div className="bg-navy-900 text-white py-3 px-5 flex justify-between items-center mb-6">
+                                    <h2 className="font-black uppercase tracking-tight m-0">{(printingBooking as any).service?.name || 'Service Request'}</h2>
+                                    <span className="font-mono text-sm underline decoration-primary-500 underline-offset-4">Ref ID: {String(printingBooking.id).substring(0, 10).toUpperCase()}</span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-0 border-t border-l border-gray-200">
+                                    <div className="border-r border-b border-gray-200 p-3">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Requester Name</p>
+                                        <p className="font-bold text-navy-900 uppercase">{printingBooking.name || '—'}</p>
+                                    </div>
+                                    <div className="border-r border-b border-gray-200 p-3">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Contact Details</p>
+                                        <p className="font-bold text-navy-900">{printingBooking.phone || '—'}</p>
+                                        {(printingBooking as any).email && <p className="text-[10px] font-medium text-gray-500">{(printingBooking as any).email}</p>}
+                                    </div>
+                                    <div className="border-r border-b border-gray-200 p-3">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Patient Vitals</p>
+                                        <p className="font-bold text-navy-900 uppercase">
+                                            {(printingBooking as any).age ? `${(printingBooking as any).age} Yrs` : 'Age N/A'} • {(printingBooking as any).gender || 'N/A'}
+                                        </p>
+                                    </div>
+                                    <div className="border-r border-b border-gray-200 p-3">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Booking Schedule</p>
+                                        <p className="font-bold text-navy-900 uppercase">
+                                            {printingBooking.booking_date ? new Date(printingBooking.booking_date).toLocaleDateString('en-GB') : '—'}
+                                            <span className="text-gray-400 font-medium ml-2">@{printingBooking.booking_time || '—'}</span>
+                                        </p>
+                                    </div>
+                                    <div className="col-span-2 border-r border-b border-gray-200 p-3">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Reference & Help</p>
+                                        <p className="font-bold text-navy-900 uppercase">
+                                            {(printingBooking as any).reference_name || 'Direct Walk-in'} 
+                                            {(printingBooking as any).reference_number && <span className="text-gray-400 font-medium ml-2">• {(printingBooking as any).reference_number}</span>}
+                                        </p>
+                                    </div>
+                                    <div className="col-span-2 border-r border-b border-gray-200 p-3 min-h-[60px]">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Primary Location Address</p>
+                                        <p className="font-bold text-navy-900 leading-relaxed uppercase text-[12px]">{printingBooking.address || '—'}</p>
+                                    </div>
+                                    {((printingBooking as any).service?.slug === 'ambulance-booking' || (printingBooking as any).service?.slug === 'funeral-service') && (
+                                        <>
+                                            <div className="border-r border-b border-gray-200 p-3">
+                                                <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Pickup Address</p>
+                                                <p className="font-bold text-navy-900 uppercase text-[11px]">{(printingBooking as any).pickup_address || '—'}</p>
+                                            </div>
+                                            <div className="border-r border-b border-gray-200 p-3">
+                                                <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Drop Address</p>
+                                                <p className="font-bold text-navy-900 uppercase text-[11px]">{(printingBooking as any).drop_address || '—'}</p>
+                                            </div>
+                                        </>
+                                    )}
+                                    <div className="col-span-2 border-r border-b border-gray-200 p-3 bg-gray-50/50 min-h-[50px]">
+                                        <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Additional Notes</p>
+                                        <p className="text-gray-700 italic text-[11px] leading-relaxed">{printingBooking.notes || 'No additional instructions provided.'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 flex justify-between items-end">
+                                    <div className="space-y-3">
+                                        <div className="w-24 h-24 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-300 text-[8px] text-center p-2 uppercase font-black">
+                                            NGO Seal /<br />Stamp Area
+                                        </div>
+                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Authorized Registration Copy</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-6">Signature of Requester</p>
+                                        <div className="w-40 border-t border-navy-900 pt-1.5">
+                                            <p className="text-[10px] font-black uppercase text-navy-900">{printingBooking.name}</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Mobile Number</p>
-                                <p className="text-gray-700 ml-4">{printingBooking.phone || '—'}</p>
+                            <div className="mt-8 pt-4 border-t border-gray-100 flex justify-between items-center text-[8px] font-bold uppercase tracking-widest text-gray-400">
+                                <span>Generated: {new Date().toLocaleString()}</span>
+                                <span>Support Helpline: +91 97733 44447</span>
+                                <span>www.ziddimumbaikarngo.com</span>
                             </div>
-
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Email Address</p>
-                                <p className="text-blue-600 underline ml-4">{(printingBooking as any).email || '—'}</p>
-                            </div>
-
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Patient Details</p>
-                                <p className="text-gray-700 ml-4">
-                                    Age: {(printingBooking as any).age || '—'} | Gender: {(printingBooking as any).gender ? (printingBooking as any).gender.charAt(0).toUpperCase() + (printingBooking as any).gender.slice(1) : '—'}
-                                </p>
-                            </div>
-
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Reference Info</p>
-                                <p className="text-gray-700 ml-4">
-                                    Name: {(printingBooking as any).reference_name || '—'} | Phone: {(printingBooking as any).reference_number || '—'}
-                                </p>
-                            </div>
-
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Service Location (Home Address)</p>
-                                <p className="text-gray-700 ml-4 whitespace-pre-wrap">{printingBooking.address || '—'}</p>
-                            </div>
-
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Locations</p>
-                                <p className="text-gray-700 ml-4 whitespace-pre-wrap"><strong>Pick Up:</strong> {(printingBooking as any).pickup_address || '—'}</p>
-                                <p className="text-gray-700 ml-4 whitespace-pre-wrap mt-1"><strong>Drop Off:</strong> {(printingBooking as any).drop_address || '—'}</p>
-                            </div>
-
-                            <div className="border-b border-gray-200 py-2 px-4">
-                                <p className="font-bold text-gray-800 mb-1">Booking Date & Time</p>
-                                <p className="text-gray-700 ml-4">
-                                    {printingBooking.booking_date ? new Date(printingBooking.booking_date).toLocaleDateString('en-GB') : '—'}
-                                    {printingBooking.booking_time ? ` at ${printingBooking.booking_time}` : ''}
-                                </p>
-                            </div>
-
-                            <div className="py-2 px-4 bg-gray-50/50 flex-grow">
-                                <p className="font-bold text-gray-800 mb-1">Additional Notes</p>
-                                <p className="text-gray-700 ml-4 whitespace-pre-wrap">{printingBooking.notes || '—'}</p>
-                            </div>
-                        </div>
-
-                        <div className="mt-8 text-center text-gray-400 text-xs font-semibold tracking-widest uppercase">
-                            Ziddi Mumbaikar NGO • Free Service
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* VIEW MODAL */}
+            <ApprovalDetailModal
+                isOpen={!!viewingBooking}
+                onClose={() => setViewingBooking(null)}
+                entityType="service_book"
+                entityId={viewingBooking?.id || ''}
+                title={viewingBooking?.name || 'Booking Details'}
+            />
         </div>
     )
 }
