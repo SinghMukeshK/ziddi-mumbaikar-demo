@@ -28,6 +28,7 @@ export interface VolunteerCreateRequest {
     state?: string;
     zip_code?: string;
     background_check_consent?: boolean;
+    designation_id?: string;
     documents?: { name: string; url: string; type: string }[];
 }
 
@@ -54,6 +55,8 @@ export interface Volunteer {
     state?: string;
     zip_code?: string;
     background_check_consent?: boolean;
+    designation_id?: string;
+    designation?: { id: string; name: string };
     documents?: { name: string; url: string; type: string }[];
 }
 

@@ -550,29 +550,31 @@ export default function FundraiserDetailPage() {
       <div className="min-h-screen bg-white print:hidden">
         {/* Immersive Header / Breadcrumb */}
         <div className="bg-gray-50/50 border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <nav className="flex items-center space-x-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-              <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
-              <ChevronRight className="w-3 h-3" />
-              <Link href="/fundraisers" className="hover:text-primary-500 transition-colors">Fundraisers</Link>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-navy-900 truncate max-w-[200px]">{fundraiser.title}</span>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <nav className="flex items-center space-x-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 overflow-hidden">
+              <Link href="/" className="hover:text-primary-500 transition-colors whitespace-nowrap">Home</Link>
+              <ChevronRight className="w-3 h-3 flex-shrink-0" />
+              <Link href="/fundraisers" className="hover:text-primary-500 transition-colors whitespace-nowrap">Fundraisers</Link>
+              <ChevronRight className="w-3 h-3 flex-shrink-0" />
+              <span className="text-navy-900 truncate max-w-[120px] sm:max-w-[200px] shrink-0">
+                {fundraiser.title?.includes('fetchedAlbums') ? 'Fundraiser Details' : fundraiser.title}
+              </span>
             </nav>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid lg:grid-cols-12 gap-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-6">
+          <div className="grid lg:grid-cols-12 gap-8">
             {/* Left Column - Main Content */}
-            <div className="lg:col-span-8 space-y-12">
+            <div className="lg:col-span-8 space-y-6">
               {/* Premium Hero Section */}
-              <div className="space-y-8">
+              <div className="space-y-4">
                 <motion.h1
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-3xl sm:text-4xl font-bold text-navy-900 leading-[1.2] tracking-tight"
+                  className="text-[22px] sm:text-4xl font-black text-navy-900 leading-[1.15] tracking-tight break-words pt-2 sm:pt-0 block w-full"
                 >
-                  {fundraiser.title}
+                  {fundraiser.title?.includes('fetchedAlbums') ? 'Help this noble cause' : fundraiser.title}
                 </motion.h1>
 
                 {/* Image Carousel */}
@@ -593,27 +595,27 @@ export default function FundraiserDetailPage() {
                   const safeIndex = Math.min(currentImageIndex, total - 1)
 
                   return (
-                    <div className="relative aspect-[16/9] rounded-[2.5rem] overflow-hidden shadow-2xl shadow-gray-200 group">
+                    <div className="relative aspect-[4/5] sm:aspect-[16/9] rounded-2xl overflow-hidden shadow-2xl shadow-gray-200/50 group bg-gray-50 border border-gray-100">
                       {/* Images */}
                       {allImages.map((url, idx) => (
                         <div
                           key={idx}
-                          className={`absolute inset-0 transition-opacity duration-500 ${idx === safeIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                            }`}
+                          className={`absolute inset-0 transition-all duration-500 ease-in-out ${idx === safeIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                            } bg-gray-50/50`}
                         >
                           <Image
                             src={url}
                             alt={`${fundraiser.title} - image ${idx + 1}`}
                             fill
-                            className={`object-cover transition-transform duration-[2000ms] ${idx === safeIndex ? 'scale-105' : 'scale-100'
+                            className={`object-contain transition-all duration-[1500ms] ${idx === safeIndex ? 'scale-100' : 'scale-95'
                               }`}
                             priority={idx === 0}
                           />
                         </div>
                       ))}
 
-                      {/* Visual Badges on Image */}
-                      <div className="absolute top-4 left-4 md:top-6 md:left-6 right-16 md:right-auto flex flex-wrap md:flex-col items-start gap-2 md:gap-3 z-20">
+                      {/* Visual Badges (Adjusted for mobile wrapping) */}
+                      <div className="absolute top-4 left-4 md:top-6 md:left-6 flex flex-wrap md:flex-col items-start gap-2 md:gap-3 z-20 max-w-[calc(100vw-60px)]">
                         {fundraiser.is_urgent && (
                           <motion.div
                             animate={{ scale: [1, 1.05, 1] }}
@@ -696,8 +698,8 @@ export default function FundraiserDetailPage() {
               </div>
 
               {/* Premium Tabs Section */}
-              <div className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-100/50 border border-gray-100 overflow-hidden">
-                <div className="flex border-b border-gray-100 bg-gray-50/30 overflow-hidden">
+              <div className="bg-white lg:rounded-[2rem] shadow-xl shadow-gray-100/50 lg:border border-gray-100 overflow-hidden -mx-4 lg:mx-0">
+                <div className="flex border-b border-gray-100 bg-gray-50/30 overflow-x-auto scrollbar-hide px-4 lg:px-0">
                   {[
                     { id: 'about', label: 'Our Story', icon: Info },
                     { id: 'beneficiary', label: 'Beneficiary', icon: User },
@@ -708,7 +710,7 @@ export default function FundraiserDetailPage() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`relative flex-1 px-2 py-4 sm:py-6 text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap ${activeTab === tab.id ? 'text-primary-600' : 'text-gray-400 hover:text-navy-900'
+                      className={`relative flex-1 px-4 py-3 sm:py-4 text-[10px] sm:text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap min-w-[120px] sm:min-w-0 ${activeTab === tab.id ? 'text-primary-600' : 'text-gray-400 hover:text-navy-900'
                         }`}
                     >
                       <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary-500' : 'text-gray-300'}`} />
@@ -724,7 +726,7 @@ export default function FundraiserDetailPage() {
                 </div>
 
                 {/* Tab Content */}
-                <div className="p-6 md:p-10">
+                <div className="p-4 md:p-8">
                   <AnimatePresence mode="wait">
                     {activeTab === 'about' && (
                       <motion.div
@@ -732,22 +734,29 @@ export default function FundraiserDetailPage() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 10 }}
-                        className="space-y-8"
+                        className="space-y-6"
                       >
-                        <div className="prose prose-lg max-w-none">
-                          <p className="text-gray-600 leading-relaxed text-lg whitespace-pre-line font-medium italic border-l-4 border-primary-500 pl-6 mb-10">
+                        <div className="prose max-w-none">
+                          <p className="text-gray-600 leading-relaxed text-base whitespace-pre-line font-medium italic border-l-4 border-primary-500 pl-5 mb-6">
                             {fundraiser.short_description}
                           </p>
-                          <div className="text-navy-900 leading-relaxed space-y-6">
-                            {fundraiser.description.split('\n').map((para: string, i: number) => (
-                              para.trim() && <p key={i} className="text-lg leading-[1.8]">{para}</p>
-                            ))}
+                          <div className="text-navy-900 leading-relaxed space-y-4">
+                            {fundraiser.description && !fundraiser.description.includes('fetchedAlbums') ? (
+                              fundraiser.description.split('\n').map((para: string, i: number) => (
+                                para.trim() && <p key={i} className="text-base leading-[1.7] font-medium">{para}</p>
+                              ))
+                            ) : (
+                              <div className="space-y-4">
+                                <p className="text-base leading-[1.7] font-medium">Join us in making a difference for this noble cause. Every contribution, no matter how small, brings us closer to our goal and provides essential support to the beneficiary.</p>
+                                <p className="text-base leading-[1.7] font-medium">We ensure 100% transparency and direct impact for every rupee donated. Your support can change a life today.</p>
+                              </div>
+                            )}
                           </div>
                         </div>
 
                         {fundraiser.beneficiary_story && (
-                          <div className="pt-8 border-t border-gray-100">
-                            <div className={`overflow-hidden transition-all duration-700 ${readMore ? 'max-h-[5000px]' : 'max-h-[300px] relative'}`}>
+                          <div className="pt-5 border-t border-gray-100">
+                            <div className={`overflow-hidden transition-all duration-700 ${readMore ? 'max-h-[5000px]' : 'max-h-[200px] relative'}`}>
                               <div className="text-gray-700 space-y-6 leading-[1.8]">
                                 {fundraiser.beneficiary_story.split('\n').map((para: string, i: number) => (
                                   para.trim() && <p key={i}>{para}</p>
@@ -758,10 +767,10 @@ export default function FundraiserDetailPage() {
                               )}
                             </div>
 
-                            <div className="text-center mt-8">
+                            <div className="text-center mt-5">
                               <button
                                 onClick={() => setReadMore(!readMore)}
-                                className="group inline-flex items-center gap-3 px-8 py-3 bg-navy-900 text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-primary-600 transition-all shadow-xl shadow-navy-900/20"
+                                className="group inline-flex items-center gap-2 px-6 py-2.5 bg-navy-900 text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-primary-600 transition-all shadow-lg shadow-navy-900/20"
                               >
                                 {readMore ? 'Show Less' : 'Full Impact Story'}
                                 <ArrowRight className={`w-4 h-4 transition-transform ${readMore ? '-rotate-90' : 'group-hover:translate-x-1'}`} />
@@ -778,17 +787,17 @@ export default function FundraiserDetailPage() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 10 }}
-                        className="space-y-10"
+                        className="space-y-6"
                       >
-                        <div className="bg-primary-50/30 rounded-[2rem] p-8 md:p-10 border border-primary-100/50">
-                          <h3 className="text-2xl font-black text-navy-900 mb-6 flex items-center gap-3">
+                        <div className="bg-primary-50/30 rounded-[1.5rem] p-6 border border-primary-100/50">
+                          <h3 className="text-lg font-black text-navy-900 mb-4 flex items-center gap-3">
                             <User className="w-6 h-6 text-primary-500" />
                             Beneficiary Profile
                           </h3>
-                          <div className="grid md:grid-cols-2 gap-8">
+                          <div className="grid md:grid-cols-2 gap-4">
                             <div>
                               <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Name</p>
-                              <p className="text-xl font-bold text-navy-900">{fundraiser.beneficiary_name}</p>
+                              <p className="text-lg font-bold text-navy-900">{fundraiser.beneficiary_name}</p>
                             </div>
                             <div>
                               <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Status</p>
@@ -799,11 +808,33 @@ export default function FundraiserDetailPage() {
                             </div>
                           </div>
 
-                          <div className="mt-8 pt-8 border-t border-primary-100/50">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">About the Beneficiary</p>
-                            <p className="text-gray-700 leading-relaxed font-medium whitespace-pre-line">
-                              {fundraiser.beneficiary_story || "Providing support for medical and essential needs to ensure a dignified life."}
-                            </p>
+                          <div className="mt-4 pt-4 border-t border-primary-100/50">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">About the Beneficiary</p>
+                            <div className="space-y-4">
+                              {fundraiser.current_situation ? (
+                                <div>
+                                  <h4 className="text-sm font-black text-navy-900 uppercase tracking-widest mb-1">Current Situation</h4>
+                                  <p className="text-gray-700 leading-relaxed font-medium whitespace-pre-line text-sm">
+                                    {fundraiser.current_situation}
+                                  </p>
+                                </div>
+                              ) : null}
+                              
+                              {fundraiser.funds_usage ? (
+                                <div>
+                                  <h4 className="text-sm font-black text-navy-900 uppercase tracking-widest mb-1">How Funds Will Help</h4>
+                                  <p className="text-gray-700 leading-relaxed font-medium whitespace-pre-line text-sm">
+                                    {fundraiser.funds_usage}
+                                  </p>
+                                </div>
+                              ) : null}
+
+                              {!fundraiser.current_situation && !fundraiser.funds_usage && (
+                                <p className="text-gray-700 leading-relaxed font-medium whitespace-pre-line">
+                                  {fundraiser.beneficiary_story || "Providing support for medical and essential needs to ensure a dignified life."}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -825,21 +856,21 @@ export default function FundraiserDetailPage() {
                           </div>
                         )}
 
-                        <div className="bg-navy-900 rounded-[2.5rem] p-8 md:p-10 text-white relative overflow-hidden group">
-                          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -mr-32 -mt-32 transition-transform group-hover:scale-125 duration-700" />
-                          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                            <div className="w-20 h-20 bg-white/10 rounded-[1.5rem] flex items-center justify-center backdrop-blur-md">
-                              <HeartHandshake className="w-10 h-10 text-primary-400" />
+                        <div className="bg-navy-900 rounded-2xl p-6 text-white relative overflow-hidden group">
+                          <div className="absolute top-0 right-0 w-48 h-48 bg-primary-500/10 rounded-full blur-3xl -mr-24 -mt-24 transition-transform group-hover:scale-125 duration-700" />
+                          <div className="relative z-10 flex flex-col md:flex-row items-center gap-5">
+                            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                              <HeartHandshake className="w-7 h-7 text-primary-400" />
                             </div>
                             <div className="flex-1 text-center md:text-left">
-                              <h4 className="text-2xl font-black mb-2">Support the Cause</h4>
-                              <p className="text-white/60 font-medium leading-relaxed">
+                              <h4 className="text-lg font-black mb-1">Support the Cause</h4>
+                              <p className="text-white/60 font-medium leading-relaxed text-sm">
                                 Your contribution goes directly to the beneficiary for their {fundraiser.category?.name || 'needs'}. We ensure 100% transparency.
                               </p>
                             </div>
                             <button
                               onClick={handleDonateClick}
-                              className="px-10 py-5 bg-primary-500 hover:bg-primary-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-primary-500/20"
+                              className="px-7 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-primary-500/20"
                             >
                               Donate Now
                             </button>
@@ -894,14 +925,14 @@ export default function FundraiserDetailPage() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 10 }}
-                        className="space-y-10"
+                        className="space-y-6"
                       >
-                        <div className="bg-primary-50 rounded-3xl p-8 flex items-start gap-6 border border-primary-100">
-                          <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-primary-500 shadow-sm flex-shrink-0">
-                            <ShieldCheck className="w-8 h-8" />
+                        <div className="bg-primary-50 rounded-2xl p-5 flex items-start gap-4 border border-primary-100">
+                          <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center text-primary-500 shadow-sm flex-shrink-0">
+                            <ShieldCheck className="w-6 h-6" />
                           </div>
                           <div>
-                            <h3 className="text-xl font-bold text-navy-900 mb-2">Verified Fundraiser</h3>
+                            <h3 className="text-base font-bold text-navy-900 mb-1">Verified Fundraiser</h3>
                             <p className="text-gray-600 leading-relaxed text-sm">
                               This fundraiser has been manually verified by our team. All documents provided are thoroughly checked to ensure transparency and trust.
                             </p>
@@ -947,7 +978,7 @@ export default function FundraiserDetailPage() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 10 }}
-                        className="space-y-12"
+                        className="space-y-6"
                       >
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-black text-navy-900 uppercase tracking-widest">Campaign Timeline</h4>
@@ -981,13 +1012,13 @@ export default function FundraiserDetailPage() {
                         </div>
 
                         {extensions.updates && extensions.updates.length > 0 ? (
-                          <div className="space-y-12 relative">
-                            <div className="absolute left-6 top-8 bottom-8 w-px bg-gray-100" />
+                          <div className="space-y-6 relative">
+                            <div className="absolute left-5 top-6 bottom-6 w-px bg-gray-100" />
                             {extensions.updates.map((update: any) => (
-                              <div key={update.id} className="relative pl-16">
-                                <div className="absolute left-4 top-2 w-4 h-4 rounded-full bg-primary-500 ring-8 ring-primary-50" />
-                                <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                                  <div className="flex items-center gap-2 text-primary-500 font-bold text-[10px] uppercase tracking-widest mb-4">
+                              <div key={update.id} className="relative pl-12">
+                                <div className="absolute left-3 top-2 w-3.5 h-3.5 rounded-full bg-primary-500 ring-4 ring-primary-50" />
+                                <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                  <div className="flex items-center gap-2 text-primary-500 font-bold text-[10px] uppercase tracking-widest mb-2">
                                     <Calendar className="w-3.5 h-3.5" />
                                     {formatDate(update.created_at, {
                                       day: 'numeric',
@@ -995,7 +1026,7 @@ export default function FundraiserDetailPage() {
                                       year: 'numeric'
                                     })}
                                   </div>
-                                  <h4 className="text-xl font-black text-navy-900 mb-4">{update.title}</h4>
+                                  <h4 className="text-base font-black text-navy-900 mb-2">{update.title}</h4>
                                   <p className="text-gray-600 leading-relaxed whitespace-pre-line text-sm">
                                     {update.content}
                                   </p>
@@ -1025,37 +1056,37 @@ export default function FundraiserDetailPage() {
 
             {/* Right Column - Premium Sticky Side Panel */}
             <div className="lg:col-span-4">
-              <div className="sticky top-12 space-y-8">
+              <div className="sticky top-6 space-y-5">
                 {/* Premium Donation Progress Card */}
-                <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-2xl shadow-gray-200/50 p-6 md:p-8 border border-gray-100 relative overflow-hidden">
+                <div className="bg-white rounded-[1.5rem] shadow-2xl shadow-gray-200/50 p-5 border border-gray-100 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-3xl -mr-16 -mt-16" />
 
                   <button
                     onClick={handleDonateClick}
                     disabled={fundraiser.status === 'completed' || fundraiser.status === 'cancelled'}
-                    className={`group relative w-full ${fundraiser.status === 'completed' ? 'bg-green-600 shadow-green-600/20' : fundraiser.status === 'cancelled' ? 'bg-gray-400' : 'bg-primary-500 hover:bg-primary-600 shadow-primary-500/30 hover:shadow-primary-500/50 hover:-translate-y-1'
-                      } text-white font-bold py-6 rounded-[1.5rem] mb-10 flex items-center justify-center gap-3 text-xl transition-all shadow-xl disabled:opacity-80 disabled:cursor-not-allowed`}
+                    className={`group relative w-full ${fundraiser.status === 'completed' ? 'bg-green-600 shadow-green-600/20' : fundraiser.status === 'cancelled' ? 'bg-gray-400' : 'bg-primary-500 hover:bg-primary-600 shadow-primary-500/30 hover:shadow-primary-500/50 hover:-translate-y-0.5'
+                      } text-white font-bold py-4 rounded-2xl mb-5 flex items-center justify-center gap-3 text-base transition-all shadow-xl disabled:opacity-80 disabled:cursor-not-allowed`}
                   >
                     <Heart className={`w-6 h-6 ${fundraiser.status === 'completed' ? 'fill-white' : 'fill-white group-hover:scale-125'} transition-transform`} />
                     {fundraiser.status === 'completed' ? 'Successfully Done' : fundraiser.status === 'cancelled' ? 'Campaign Cancelled' : 'Donate Now'}
                   </button>
 
                   {/* Big Progress Stats */}
-                  <div className="space-y-8 mb-10">
+                  <div className="space-y-4 mb-5">
                     <div className="flex justify-between items-end">
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Raised</span>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-black text-navy-900 tracking-tight">₹{Number(fundraiser.raised_amount).toLocaleString()}</span>
+                          <span className="text-3xl font-black text-navy-900 tracking-tight">₹{Number(fundraiser.raised_amount).toLocaleString()}</span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className="text-3xl font-extrabold text-primary-500">{progress.toFixed(0)}%</span>
+                        <span className="text-2xl font-extrabold text-primary-500">{progress.toFixed(0)}%</span>
                       </div>
                     </div>
 
                     {/* High Definition Progress Bar */}
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <div className="relative w-full bg-gray-100 rounded-full h-4 overflow-hidden shadow-inner">
                         <motion.div
                           initial={{ width: 0 }}
@@ -1072,7 +1103,7 @@ export default function FundraiserDetailPage() {
                   </div>
 
                   {/* Trust Signal / Organizer */}
-                  <div className="flex items-center gap-4 p-5 bg-navy-50 rounded-2xl border border-navy-100">
+                  <div className="flex items-center gap-3 p-4 bg-navy-50 rounded-xl border border-navy-100">
                     <div className="w-12 h-12 bg-navy-900 rounded-xl flex items-center justify-center text-white shadow-lg flex-shrink-0">
                       <span className="text-xs font-bold">
                         ZM
@@ -1090,7 +1121,7 @@ export default function FundraiserDetailPage() {
                   </div>
 
                   {/* Share Strip */}
-                  <div className="mt-8 pt-8 border-t border-gray-100">
+                  <div className="mt-4 pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Spread the Word</span>
                     </div>
@@ -1109,15 +1140,15 @@ export default function FundraiserDetailPage() {
                 </div>
 
                 {/* Supporters Card */}
-                <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-gray-100/30 p-6 md:p-8 border border-gray-100">
-                  <div className="flex items-center justify-between mb-8">
+                <div className="bg-white rounded-[1.5rem] shadow-xl shadow-gray-100/30 p-5 border border-gray-100">
+                  <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-bold text-navy-900 uppercase tracking-widest flex items-center gap-2">
                       <Users className="w-4 h-4 text-primary-500" />
                       Supporters ({fundraiser.donor_count || 0})
                     </h3>
                   </div>
 
-                  <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                     {fundraiser.donations && fundraiser.donations.length > 0 ? (
                       fundraiser.donations.map((donation: any) => (
                         <motion.div
@@ -1185,25 +1216,27 @@ export default function FundraiserDetailPage() {
                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
                 className="relative w-full max-w-lg bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]"
               >
-                {/* Modal Header - Lightweight Version */}
-                <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 relative flex-shrink-0">
+                {/* Modal Header */}
+                <div className="px-5 sm:px-6 pt-5 pb-3 relative flex-shrink-0 flex items-center justify-between border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center">
+                      <Heart className="w-4 h-4 text-primary-600 fill-primary-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-black text-navy-900 tracking-tight">Support this cause</h3>
+                      <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Your contribution changes lives</p>
+                    </div>
+                  </div>
                   <button
                     onClick={() => setShowDonationModal(false)}
-                    className="absolute top-4 sm:top-8 right-4 sm:right-8 w-8 sm:w-10 h-8 sm:h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:text-navy-900 hover:bg-gray-200 transition-all border border-gray-200"
+                    className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:text-navy-900 hover:bg-gray-200 transition-all"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                   </button>
-                  <div className="flex flex-col items-center text-center">
-                    <div className="w-16 h-16 bg-primary-50 rounded-[1.5rem] flex items-center justify-center mb-4 ring-8 ring-primary-50/50">
-                      <Heart className="w-8 h-8 text-primary-600 fill-primary-600" />
-                    </div>
-                    <h3 className="text-2xl font-black text-navy-900 tracking-tight">Support this cause</h3>
-                    <p className="text-gray-600 text-[11px] font-bold uppercase tracking-[0.15em] mt-1">Your contribution changes lives</p>
-                  </div>
                 </div>
 
                 {/* Modal Body */}
-                <div className="px-6 sm:px-8 py-6 overflow-y-auto custom-scrollbar flex-1">
+                <div className="px-5 sm:px-6 py-4 overflow-y-auto custom-scrollbar flex-1">
                   {paymentStep === 'success' ? (
                     <div className="flex flex-col items-center justify-center py-4 sm:py-10">
                       <motion.div
@@ -1243,7 +1276,7 @@ export default function FundraiserDetailPage() {
                         <motion.div
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="mb-8 p-4 bg-red-50 rounded-2xl border border-red-100 flex items-center gap-3 text-red-700 text-[12px] font-bold uppercase tracking-wider"
+                          className="mb-4 p-3 bg-red-50 rounded-xl border border-red-100 flex items-center gap-3 text-red-700 text-[12px] font-bold uppercase tracking-wider"
                         >
                           <AlertCircle className="w-4 h-4 flex-shrink-0" />
                           {error}
@@ -1251,19 +1284,19 @@ export default function FundraiserDetailPage() {
                       )}
 
                       {/* Amount Selection */}
-                      <div className="space-y-6 mb-8">
-                        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                          <label className="text-[12px] font-black uppercase tracking-wider text-navy-900">Select Amount</label>
-                          <span className="text-[11px] font-black text-primary-600">Min. ₹100</span>
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
+                          <label className="text-[11px] font-black uppercase tracking-wider text-navy-900">Select Amount</label>
+                          <span className="text-[10px] font-black text-primary-600">Min. ₹100</span>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 xs:grid-cols-4 gap-2">
                           {predefinedAmounts.map((amount) => (
                             <button
                               key={amount}
                               type="button"
                               onClick={() => { handleAmountSelect(amount); setFormErrors(e => ({ ...e, amount: '' })) }}
-                              className={`py-4 rounded-xl font-black text-sm transition-all border-2 ${donationAmount === amount.toString()
+                              className={`py-3 rounded-xl font-black text-sm transition-all border-2 ${donationAmount === amount.toString()
                                 ? 'bg-navy-900 border-navy-900 text-white shadow-lg shadow-navy-900/40'
                                 : formErrors.amount
                                   ? 'bg-white border-red-300 text-navy-900 hover:border-red-400'
@@ -1278,13 +1311,13 @@ export default function FundraiserDetailPage() {
                         {/* Custom Amount Field */}
                         <div className="space-y-1">
                           <div className="relative group">
-                            <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-navy-900 group-focus-within:text-primary-600 transition-colors font-black text-base">₹</div>
+                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-navy-900 group-focus-within:text-primary-600 transition-colors font-black text-sm">₹</div>
                             <input
                               type="number"
                               value={customAmount}
                               onChange={(e) => { handleCustomAmountChange(e); setFormErrors(f => ({ ...f, amount: '' })) }}
                               placeholder="Enter custom amount..."
-                              className={`w-full bg-gray-50 border-2 rounded-2xl py-5 pl-12 pr-6 focus:outline-none focus:bg-white transition-all font-black text-navy-900 placeholder:text-gray-400 text-base ${formErrors.amount
+                              className={`w-full bg-gray-50 border-2 rounded-xl py-3 pl-9 pr-4 focus:outline-none focus:bg-white transition-all font-black text-navy-900 placeholder:text-gray-400 text-sm ${formErrors.amount
                                 ? 'border-red-400 focus:border-red-500 bg-red-50/30'
                                 : 'border-gray-100 focus:border-primary-500'
                                 }`}
@@ -1299,9 +1332,9 @@ export default function FundraiserDetailPage() {
                       </div>
 
                       {/* Donor Information */}
-                      <div className="space-y-6">
-                        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                          <label className="text-[12px] font-black uppercase tracking-wider text-navy-900">Your Details</label>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
+                          <label className="text-[11px] font-black uppercase tracking-wider text-navy-900">Your Details</label>
                           <button
                             onClick={() => setIsAnonymous(!isAnonymous)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isAnonymous ? 'bg-navy-900 text-white shadow-lg shadow-navy-900/30' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -1313,10 +1346,10 @@ export default function FundraiserDetailPage() {
                         </div>
 
                         {!isAnonymous && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          <div className="grid grid-cols-2 gap-3">
                             {/* Full Name */}
                             <div className="space-y-1">
-                              <label className="text-[11px] font-black uppercase tracking-widest text-navy-900 ml-1">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-navy-900 ml-1">
                                 Full Name <span className="text-red-500">*</span>
                               </label>
                               <input
@@ -1324,11 +1357,11 @@ export default function FundraiserDetailPage() {
                                 value={donorName}
                                 onChange={(e) => { setDonorName(e.target.value); setFormErrors(f => ({ ...f, name: '' })) }}
                                 placeholder="Your Name"
-                                className={`w-full bg-gray-50 border-2 rounded-xl py-4 px-5 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400 ${formErrors.name ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
+                                className={`w-full bg-gray-50 border-2 rounded-lg py-2.5 px-3 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400 ${formErrors.name ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
                                   }`}
                               />
                               {formErrors.name && (
-                                <p className="text-red-500 text-[11px] font-bold flex items-center gap-1 ml-1">
+                                <p className="text-red-500 text-[10px] font-bold flex items-center gap-1 ml-1">
                                   <AlertCircle className="w-3 h-3" />{formErrors.name}
                                 </p>
                               )}
@@ -1336,7 +1369,7 @@ export default function FundraiserDetailPage() {
 
                             {/* Email */}
                             <div className="space-y-1">
-                              <label className="text-[11px] font-black uppercase tracking-widest text-navy-900 ml-1">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-navy-900 ml-1">
                                 Email <span className="text-red-500">*</span>
                               </label>
                               <input
@@ -1344,11 +1377,11 @@ export default function FundraiserDetailPage() {
                                 value={donorEmail}
                                 onChange={(e) => { setDonorEmail(e.target.value); setFormErrors(f => ({ ...f, email: '' })) }}
                                 placeholder="email@example.com"
-                                className={`w-full bg-gray-50 border-2 rounded-xl py-4 px-5 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400 ${formErrors.email ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
+                                className={`w-full bg-gray-50 border-2 rounded-lg py-2.5 px-3 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400 ${formErrors.email ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
                                   }`}
                               />
                               {formErrors.email && (
-                                <p className="text-red-500 text-[11px] font-bold flex items-center gap-1 ml-1">
+                                <p className="text-red-500 text-[10px] font-bold flex items-center gap-1 ml-1">
                                   <AlertCircle className="w-3 h-3" />{formErrors.email}
                                 </p>
                               )}
@@ -1356,7 +1389,7 @@ export default function FundraiserDetailPage() {
 
                             {/* Phone */}
                             <div className="space-y-1">
-                              <label className="text-[11px] font-black uppercase tracking-widest text-navy-900 ml-1">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-navy-900 ml-1">
                                 Phone <span className="text-red-500">*</span>
                               </label>
                               <input
@@ -1364,11 +1397,11 @@ export default function FundraiserDetailPage() {
                                 value={donorPhone}
                                 onChange={(e) => { setDonorPhone(e.target.value); setFormErrors(f => ({ ...f, phone: '' })) }}
                                 placeholder="Phone Number"
-                                className={`w-full bg-gray-50 border-2 rounded-xl py-4 px-5 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400 ${formErrors.phone ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
+                                className={`w-full bg-gray-50 border-2 rounded-lg py-2.5 px-3 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 text-sm placeholder:text-gray-400 ${formErrors.phone ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
                                   }`}
                               />
                               {formErrors.phone && (
-                                <p className="text-red-500 text-[11px] font-bold flex items-center gap-1 ml-1">
+                                <p className="text-red-500 text-[10px] font-bold flex items-center gap-1 ml-1">
                                   <AlertCircle className="w-3 h-3" />{formErrors.phone}
                                 </p>
                               )}
@@ -1376,18 +1409,18 @@ export default function FundraiserDetailPage() {
 
                             {/* PAN */}
                             <div className="space-y-1">
-                              <label className="text-[11px] font-black uppercase tracking-widest text-navy-900 ml-1">PAN (Optional)</label>
+                              <label className="text-[10px] font-black uppercase tracking-widest text-navy-900 ml-1">PAN (Optional)</label>
                               <input
                                 type="text"
                                 value={donorPan}
                                 onChange={(e) => { setDonorPan(e.target.value.toUpperCase()); setFormErrors(f => ({ ...f, pan: '' })) }}
                                 placeholder="PAN Number"
                                 maxLength={10}
-                                className={`w-full bg-gray-50 border-2 rounded-xl py-4 px-5 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 uppercase text-sm placeholder:text-gray-400 ${formErrors.pan ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
+                                className={`w-full bg-gray-50 border-2 rounded-lg py-2.5 px-3 focus:outline-none focus:bg-white transition-all font-bold text-navy-900 uppercase text-sm placeholder:text-gray-400 ${formErrors.pan ? 'border-red-400 focus:border-red-500 bg-red-50/30' : 'border-gray-200 focus:border-primary-500'
                                   }`}
                               />
                               {formErrors.pan && (
-                                <p className="text-red-500 text-[11px] font-bold flex items-center gap-1 ml-1">
+                                <p className="text-red-500 text-[10px] font-bold flex items-center gap-1 ml-1">
                                   <AlertCircle className="w-3 h-3" />{formErrors.pan}
                                 </p>
                               )}
@@ -1397,9 +1430,9 @@ export default function FundraiserDetailPage() {
                       </div>
 
                       {/* Subscription Option */}
-                      <div className="mt-6 flex flex-col p-5 bg-gradient-to-r from-primary-50 to-orange-50 rounded-2xl border border-primary-100/50 cursor-pointer overflow-hidden relative group"
+                      <div className="mt-3 flex flex-col p-3.5 bg-gradient-to-r from-primary-50 to-orange-50 rounded-xl border border-primary-100/50 cursor-pointer overflow-hidden relative group"
                         onClick={() => setIsMonthly(!isMonthly)}>
-                        <div className="flex items-center gap-4 relative z-10">
+                        <div className="flex items-center gap-3 relative z-10">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors flex-shrink-0 ${isMonthly ? 'border-primary-600 bg-primary-600' : 'border-primary-300 bg-white'}`}>
                             {isMonthly && <CheckCircle2 className="w-4 h-4 text-white" />}
                           </div>
@@ -1420,7 +1453,7 @@ export default function FundraiserDetailPage() {
                       </div>
 
                       {/* Tax Benefits Info */}
-                      {fundraiser.is_zakat_eligible && (
+                      {/* {fundraiser.is_zakat_eligible && (
                         <div className="mt-8 p-6 bg-navy-900 rounded-[2rem] shadow-xl shadow-navy-100/50 flex items-start gap-4">
                           <ShieldCheck className="w-6 h-6 text-primary-400 flex-shrink-0 mt-0.5" />
                           <div>
@@ -1428,33 +1461,32 @@ export default function FundraiserDetailPage() {
                             <p className="text-[11px] text-white/80 font-bold leading-relaxed mt-1">80G certificate will be issued for this donation.</p>
                           </div>
                         </div>
-                      )}
+                      )} */}
                     </>
                   )}
                 </div>
 
-                {/* Modal Footer */}
+                 {/* Modal Footer */}
                 {paymentStep !== 'success' && (
-                  <div className="px-6 sm:px-10 py-6 sm:py-10 bg-gray-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-t border-gray-200 gap-4 sm:gap-8 text-center sm:text-left flex-shrink-0">
-                    <div className="flex-shrink-0">
-                      <p className="text-[11px] font-black uppercase tracking-widest text-navy-900/60 mb-1 leading-none">{isMonthly ? 'Monthly' : 'Confirming'}</p>
-                      <p className="text-3xl font-black text-navy-900 leading-none">
+                  <div className="px-5 sm:px-6 py-4 bg-gray-50 flex items-center justify-between border-t border-gray-200 gap-3 flex-shrink-0">
+                    <div className="flex-shrink-0 min-w-0">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-navy-900/60 mb-0.5 leading-none truncate">{isMonthly ? 'Monthly' : 'One-time'}</p>
+                      <p className="text-xl sm:text-2xl font-black text-navy-900 leading-none truncate">
                         ₹{getFinalAmount() ? getFinalAmount().toLocaleString() : '0'}
-                        {isMonthly && <span className="text-base font-bold text-gray-400 ml-1 tracking-normal">/mo</span>}
                       </p>
                     </div>
                     <button
                       onClick={handleDonationSubmit}
                       disabled={submittingDonation || !getFinalAmount()}
-                      className="flex-1 py-5 bg-primary-500 text-white rounded-2xl font-black text-[13px] uppercase tracking-widest hover:bg-primary-600 transition-all shadow-xl shadow-primary-500/40 disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-3 group"
+                      className="flex-1 py-4 bg-primary-500 text-white rounded-xl sm:rounded-2xl font-black text-[11px] sm:text-[13px] uppercase tracking-widest hover:bg-primary-600 transition-all shadow-xl shadow-primary-500/40 disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 group whitespace-nowrap"
                     >
                       {submittingDonation ? (
                         <>
-                          <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                          {paymentStep === 'processing' ? 'Opening...' : 'Wait...'}
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          {paymentStep === 'processing' ? 'OPENING...' : 'WAIT...'}
                         </>
                       ) : (
-                        <>Proceed to Pay <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>
+                        <>PROCEED <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></>
                       )}
                     </button>
                   </div>
@@ -1547,6 +1579,32 @@ export default function FundraiserDetailPage() {
 
         {/* Footer */}
         <Footer />
+      </div>
+
+      {/* Sticky Mobile CTA Bar (Moved outside main wrapper for better viewport targeting) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[2000] p-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] bg-white/95 backdrop-blur-2xl border-t border-gray-100 flex items-center justify-between gap-4 shadow-[0_-15px_40px_rgba(0,0,0,0.12)] max-w-full box-border">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-black uppercase text-gray-400">Raised So Far</span>
+            <span className="text-[11px] font-black text-primary-500">{progress.toFixed(0)}%</span>
+          </div>
+          <div className="relative w-full bg-gray-100 rounded-full h-2.5 overflow-hidden shadow-inner">
+            <div
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary-500 to-orange-400"
+              style={{ width: `${Math.min(progress, 100)}%` }}
+            />
+          </div>
+        </div>
+        <button
+          onClick={handleDonateClick}
+          disabled={fundraiser.status === 'completed' || fundraiser.status === 'cancelled'}
+          className={`px-8 py-4 ${fundraiser.status === 'completed' || fundraiser.status === 'cancelled'
+              ? 'bg-gray-400'
+              : 'bg-primary-500 shadow-2xl shadow-primary-500/40 active:scale-95'
+            } text-white font-black text-[12px] uppercase tracking-[0.1em] rounded-2xl whitespace-nowrap transition-all`}
+        >
+          {fundraiser.status === 'completed' ? 'Success' : fundraiser.status === 'cancelled' ? 'Closed' : 'Donate Now'}
+        </button>
       </div>
 
       {/* Hidden Print Receipt - Only shows when window.print() is called */}

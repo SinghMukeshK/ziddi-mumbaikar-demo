@@ -12,6 +12,7 @@ import { toast } from 'react-hot-toast'
 import { fundraiserService } from '@/services/fundraiser.service'
 import ImageEditor from '@/components/ImageEditor'
 import { fixImageUrl, fixObjectUrls } from '@/lib/image-utils'
+import { payrollService, Designation } from '@/services/payroll.service'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const NGO_REG = 'Maharashtra State, Mumbai 2018 / GBBSD / 1566 / 2018'
@@ -101,62 +102,61 @@ function IDCardFront({ v, index }: { v: Volunteer; index: number }) {
             </div>
 
             {/* ── Body Content ─────────────────────────────────────────────────── */}
-            <div className="relative z-10 mt-2 flex gap-4 px-3 pt-6 h-[calc(214px-60px)]">
+            <div className="relative z-0 flex gap-2 px-3 pt-[30px] h-full">
                 {/* Profile Photo */}
-                <div className="flex-shrink-0 relative group">
+                <div className="flex-shrink-0 pt-2">
                     <div
-                        className="border-2 border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center shadow-lg"
-                        style={{ width: '82px', height: '102px', borderRadius: '12px' }}
+                        className="border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shadow-sm"
+                        style={{ width: '100px', height: '100px', borderRadius: '5px' }}
                     >
                         {v.photo_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={fixImageUrl(v.photo_url)} alt={fullName} className="w-full h-full object-cover object-top" />
                         ) : (
-                            <div className="w-full h-full bg-orange-50 flex flex-col items-center justify-center">
+                            <div className="w-full h-full bg-orange-50 flex items-center justify-center">
                                 <span className="text-2xl font-black text-orange-200">{initials}</span>
-                                <span className="text-[6px] font-black text-orange-200 mt-1 uppercase">Passport Photo</span>
                             </div>
                         )}
-                    </div>
-                    {/* Status badge Overlay */}
-                    <div className="absolute -bottom-1 -right-1 bg-green-500 text-white font-black px-2 py-0.5 rounded-full border border-white" style={{ fontSize: '5px' }}>
-                        CERTIFIED
                     </div>
                 </div>
 
                 {/* Information Grid */}
-                <div className="flex-1 flex flex-col gap-2.5 pt-1">
-                    <div className="space-y-0.5">
-                        <p className="text-gray-400 font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>Volunteer Name</p>
-                        <p className="text-navy-900 font-black tracking-tight leading-tight" style={{ fontSize: '13px' }}>{fullName}</p>
+                <div className="flex-1 flex flex-col pt-1 pb-1">
+                    <div className="mb-1">
+                        <p className="text-[#929292] font-black uppercase tracking-tighter" style={{ fontSize: '8px' }}>Name</p>
+                        <p className="text-black font-black tracking-tight leading-none" style={{ fontSize: '13px' }}>{fullName}</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-0.5">
-                            <p className="text-gray-400 font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>Date of Birth</p>
-                            <p className="text-navy-900 font-bold" style={{ fontSize: '10px' }}>{formatDOB(v.date_of_birth)}</p>
+                    {v.designation?.name && (
+                        <div className="mb-1">
+                            <p className="text-[#929292] font-black uppercase tracking-tighter" style={{ fontSize: '8px' }}>Designation</p>
+                            <p className="text-black font-black leading-none" style={{ fontSize: '13px' }}>{v.designation.name}</p>
                         </div>
-                        <div className="space-y-0.5">
-                            <p className="text-[#FF8A00] font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>Volunteer ID</p>
-                            <p className="text-[#FF8A00] font-black" style={{ fontSize: '10px' }}>{formatIdNo(v.id)}</p>
-                        </div>
-                    </div>
+                    )}
 
-                    <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-0.5">
-                            <p className="text-gray-400 font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>Gender</p>
-                            <p className="text-navy-900 font-bold uppercase" style={{ fontSize: '10px' }}>{v.gender || '—'}</p>
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-0.5">
+                        <div className="space-y-0 text-left">
+                            <p className="text-[#929292] font-black uppercase tracking-tighter" style={{ fontSize: '8px' }}>Date of Birth</p>
+                            <p className="text-black font-bold leading-none" style={{ fontSize: '9px' }}>{formatDOB(v.date_of_birth)}</p>
                         </div>
-                        <div className="space-y-0.5">
-                            <p className="text-gray-400 font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>Contact</p>
-                            <p className="text-navy-900 font-bold" style={{ fontSize: '10px' }}>{v.phone}</p>
+                        <div className="space-y-0 text-left">
+                            <p className="text-[#929292] font-black uppercase tracking-tighter" style={{ fontSize: '8px' }}>ID</p>
+                            <p className="text-black font-black leading-none" style={{ fontSize: '9px' }}>{formatIdNo(v.id)}</p>
+                        </div>
+                        <div className="space-y-0 text-left">
+                            <p className="text-[#929292] font-black uppercase tracking-tighter" style={{ fontSize: '8px' }}>Gender</p>
+                            <p className="text-black font-bold uppercase leading-none" style={{ fontSize: '9px' }}>{v.gender || '—'}</p>
+                        </div>
+                        <div className="space-y-0 text-left">
+                            <p className="text-[#929292] font-black uppercase tracking-tighter" style={{ fontSize: '5px' }}>Contact</p>
+                            <p className="text-black font-bold leading-none" style={{ fontSize: '9px' }}>{v.phone || '—'}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Bottom Tagline */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#FF8A00]"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#FF8A00]"></div>
         </div>
     )
 }
@@ -192,10 +192,10 @@ function IDCardBack({ v }: { v: Volunteer }) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-auto">
-                    <div>
-                        <p className="text-navy-900 font-black text-[8px] uppercase tracking-widest mb-1">Occupation</p>
-                        <p className="text-gray-700 font-bold uppercase" style={{ fontSize: '9px' }}>{v.occupation || 'Volunteer'}</p>
-                    </div>
+                    {/* <div>
+                        <p className="text-navy-900 font-black text-[8px] uppercase tracking-widest mb-1">{v.designation?.name ? 'Designation' : 'Occupation'}</p>
+                        <p className="text-gray-700 font-bold uppercase" style={{ fontSize: '9px' }}>{v.designation?.name || v.occupation || 'Volunteer'}</p>
+                    </div> */}
                     <div>
                         <p className="text-navy-900 font-black text-[8px] uppercase tracking-widest mb-1">Availability</p>
                         <p className="text-gray-700 font-bold uppercase" style={{ fontSize: '9px' }}>{v.availability || 'Weekends'}</p>
@@ -227,8 +227,8 @@ function IDCardBack({ v }: { v: Volunteer }) {
                     {/* Signature */}
                     <div className="relative text-center pb-2">
                         <div className="h-10 w-24 border-b border-navy-900/20 mb-1 flex items-end justify-center">
-                             {/* Stylish italic placeholder for signature */}
-                             <span className="text-navy-900/30 font-medium italic" style={{ fontSize: '8px' }}>Authorized Sign</span>
+                            {/* Stylish italic placeholder for signature */}
+                            <span className="text-navy-900/30 font-medium italic" style={{ fontSize: '8px' }}>Authorized Sign</span>
                         </div>
                         <p className="text-navy-900 font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>President Signature</p>
                     </div>
@@ -385,6 +385,10 @@ function VolunteerDetailsModal({ volunteer, onClose, onUpdateStatus, loadingId }
                                 <div className="bg-gray-50 p-3 rounded-xl">
                                     <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Occupation</p>
                                     <p className="text-sm font-semibold text-gray-900">{volunteer.occupation || 'Not specified'}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Designation</p>
+                                    <p className="text-sm font-semibold text-primary-600 font-bold uppercase">{volunteer.designation?.name || 'Volunteer'}</p>
                                 </div>
                                 <div className="bg-gray-50 p-3 rounded-xl">
                                     <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Availability</p>
@@ -630,8 +634,28 @@ function EditVolunteerModal({
         motivation: volunteer.motivation || '',
         photo_url: volunteer.photo_url || '',
         id_proof_url: volunteer.id_proof_url || '',
+        designation_id: volunteer.designation_id || '',
     })
+    const [designations, setDesignations] = useState<Designation[]>([])
+    const [loadingDesignations, setLoadingDesignations] = useState(false)
     const [saving, setSaving] = useState(false)
+
+    useEffect(() => {
+        const fetchDesignations = async () => {
+            setLoadingDesignations(true)
+            try {
+                const res = await payrollService.getDesignations()
+                if (res.success) {
+                    setDesignations(res.data)
+                }
+            } catch (error) {
+                console.error('Failed to fetch designations:', error)
+            } finally {
+                setLoadingDesignations(false)
+            }
+        }
+        fetchDesignations()
+    }, [])
     const [photoFile, setPhotoFile] = useState<File | null>(null)
     const [idProofFile, setIdProofFile] = useState<File | null>(null)
     const [editingFile, setEditingFile] = useState<{ file: File, type: 'id' | 'photo' } | null>(null)
@@ -768,6 +792,20 @@ function EditVolunteerModal({
                                 onChange={handleChange}
                                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
                             />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Designation</label>
+                            <select
+                                name="designation_id"
+                                value={formData.designation_id}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:border-primary-500 transition-all outline-none font-semibold text-navy-900"
+                            >
+                                <option value="">Select Designation</option>
+                                {designations.map((d) => (
+                                    <option key={d.id} value={d.id}>{d.name}</option>
+                                ))}
+                            </select>
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-1">Availability</label>
@@ -1081,7 +1119,7 @@ function VolunteersPageContent() {
         try {
             const res = await volunteerService.updateVolunteer(id, data)
             if (res.success) {
-                setVolunteers(prev => prev.map(v => v.id === id ? { ...v, ...data } : v))
+                setVolunteers(prev => prev.map(v => v.id === id ? { ...v, ...res.data } : v))
                 toast.success('Volunteer details updated successfully')
             } else {
                 toast.error(res.message || 'Failed to update volunteer')
@@ -1276,8 +1314,8 @@ function VolunteersPageContent() {
                                     <thead>
                                         <tr className="bg-gray-50 border-b border-gray-200">
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500">Volunteer</th>
+                                            <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hidden md:table-cell">Designation</th>
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hidden md:table-cell">Contact</th>
-                                            <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hidden lg:table-cell">Skills</th>
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500">Status</th>
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500 hidden sm:table-cell">Joined</th>
                                             <th className="text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-500">Actions</th>
@@ -1304,25 +1342,21 @@ function VolunteersPageContent() {
                                                             <div>
                                                                 <p className="font-semibold text-gray-900">{fullName}</p>
                                                                 <p className="text-[11px] text-gray-400">
-                                                                    {formatIdNo(v.id)} · {v.occupation || '—'}
+                                                                    {formatIdNo(v.id)}
                                                                 </p>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-5 py-4 hidden md:table-cell">
+                                                        <span className="px-2 py-1 bg-primary-50 text-primary-600 rounded-md text-[11px] font-bold uppercase tracking-wider">
+                                                            {v.designation?.name || v.occupation || 'Volunteer'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-5 py-4 hidden md:table-cell">
                                                         <p className="text-gray-700">{v.email}</p>
                                                         <p className="text-[11px] text-gray-400">{v.phone}</p>
                                                     </td>
-                                                    <td className="px-5 py-4 hidden lg:table-cell">
-                                                        <div className="flex flex-wrap gap-1">
-                                                            {(v.skills ?? []).slice(0, 3).map((s) => (
-                                                                <span key={s} className="px-2 py-0.5 bg-primary-50 text-primary-600 rounded-full text-[10px] font-semibold">{s}</span>
-                                                            ))}
-                                                            {(v.skills?.length ?? 0) > 3 && (
-                                                                <span className="text-[10px] text-gray-400">+{(v.skills?.length ?? 0) - 3}</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
+
                                                     <td className="px-5 py-4">
                                                         <div className={`inline-block px-3 py-1.5 rounded-full text-[11px] font-bold ${cfg.bg} ${cfg.text}`}>
                                                             {cfg.label}

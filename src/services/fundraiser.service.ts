@@ -32,6 +32,8 @@ export interface Fundraiser {
     start_date: string;
     end_date: string;
     beneficiary_name: string;
+    current_situation?: string;
+    funds_usage?: string;
     beneficiary_story: string;
     cover_image_url: string;
     created_by: string;
@@ -103,6 +105,8 @@ export interface FundraiserCreateRequest {
     is_featured?: boolean;
     project_id?: string;
     campaign_code?: string;
+    current_situation?: string;
+    funds_usage?: string;
 }
 
 export interface FundraiserCategory {
@@ -145,6 +149,8 @@ export const mapCampaignToFundraiser = (campaign: any): Fundraiser => {
         project_id: campaign.project_id,
         completion_percentage: (campaign.goal_amount > 0 ? (campaign.raised_amount / campaign.goal_amount) * 100 : 0),
         donor_count: campaign.donor_count || 0,
+        current_situation: campaign.current_situation,
+        funds_usage: campaign.funds_usage,
         category: campaign.category || { id: 'general', name: 'General' }, // Ensure category is always present
     };
 };
@@ -186,6 +192,8 @@ export const fundraiserService = {
             campaign_code: data.campaign_code || `FND-${Date.now()}`,
             // Ensure project_id is present (defaulting for now if missing)
             project_id: data.project_id || '00000000-0000-0000-0000-000000000000',
+            current_situation: data.current_situation,
+            funds_usage: data.funds_usage,
         };
         return apiV1.post<ApiResponse<any>>('/campaigns', campaignData);
     },

@@ -43,12 +43,12 @@ export default function Header() {
                 <div className="flex justify-between items-center h-20">
                     {/* Center - Logo */}
                     <div className="flex-shrink-0">
-                        <Link href="/" className="flex items-center gap-3">
+                        <Link href="/" className="flex items-center gap-1">
                             <Image
                                 src="/logo.webp"
                                 alt="Ziddi Mumbaikar Logo"
-                                width={80}
-                                height={80}
+                                width={60}
+                                height={60}
                                 className="object-contain"
                             />
                             <div className="font-display text-2xl font-bold hidden sm:block">
