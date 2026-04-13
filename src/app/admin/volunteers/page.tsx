@@ -226,9 +226,9 @@ function IDCardBack({ v }: { v: Volunteer }) {
 
                     {/* Signature */}
                     <div className="relative text-center pb-2">
-                        <div className="h-10 w-24 border-b border-navy-900/20 mb-1 flex items-end justify-center">
-                            {/* Stylish italic placeholder for signature */}
-                            <span className="text-navy-900/30 font-medium italic" style={{ fontSize: '8px' }}>Authorized Sign</span>
+                        <div className="h-10 w-24 border-b border-navy-900/20 mb-1 flex items-center justify-center relative">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/sign.jpeg" alt="President Signature" className="h-10 w-auto object-contain mix-blend-multiply shadow-sm" />
                         </div>
                         <p className="text-navy-900 font-black uppercase tracking-widest" style={{ fontSize: '6px' }}>President Signature</p>
                     </div>
