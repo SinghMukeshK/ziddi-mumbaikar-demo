@@ -29,6 +29,20 @@ export interface PaginatedResponse<T> {
     };
 }
 
+export interface WebhookEventLog {
+    id: string;
+    tenant_id: string;
+    gateway: string;
+    event_type: string;
+    gateway_event_id: string;
+    payload: any;
+    status: 'pending' | 'processed' | 'failed' | 'invalid_signature';
+    error_message?: string;
+    reference_id?: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export const auditService = {
     getLogs: async (params?: { page?: number, limit?: number }): Promise<PaginatedResponse<AuditLog>> => {
         let query = '';
@@ -39,5 +53,9 @@ export const auditService = {
         query = searchParams.toString() ? `?${searchParams.toString()}` : '';
 
         return apiV1.get<PaginatedResponse<AuditLog>>(`/audit-logs${query}`);
+    },
+
+    getWebhookLogsByReference: async (referenceId: string) => {
+        return apiV1.get<any>(`/audit-logs/webhooks/reference/${referenceId}`);
     }
 };

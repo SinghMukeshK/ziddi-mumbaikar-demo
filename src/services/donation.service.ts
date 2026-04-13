@@ -129,4 +129,39 @@ export const donationService = {
             data
         );
     },
+
+    /**
+     * Get recurring donation subscriptions.
+     */
+    getSubscriptions: async (params?: any) => {
+        return apiV1.get<any>('/donations/subscriptions', { params });
+    },
+
+    /**
+     * Sync a subscription with Razorpay.
+     */
+    syncSubscription: async (id: string) => {
+        return apiV1.post<any>(`/donations/subscriptions/${id}/sync`, {});
+    },
 };
+
+export interface Subscription {
+    id: string;
+    donor_id: string;
+    donor?: { first_name: string; last_name: string; email: string };
+    project_id?: string;
+    project?: { name: string };
+    fundraiser_id?: string;
+    fundraiser?: { title: string; slug: string };
+    amount: number;
+    currency: string;
+    frequency: string;
+    status: string;
+    next_billing_at?: string;
+    paid_count: number;
+    total_count?: number;
+    gateway_subscription_id: string;
+    metadata?: any;
+    created_at: string;
+}
+
