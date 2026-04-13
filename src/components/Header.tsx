@@ -168,9 +168,9 @@ export default function Header() {
                                                                 { href: "/admin/bookings", label: "Service Bookings" },
                                                                 { href: "/admin/volunteers", label: "Volunteers" },
                                                                 { href: "/admin/approvals", label: "Approval Queue" },
+                                                                { href: "/admin/donations/active-subscriptions", label: "Recurring Donations" },
                                                                 { href: "/donations", label: "Donations" },
                                                                 { href: "/admin/events", label: "Events & Gallery" },
-                                                                { href: "/admin/donations/active-subscriptions", label: "Recurring Donations" },
                                                                 { href: "/admin/contact-inquiries", label: "Contact Inquiries" },
                                                                 { href: "/admin/billing", label: "My Bills" }
                                                             ].map((link) => (
