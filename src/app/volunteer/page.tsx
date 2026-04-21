@@ -33,6 +33,7 @@ import ImageEditor from '@/components/ImageEditor'
 import { volunteerService, VolunteerCreateRequest } from '@/services/volunteer.service'
 import { fundraiserService } from '@/services/fundraiser.service'
 import { useRouter } from 'next/navigation'
+import BirthDateInput from '@/components/BirthDateInput'
 
 export default function VolunteerPage() {
     const router = useRouter()
@@ -365,13 +366,13 @@ export default function VolunteerPage() {
                                     <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Date of Birth</label>
                                     <div className="relative">
                                         <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-                                        <input
-                                            type="date"
-                                            name="date_of_birth"
-                                            value={formData.date_of_birth}
-                                            onChange={handleInputChange}
-                                            className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-primary-500 focus:outline-none transition-all font-medium text-navy-900 text-sm"
-                                        />
+                                        <div className="pl-11">
+                                            <BirthDateInput
+                                                name="date_of_birth"
+                                                value={formData.date_of_birth}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
