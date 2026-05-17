@@ -102,7 +102,8 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                     donor_email: email,
                     donor_phone: phone,
                     currency: 'INR',
-                    donation_type: 'general'
+                    donation_type: 'general',
+                    payment_method: 'card'
                 })
 
                 if (!response.success || !response.data) {
@@ -197,6 +198,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 donor_phone: phone,
                 currency: 'INR',
                 donation_type: 'general',
+                payment_method: 'card',
                 message: `First installment for subscription ${lastSubscriptionId}`
             })
 
