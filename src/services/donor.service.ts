@@ -22,6 +22,13 @@ export interface DonorCreateRequest {
     pan_number?: string;
     donor_type?: 'individual' | 'corporate' | 'institution' | 'trust';
     is_anonymous?: boolean;
+    communication_preference?: 'email' | 'sms' | 'whatsapp' | 'none';
+    address?: string;
+    city?: string;
+    state?: string;
+    postal_code?: string;
+    country?: string;
+    notes?: string;
 }
 
 export const donorService = {
@@ -35,6 +42,10 @@ export const donorService = {
 
     createDonor: async (data: DonorCreateRequest) => {
         return apiV1.post<any>('/donors', data);
+    },
+
+    updateDonor: async (id: string, data: Partial<DonorCreateRequest>) => {
+        return apiV1.put<any>(`/donors/${id}`, data);
     },
 
     getDonorDonations: async (id: string, params?: any) => {

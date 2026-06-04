@@ -39,6 +39,7 @@ export default function ActiveSubscriptionsPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [expandedId, setExpandedId] = useState<string | null>(null)
     const [syncingId, setSyncingId] = useState<string | null>(null)
+    const [statusFilter, setStatusFilter] = useState<'active' | 'created' | 'cancelled' | 'all'>('active')
 
     useEffect(() => {
         if (isLoggedIn && user && user.role !== 'admin' && user.role !== 'super_admin') {
@@ -55,8 +56,7 @@ export default function ActiveSubscriptionsPage() {
             if (res.success) {
                 const rawData = res.data as any;
                 const data = (Array.isArray(rawData) ? rawData : (rawData?.data || [])) as Subscription[];
-                const activeOnly = data.filter(s => s.status === 'active');
-                setSubscriptions(activeOnly)
+                setSubscriptions(data)
             }
         } catch (error) {
             console.error('Failed to fetch subscriptions:', error)
@@ -181,8 +181,10 @@ export default function ActiveSubscriptionsPage() {
 
     const filteredSubscriptions = subscriptions.filter(s => {
         const donorName = `${s.donor?.first_name || ''} ${s.donor?.last_name || ''}`.toLowerCase()
-        return donorName.includes(searchQuery.toLowerCase()) || 
-               (s.donor?.email || '').toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesSearch = donorName.includes(searchQuery.toLowerCase()) || 
+                              (s.donor?.email || '').toLowerCase().includes(searchQuery.toLowerCase())
+        if (statusFilter === 'all') return matchesSearch;
+        return matchesSearch && s.status === statusFilter;
     })
 
     return (
@@ -219,7 +221,7 @@ export default function ActiveSubscriptionsPage() {
                             <div className="absolute top-0 right-0 w-24 h-24 bg-primary-50 rounded-full -translate-y-12 translate-x-12 blur-2xl group-hover:bg-primary-100 transition-colors" />
                             <div className="relative z-10">
                                 <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Active Core</p>
-                                <h3 className="text-2xl font-black text-navy-900">{subscriptions.length}</h3>
+                                <h3 className="text-2xl font-black text-navy-900">{subscriptions.filter(s => s.status === 'active').length}</h3>
                                 <p className="text-[9px] font-bold text-emerald-500 mt-1 uppercase tracking-widest flex items-center gap-1">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Status
                                 </p>
@@ -228,7 +230,7 @@ export default function ActiveSubscriptionsPage() {
                         <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-center">
                             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">MRR (INR)</p>
                             <h3 className="text-2xl font-black text-navy-900">
-                                {formatCurrency(subscriptions.reduce((acc, s) => acc + (Number(s.amount) || 0), 0))}
+                                {formatCurrency(subscriptions.filter(s => s.status === 'active').reduce((acc, s) => acc + (Number(s.amount) || 0), 0))}
                             </h3>
                             <p className="text-[9px] font-bold text-primary-500 mt-1 uppercase tracking-widest">Monthly Commitment</p>
                         </div>
@@ -251,10 +253,20 @@ export default function ActiveSubscriptionsPage() {
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
-                            <div className="hidden sm:flex items-center gap-2">
-                                <div className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100 text-[9px] font-black uppercase tracking-widest">
-                                    Status: Active Only
-                                </div>
+                            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+                                {((['active', 'created', 'cancelled', 'all'] as const)).map((status) => (
+                                    <button
+                                        key={status}
+                                        onClick={() => setStatusFilter(status)}
+                                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                                            statusFilter === status
+                                                ? 'bg-[#1a1c1e] text-white shadow-sm'
+                                                : 'text-gray-500 hover:text-navy-900'
+                                        }`}
+                                    >
+                                        {status === 'created' ? 'Pending' : status}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
@@ -320,7 +332,15 @@ export default function ActiveSubscriptionsPage() {
                                                     </td>
                                                     <td className="px-4 py-3 text-right">
                                                         <p className="text-sm font-black text-navy-900 tracking-tight">{formatCurrency(s.amount)}</p>
-                                                        <p className="text-[9px] font-black text-primary-500 uppercase tracking-widest leading-none mt-0.5">{s.status}</p>
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest mt-1 ${
+                                                            s.status === 'active' 
+                                                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                            : s.status === 'created'
+                                                            ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                            : 'bg-rose-50 text-rose-600 border border-rose-100'
+                                                        }`}>
+                                                            {s.status === 'created' ? 'Pending' : s.status}
+                                                        </span>
                                                     </td>
                                                     <td className="px-4 py-3 text-right">
                                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-all ${expandedId === s.id ? 'bg-navy-900 text-white rotate-180' : 'text-gray-200 group-hover:text-primary-500'}`}>
@@ -370,6 +390,55 @@ export default function ActiveSubscriptionsPage() {
                                                                                     </button>
                                                                                 </div>
                                                                             </div>
+                                                                            {s.status === 'created' && s.short_url && (
+                                                                                <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 shadow-sm space-y-3">
+                                                                                    <div className="flex items-center justify-between">
+                                                                                        <p className="text-[9px] font-black text-amber-800 uppercase tracking-widest">Pending Payment Checkout Link</p>
+                                                                                        <span className="text-[8px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider">Unpaid</span>
+                                                                                    </div>
+                                                                                    
+                                                                                    <div className="bg-amber-100/40 p-2.5 rounded-lg border border-amber-200/50 text-[10px] text-amber-900 space-y-1.5">
+                                                                                        <div className="flex gap-1.5 items-start">
+                                                                                            <span className="font-black uppercase tracking-wider text-[8px] mt-0.5 px-1 py-0.2 bg-amber-200/60 rounded text-amber-900">Remark:</span>
+                                                                                            <span>This subscription was initiated but remains unpaid. Razorpay requires the donor to complete their checkout/authorization before this plan can become active.</span>
+                                                                                        </div>
+                                                                                        <div className="flex gap-1.5 items-start">
+                                                                                            <span className="font-black uppercase tracking-wider text-[8px] mt-0.5 px-1 py-0.2 bg-amber-200/60 rounded text-amber-900">Action:</span>
+                                                                                            <span>Share the link below with the donor. Once paid, status will change to Active. Use the "Sync Gateway" button to reconcile manually.</span>
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    <p className="text-[10px] text-gray-500 font-bold">Copy or visit the checkout link:</p>
+                                                                                    <div className="flex gap-2 items-center bg-white p-2 rounded-lg border border-gray-200">
+                                                                                        <input 
+                                                                                            type="text" 
+                                                                                            readOnly 
+                                                                                            value={s.short_url} 
+                                                                                            className="flex-1 text-[10px] font-mono bg-transparent outline-none border-none text-gray-700 select-all" 
+                                                                                            onClick={(e) => { e.stopPropagation(); (e.target as HTMLInputElement).select(); }}
+                                                                                        />
+                                                                                        <button 
+                                                                                            onClick={(e) => { 
+                                                                                                e.stopPropagation(); 
+                                                                                                navigator.clipboard.writeText(s.short_url || '');
+                                                                                                alert('Link copied to clipboard!');
+                                                                                            }}
+                                                                                            className="px-2.5 py-1 bg-[#1a1c1e] text-white rounded-md text-[9px] font-black uppercase tracking-wider hover:bg-primary-500 transition-colors"
+                                                                                        >
+                                                                                            Copy
+                                                                                        </button>
+                                                                                        <a 
+                                                                                            href={s.short_url} 
+                                                                                            target="_blank" 
+                                                                                            rel="noreferrer"
+                                                                                            onClick={(e) => e.stopPropagation()}
+                                                                                            className="p-1 text-gray-400 hover:text-navy-900 transition-colors"
+                                                                                        >
+                                                                                            <ExternalLink size={12} />
+                                                                                        </a>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
                                                                             <JsonViewer data={s.metadata} title="Meta Cluster" />
                                                                         </div>
                                                                         <div className="space-y-4">

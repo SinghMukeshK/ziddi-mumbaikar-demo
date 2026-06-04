@@ -7,10 +7,13 @@ export interface Donation {
     donor_id: string;
     amount: number;
     currency: string;
-    donation_type: 'general' | 'zakat' | 'sadaqah' | 'fitrah' | 'qurbani' | 'service-booking';
+    donation_type: 'general' | 'zakat' | 'sadaqah' | 'fitrah' | 'qurbani' | 'service-booking' | 'recurring';
     payment_method: 'upi' | 'card' | 'net_banking' | 'wallet' | 'bank_transfer' | 'cash' | 'cheque';
     status: 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled';
     is_anonymous: boolean;
+    is_recurring?: boolean;
+    donor_name?: string;
+    donor_email?: string;
     transaction_id?: string;
     razorpay_order_id?: string;
     razorpay_payment_id?: string;
@@ -161,6 +164,7 @@ export interface Subscription {
     paid_count: number;
     total_count?: number;
     gateway_subscription_id: string;
+    short_url?: string;
     metadata?: any;
     created_at: string;
 }
