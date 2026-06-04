@@ -404,7 +404,7 @@ export default function ActiveSubscriptionsPage() {
                                                                                         </div>
                                                                                         <div className="flex gap-1.5 items-start">
                                                                                             <span className="font-black uppercase tracking-wider text-[8px] mt-0.5 px-1 py-0.2 bg-amber-200/60 rounded text-amber-900">Action:</span>
-                                                                                            <span>Share the link below with the donor. Once paid, status will change to Active. Use the "Sync Gateway" button to reconcile manually.</span>
+                                                                                            <span>Share the link below with the donor. Once paid, status will change to Active. Use the &quot;Sync Gateway&quot; button to reconcile manually.</span>
                                                                                         </div>
                                                                                     </div>
 
