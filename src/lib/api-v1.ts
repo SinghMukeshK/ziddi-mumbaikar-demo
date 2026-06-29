@@ -20,7 +20,7 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
 
   // Get auth token, API key and tenant ID from localStorage/env
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-  const apiKey = (typeof window !== 'undefined' ? localStorage.getItem('api_key') : null) || process.env.DRISTA_API_KEY;
+  const apiKey = (typeof window !== 'undefined' ? localStorage.getItem('api_key') : null) || process.env.NEXT_PUBLIC_DRISTA_API_KEY || process.env.DRISTA_API_KEY;
   const storedTenantId = typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null;
   const DEFAULT_TENANT_ID = '050a9c4a-ebf6-4897-b5fe-5fe8a2ce1317';
   const tenantId = storedTenantId || DEFAULT_TENANT_ID;
