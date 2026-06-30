@@ -18,6 +18,8 @@ import {
     Activity,
     ChevronDown,
     ChevronUp,
+    ChevronLeft,
+    ChevronRight,
     ExternalLink,
     FileJson,
     Info,
@@ -40,6 +42,8 @@ export default function ActiveSubscriptionsPage() {
     const [expandedId, setExpandedId] = useState<string | null>(null)
     const [syncingId, setSyncingId] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<'active' | 'created' | 'cancelled' | 'all'>('active')
+    const [currentPage, setCurrentPage] = useState(1)
+    const ITEMS_PER_PAGE = 10
 
     useEffect(() => {
         if (isLoggedIn && user && user.role !== 'admin' && user.role !== 'super_admin') {
@@ -49,10 +53,14 @@ export default function ActiveSubscriptionsPage() {
         }
     }, [isLoggedIn, user, router])
 
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchQuery, statusFilter])
+
     const fetchSubscriptions = async () => {
         setLoading(true)
         try {
-            const res = await donationService.getSubscriptions()
+            const res = await donationService.getSubscriptions({ limit: 1000 })
             if (res.success) {
                 const rawData = res.data as any;
                 const data = (Array.isArray(rawData) ? rawData : (rawData?.data || [])) as Subscription[];
@@ -187,6 +195,12 @@ export default function ActiveSubscriptionsPage() {
         return matchesSearch && s.status === statusFilter;
     })
 
+    const totalPages = Math.ceil(filteredSubscriptions.length / ITEMS_PER_PAGE)
+    const paginatedSubscriptions = filteredSubscriptions.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    )
+
     return (
         <ProtectedRoute>
             <div className="min-h-screen bg-gray-50/50">
@@ -293,7 +307,7 @@ export default function ActiveSubscriptionsPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
-                                        {filteredSubscriptions.map((s) => (
+                                        {paginatedSubscriptions.map((s) => (
                                             <React.Fragment key={s.id}>
                                                 <tr
                                                     onClick={() => toggleExpand(s.id)}
@@ -457,6 +471,28 @@ export default function ActiveSubscriptionsPage() {
                             )}
                         </div>
                     </div>
+
+                    {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-4 mt-8">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                className="px-6 py-2.5 text-xs font-bold bg-white text-navy-900 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm flex items-center gap-2"
+                            >
+                                <ChevronLeft className="w-4 h-4" /> Previous
+                            </button>
+                            <span className="text-xs font-bold text-gray-500 bg-gray-50 px-4 py-2 rounded-lg">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <button
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                className="px-6 py-2.5 text-xs font-bold bg-white text-navy-900 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm flex items-center gap-2"
+                            >
+                                Next <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
                 </div>
                 <Footer />
             </div>
