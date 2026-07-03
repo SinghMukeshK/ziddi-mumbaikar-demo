@@ -390,10 +390,9 @@ export default function NgoServices() {
                     </div>
                 </div>
 
-                {/* Booking Modal */}
                 {isModalOpen && selectedService && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-10">
-                        <div className="fixed inset-0 bg-navy-950/80 backdrop-blur-md" onClick={() => setIsModalOpen(false)}></div>
+                        <div className="fixed inset-0 bg-navy-900/80 backdrop-blur-md" onClick={() => setIsModalOpen(false)}></div>
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}

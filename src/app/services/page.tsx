@@ -382,6 +382,23 @@ function ServicesContent() {
                                         <ChevronRight className={`w-4 h-4 text-primary-500 shrink-0 transition-all duration-300 ${selectedService?.id === service.id ? 'opacity-100' : '-translate-x-2 opacity-0'}`} />
                                     </button>
                                 ))}
+                                <Link
+                                    href="/services/group-marriage/register"
+                                    className="w-full flex items-center gap-3 p-3 rounded-2xl transition-all border-2 text-left bg-white border-primary-100 hover:border-primary-300 hover:bg-primary-50/10 group cursor-pointer"
+                                >
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-primary-500 text-white group-hover:bg-primary-600 transition-colors">
+                                        <Heart className="w-5 h-5 fill-current" />
+                                    </div>
+                                    <div className="flex-grow min-w-0">
+                                        <h3 className="text-sm font-black text-navy-900">
+                                            Group Marriage Registration
+                                        </h3>
+                                        <p className="text-[10px] text-primary-500 uppercase tracking-wider font-bold mt-0.5">
+                                            Social Service Event
+                                        </p>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-primary-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                                </Link>
                             </div>
 
                             {/* <div className="mt-6 p-5 bg-navy-900 rounded-2xl text-white relative overflow-hidden">

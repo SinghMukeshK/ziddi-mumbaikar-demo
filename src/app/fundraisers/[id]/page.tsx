@@ -1505,7 +1505,7 @@ export default function FundraiserDetailPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setShowUpdateModal(false)}
-                className="absolute inset-0 bg-navy-950/80 backdrop-blur-md"
+                className="absolute inset-0 bg-navy-900/80 backdrop-blur-md"
               />
 
               <motion.div

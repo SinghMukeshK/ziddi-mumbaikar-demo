@@ -147,6 +147,16 @@ export default function Hero() {
             </span>
           </Link>
 
+          <Link
+            href="/services/group-marriage/register"
+            className="group relative bg-navy-900 hover:bg-navy-800 border border-primary-500 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all duration-300 w-full sm:w-auto shadow-lg shadow-primary-500/20 hover:shadow-xl hover:shadow-primary-500/40 hover:scale-105"
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2 text-primary-400 font-extrabold group-hover:text-primary-300 transition-colors">
+              <Heart className="w-5 h-5 fill-current text-primary-500" />
+              Group Marriage Registration
+            </span>
+          </Link>
+
 
         </div>
 
