@@ -161,7 +161,8 @@ function ServicesContent() {
             selectedService?.slug === 'ambulance-booking' ||
             selectedService?.slug === 'ambulance-service' ||
             selectedService?.slug === 'funeral-service' ||
-            selectedService?.slug === 'funeral-booking'
+            selectedService?.slug === 'funeral-booking' ||
+            selectedService?.slug === 'funeral-van-service'
         ) {
             if (!bookingData.pickup_address.trim()) errors.pickup_address = 'Pickup point is required'
             if (!bookingData.drop_address.trim()) errors.drop_address = 'Drop point is required'
@@ -660,7 +661,7 @@ function ServicesContent() {
                                             </div>
 
                                             {/* Pickup/Drop for specific services */}
-                                            {(selectedService?.slug === 'ambulance-booking' || selectedService?.slug === 'ambulance-service' || selectedService?.slug === 'funeral-service' || selectedService?.slug === 'funeral-booking') && (
+                                            {(selectedService?.slug === 'ambulance-booking' || selectedService?.slug === 'ambulance-service' || selectedService?.slug === 'funeral-service' || selectedService?.slug === 'funeral-booking' || selectedService?.slug === 'funeral-van-service') && (
                                                 <>
                                                     <div className="md:col-span-2">
                                                         <label className={labelCls}>Pickup Point</label>
@@ -933,7 +934,7 @@ function ServicesContent() {
                                         <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Primary Location Address</p>
                                         <p className="font-bold text-navy-900 leading-relaxed uppercase text-[12px]">{bookingData.address || '—'}</p>
                                     </div>
-                                    {(selectedService.slug === 'ambulance-booking' || selectedService.slug === 'ambulance-service' || selectedService.slug === 'funeral-service' || selectedService.slug === 'funeral-booking') && (
+                                    {(selectedService.slug === 'ambulance-booking' || selectedService.slug === 'ambulance-service' || selectedService.slug === 'funeral-service' || selectedService.slug === 'funeral-booking' || selectedService.slug === 'funeral-van-service') && (
                                         <>
                                             <div className="border-r border-b border-gray-200 p-3">
                                                 <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Pickup Address</p>

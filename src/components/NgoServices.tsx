@@ -166,7 +166,8 @@ export default function NgoServices() {
             selectedService?.slug === 'ambulance-service' ||
             selectedService?.slug === 'deadbody-freezer' ||
             selectedService?.slug === 'funeral-service' ||
-            selectedService?.slug === 'funeral-booking'
+            selectedService?.slug === 'funeral-booking' ||
+            selectedService?.slug === 'funeral-van-service'
         ) {
             if (!bookingData.pickup_address.trim()) {
                 errors.pickup_address = 'Pickup point is required'
@@ -715,7 +716,7 @@ export default function NgoServices() {
                                             {formErrors.address && <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{formErrors.address}</p>}
                                         </div>
 
-                                        {(selectedService.slug === 'ambulance-booking' || selectedService.slug === 'ambulance-service' || selectedService.slug === 'deadbody-freezer' || selectedService.slug === 'funeral-service' || selectedService.slug === 'funeral-booking') && (
+                                        {(selectedService.slug === 'ambulance-booking' || selectedService.slug === 'ambulance-service' || selectedService.slug === 'deadbody-freezer' || selectedService.slug === 'funeral-service' || selectedService.slug === 'funeral-booking' || selectedService.slug === 'funeral-van-service') && (
                                             <>
                                                 <div className="space-y-2 col-span-2">
                                                     <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Pickup Address</label>
@@ -886,7 +887,7 @@ export default function NgoServices() {
                                     <p className="text-gray-700 ml-4 whitespace-pre-wrap">{bookingData.address || '—'}</p>
                                 </div>
 
-                                {(selectedService.slug === 'ambulance-booking' || selectedService.slug === 'ambulance-service' || selectedService.slug === 'deadbody-freezer' || selectedService.slug === 'funeral-service' || selectedService.slug === 'funeral-booking') && (
+                                {(selectedService.slug === 'ambulance-booking' || selectedService.slug === 'ambulance-service' || selectedService.slug === 'deadbody-freezer' || selectedService.slug === 'funeral-service' || selectedService.slug === 'funeral-booking' || selectedService.slug === 'funeral-van-service') && (
                                     <>
                                         <div className="border-b border-gray-200 py-2 px-4">
                                             <p className="font-bold text-gray-800 mb-1">Pick Up Address</p>
