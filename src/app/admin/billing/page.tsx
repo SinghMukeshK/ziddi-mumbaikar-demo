@@ -49,7 +49,12 @@ export default function AdministrativeBillingPage() {
             const invData = await billingService.getInvoices(page, 10)
 
             if ((invData as any).success) {
-                setInvoices((invData as any).data)
+                const sorted = [...((invData as any).data || [])].sort((a, b) => {
+                    const dateA = new Date(a.created_at || a.createdAt || 0).getTime()
+                    const dateB = new Date(b.created_at || b.createdAt || 0).getTime()
+                    return dateB - dateA
+                })
+                setInvoices(sorted)
                 setTotalPages((invData as any).pagination?.totalPages || 1)
             }
         } catch (err: any) {

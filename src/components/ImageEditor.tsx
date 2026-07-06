@@ -61,7 +61,7 @@ function centerAspectCrop(mediaWidth: number, mediaHeight: number, aspect: numbe
     )
 }
 
-export default function ImageEditor({ file, onSave, onCancel, aspectRatio = 16 / 9 }: ImageEditorProps) {
+export default function ImageEditor({ file, onSave, onCancel, aspectRatio }: ImageEditorProps) {
     const [imgSrc, setImgSrc] = useState('')                    // original file data URL
     const [previewSrc, setPreviewSrc] = useState('')            // transformed preview data URL
     const [crop, setCrop] = useState<Crop>()
@@ -252,7 +252,7 @@ export default function ImageEditor({ file, onSave, onCancel, aspectRatio = 16 /
                 {/* Body (Scrollable Area) */}
                 <div className="flex-1 overflow-y-auto bg-gray-50 flex flex-col min-h-0">
                     {/* Crop Area */}
-                    <div className="flex-shrink-0 bg-gray-950 flex items-center justify-center p-4 md:p-6 min-h-[300px] relative">
+                    <div className="flex-shrink-0 bg-gray-950 flex items-center justify-center p-4 md:p-6 min-h-[220px] relative">
                         {previewSrc ? (
                             <div className="relative w-full h-full flex items-center justify-center">
                                 <ReactCrop
@@ -269,7 +269,7 @@ export default function ImageEditor({ file, onSave, onCancel, aspectRatio = 16 /
                                         alt="Transformed preview"
                                         onLoad={onPreviewImageLoad}
                                         style={{
-                                            maxHeight: '400px',
+                                            maxHeight: '250px',
                                             maxWidth: '100%',
                                             display: 'block',
                                             objectFit: 'contain',
