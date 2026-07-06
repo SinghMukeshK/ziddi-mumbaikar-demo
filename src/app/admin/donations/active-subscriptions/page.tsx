@@ -41,7 +41,7 @@ export default function ActiveSubscriptionsPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [expandedId, setExpandedId] = useState<string | null>(null)
     const [syncingId, setSyncingId] = useState<string | null>(null)
-    const [statusFilter, setStatusFilter] = useState<'active' | 'created' | 'cancelled' | 'all'>('active')
+    const [statusFilter, setStatusFilter] = useState<'active' | 'created' | 'cancelled' | 'all'>('all')
     const [currentPage, setCurrentPage] = useState(1)
     const ITEMS_PER_PAGE = 10
 
@@ -268,7 +268,7 @@ export default function ActiveSubscriptionsPage() {
                                 />
                             </div>
                             <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
-                                {((['active', 'created', 'cancelled', 'all'] as const)).map((status) => (
+                                {((['all', 'active', 'created', 'cancelled'] as const)).map((status) => (
                                     <button
                                         key={status}
                                         onClick={() => setStatusFilter(status)}
