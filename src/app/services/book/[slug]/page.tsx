@@ -99,7 +99,12 @@ function FocusedBookingContent() {
             errors.phone = 'Please enter a valid 10-digit phone number'
         }
         if (!bookingData.address.trim()) errors.address = 'Service address is required'
-        if (service?.slug === 'ambulance-booking' || service?.slug === 'funeral-service') {
+        if (
+            service?.slug === 'ambulance-booking' ||
+            service?.slug === 'ambulance-service' ||
+            service?.slug === 'funeral-service' ||
+            service?.slug === 'funeral-booking'
+        ) {
             if (!bookingData.pickup_address.trim()) errors.pickup_address = 'Pickup point is required'
             if (!bookingData.drop_address.trim()) errors.drop_address = 'Drop point is required'
         }
@@ -456,7 +461,7 @@ function FocusedBookingContent() {
                                             </div>
                                         </div>
 
-                                        {(service.slug === 'ambulance-booking' || service.slug === 'funeral-service') && (
+                                        {(service.slug === 'ambulance-booking' || service.slug === 'ambulance-service' || service.slug === 'funeral-service' || service.slug === 'funeral-booking') && (
                                             <>
                                                 <div>
                                                     <label className={labelCls}>Pickup Point <span className="text-red-500">*</span></label>
@@ -708,7 +713,7 @@ function FocusedBookingContent() {
                                         <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Primary Location Address</p>
                                         <p className="font-bold text-navy-900 leading-relaxed uppercase text-[12px]">{bookingData.address || '—'}</p>
                                     </div>
-                                    {(service.slug === 'ambulance-booking' || service.slug === 'funeral-service') && (
+                                    {(service.slug === 'ambulance-booking' || service.slug === 'ambulance-service' || service.slug === 'funeral-service' || service.slug === 'funeral-booking') && (
                                         <>
                                             <div className="border-r border-b border-gray-200 p-3">
                                                 <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Pickup Address</p>

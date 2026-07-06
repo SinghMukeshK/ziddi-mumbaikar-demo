@@ -449,7 +449,7 @@ export default function AdminBookings() {
                                         <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Primary Location Address</p>
                                         <p className="font-bold text-navy-900 leading-relaxed uppercase text-[12px]">{printingBooking.address || '—'}</p>
                                     </div>
-                                    {((printingBooking as any).service?.slug === 'ambulance-booking' || (printingBooking as any).service?.slug === 'funeral-service') && (
+                                    {((printingBooking as any).service?.slug === 'ambulance-booking' || (printingBooking as any).service?.slug === 'ambulance-service' || (printingBooking as any).service?.slug === 'funeral-service' || (printingBooking as any).service?.slug === 'funeral-booking') && (
                                         <>
                                             <div className="border-r border-b border-gray-200 p-3">
                                                 <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Pickup Address</p>
