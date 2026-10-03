@@ -9,6 +9,7 @@ import { ArrowLeft, Loader2, Plus, Trash2, Heart, Users, Home, FileText, AlertCi
 import { groupMarriageService, GroupMarriageEvent, GroupMarriageWitnessInput, GroupMarriageApplicationResult } from '@/services/group-marriage.service'
 import { fundraiserService } from '@/services/fundraiser.service'
 import { fixImageUrl } from '@/lib/image-utils'
+import toast from 'react-hot-toast'
 
 const inputCls = 'w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl outline-none font-bold text-xs text-navy-900 placeholder:text-gray-300 focus:border-primary-500 focus:bg-white transition-all'
 const inputErrCls = 'w-full px-4 py-2.5 bg-rose-50 border border-rose-300 rounded-xl outline-none font-bold text-xs text-navy-900 placeholder:text-rose-300 focus:border-rose-500 focus:bg-rose-50/50 transition-all'
@@ -343,7 +344,7 @@ function PersonTab({ prefix, form, set, countries, states, handleCountryChange, 
                                 value={form[`${prefix}_age`] || ''}
                                 onChange={e => set(`${prefix}_age`, e.target.value)}
                                 onBlur={() => onBlur(`${prefix}_age`)}
-                                placeholder="Age (min 18 for groom, 18 for bride)"
+                                placeholder={prefix === 'groom' ? 'Age (at least 21)' : 'Age (at least 18)'}
                                 className={ic(`${prefix}_age`)}
                             />
                         </Field>
@@ -694,6 +695,45 @@ function PersonTab({ prefix, form, set, countries, states, handleCountryChange, 
     )
 }
 
+// ── Save and continue: the application is kept as a draft in this browser ──────────────────
+// Saved as the applicant types and on every "Save & Continue", restored when they come back to
+// this page on the same device, and cleared once the application is submitted (or on "Start over").
+const DRAFT_KEY = 'ziddi_group_marriage_application_draft_v1'
+const DRAFT_MAX_AGE_DAYS = 60
+
+interface ApplicationDraft {
+    savedAt: string
+    eventId?: string
+    form: Record<string, string>
+    documents: UploadedDoc[]
+    witnesses: GroupMarriageWitnessInput[]
+    activeTab: Tab
+    groomSubTab: SubTabType
+    brideSubTab: SubTabType
+}
+
+function readDraft(): ApplicationDraft | null {
+    try {
+        const raw = window.localStorage.getItem(DRAFT_KEY)
+        if (!raw) return null
+        const d = JSON.parse(raw) as ApplicationDraft
+        if (!d?.savedAt || Date.now() - new Date(d.savedAt).getTime() > DRAFT_MAX_AGE_DAYS * 86400000) {
+            window.localStorage.removeItem(DRAFT_KEY)
+            return null
+        }
+        return d
+    } catch {
+        return null
+    }
+}
+function writeDraft(d: ApplicationDraft): boolean {
+    try { window.localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); return true } catch { return false }
+}
+function clearDraft() {
+    try { window.localStorage.removeItem(DRAFT_KEY) } catch { /* storage unavailable */ }
+}
+const savedTime = (iso: string) => new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+
 export default function GroupMarriageRegisterPage() {
     const router = useRouter()
     const [event, setEvent] = useState<GroupMarriageEvent | null>(null)
@@ -823,6 +863,56 @@ export default function GroupMarriageRegisterPage() {
     })
 
     const set = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
+
+    const [restoredAt, setRestoredAt] = useState<string | null>(null)
+    const [savedAt, setSavedAt] = useState<string | null>(null)
+    const draftReady = React.useRef(false)
+
+    // Restore a saved draft once, on arrival.
+    useEffect(() => {
+        const d = readDraft()
+        if (d) {
+            setForm(prev => ({ ...prev, ...d.form }))
+            setDocuments(Array.isArray(d.documents) ? d.documents : [])
+            if (Array.isArray(d.witnesses) && d.witnesses.length) setWitnesses(d.witnesses)
+            if (d.activeTab) setActiveTab(d.activeTab)
+            if (d.groomSubTab) setGroomSubTab(d.groomSubTab)
+            if (d.brideSubTab) setBrideSubTab(d.brideSubTab)
+            setRestoredAt(d.savedAt)
+            setSavedAt(d.savedAt)
+        }
+        draftReady.current = true
+    }, [])
+
+    const hasContent = Object.entries(form).some(([k, v]) => v && !['groom_country', 'bride_country', 'application_date'].includes(k))
+        || documents.length > 0 || witnesses.some(w => w.name?.trim())
+
+    const saveDraft = React.useCallback((): boolean => {
+        if (!draftReady.current || success) return false
+        const at = new Date().toISOString()
+        // An upload still in progress isn't saved as a photo.
+        const cleanForm = Object.fromEntries(Object.entries(form).map(([k, v]) => [k, v === 'Uploading...' ? '' : v]))
+        const ok = writeDraft({ savedAt: at, eventId: event?.id, form: cleanForm, documents, witnesses, activeTab, groomSubTab, brideSubTab })
+        if (ok) setSavedAt(at)
+        return ok
+    }, [form, documents, witnesses, activeTab, groomSubTab, brideSubTab, event, success])
+
+    // Autosave a moment after the applicant stops typing.
+    useEffect(() => {
+        if (!draftReady.current || success || !hasContent) return
+        const timer = setTimeout(saveDraft, 800)
+        return () => clearTimeout(timer)
+    }, [saveDraft, success, hasContent])
+
+    const saveForLater = () => {
+        if (saveDraft()) toast.success('Saved on this device. Open this page again on the same phone or computer to continue.', { duration: 6000 })
+        else toast.error('Could not save on this device (private browsing or storage is full).')
+    }
+    const startOver = () => {
+        if (!window.confirm('Clear everything you have filled in and start a new application?')) return
+        clearDraft()
+        window.location.reload()
+    }
 
     // Recompute errors whenever form changes
     React.useEffect(() => {
@@ -1005,7 +1095,8 @@ export default function GroupMarriageRegisterPage() {
                 const res = await groupMarriageService.listOpenEvents()
                 const open = Array.isArray(res.data) ? res.data : []
                 setEvents(open)
-                if (open.length > 0) setEvent(open[0])
+                const draftEventId = readDraft()?.eventId
+                if (open.length > 0) setEvent(open.find(ev => ev.id === draftEventId) || open[0])
             } catch (err) {
                 console.error('Failed to load group marriage events:', err)
             } finally {
@@ -1089,6 +1180,7 @@ export default function GroupMarriageRegisterPage() {
             if (res.success) {
                 setResult(res.data)
                 setSuccess(true)
+                clearDraft()
                 window.scrollTo({ top: 0, behavior: 'smooth' })
             } else {
                 setError(res.message || 'Failed to submit registration')
@@ -1285,6 +1377,13 @@ export default function GroupMarriageRegisterPage() {
 
 
 
+                        {restoredAt && (
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-2xl px-4 py-3 text-xs font-semibold">
+                                <span className="flex items-center gap-2"><CheckCircle2 size={14} /> Welcome back — we restored the application you saved on {savedTime(restoredAt)}. Continue where you left off.</span>
+                                <button type="button" onClick={startOver} className="self-start sm:self-auto text-[11px] font-black text-emerald-900 underline underline-offset-2 hover:text-rose-600">Start over</button>
+                            </div>
+                        )}
+
                         {/* Tab Card */}
                         <div className="bg-white rounded-3xl border border-gray-100 shadow-md overflow-hidden">
                             {/* Tab Bar */}
@@ -1408,24 +1507,33 @@ export default function GroupMarriageRegisterPage() {
                                         Submit Registration
                                     </button>
                                 ) : (
-                                    <button type="button" onClick={handleNext}
+                                    <button type="button" onClick={() => { saveDraft(); handleNext() }}
                                         className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary-600 transition-all">
-                                        Next <ChevronRight size={12} />
+                                        Save &amp; Continue <ChevronRight size={12} />
                                     </button>
                                 )}
                             </div>
                         </div>
 
                         {/* Quick submit bar */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                             <button type="button" onClick={handleSubmit} disabled={loading}
                                 className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary-600 disabled:opacity-50 transition-all shadow-lg shadow-primary-500/20">
                                 {loading ? <Loader2 size={13} className="animate-spin" /> : <Heart size={13} />}
                                 Submit Registration
                             </button>
+                            <button type="button" onClick={saveForLater}
+                                className="px-6 py-3 border border-primary-200 bg-white rounded-xl font-black text-[10px] uppercase tracking-widest text-primary-600 hover:bg-primary-50 transition-all">
+                                Save &amp; finish later
+                            </button>
                             <Link href="/services" className="px-6 py-3 border border-gray-100 bg-white rounded-xl font-black text-[10px] uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all">
                                 Cancel
                             </Link>
+                            {savedAt && (
+                                <span className="text-[11px] text-gray-500 font-medium">
+                                    <CheckCircle2 size={12} className="inline -mt-0.5 mr-1 text-emerald-500" />Saved on this device · {savedTime(savedAt)}
+                                </span>
+                            )}
                         </div>
                     </div>
                 )}
