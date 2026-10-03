@@ -12,6 +12,30 @@ export interface GroupMarriageEvent {
     end_datetime: string;
     status: string;
     couple_count?: number;
+    ceremony_type?: string | null;
+    /** Places left when the event has a limit; null when it has none. */
+    seats_left?: number | null;
+}
+
+export interface GroupMarriageWitnessInput {
+    name: string;
+    phone?: string;
+    aadhaar?: string;
+    relationship?: string;
+    role?: 'primary' | 'secondary' | 'other';
+    /** Uploaded Aadhaar / photo ID of the witness. */
+    id_proof_url?: string;
+    photo_url?: string;
+}
+
+export interface GroupMarriageApplicationResult {
+    id: string;
+    couple_number: number;
+    /** Shown to the applicant to quote when they call. */
+    reference: string;
+    event: { id: string; title: string; start_datetime: string; location?: string };
+    documents: number;
+    witnesses: number;
 }
 
 export interface GroupMarriageCouple {
@@ -91,6 +115,16 @@ export interface ApiResponse<T = any> {
 }
 
 class GroupMarriageService {
+    /** Events open for applications on the public website (published, not yet held). No sign-in needed. */
+    async listOpenEvents(): Promise<ApiResponse<GroupMarriageEvent[]>> {
+        return apiV1.get<ApiResponse<GroupMarriageEvent[]>>('/public/group-marriages');
+    }
+
+    /** Submits an application from the public website, with its documents and witnesses. No sign-in needed. */
+    async applyPublic(eventId: string, data: Record<string, any> & { documents?: any[]; witnesses?: GroupMarriageWitnessInput[] }): Promise<ApiResponse<GroupMarriageApplicationResult>> {
+        return apiV1.post<ApiResponse<GroupMarriageApplicationResult>>(`/public/group-marriages/${eventId}/register`, data);
+    }
+
     async listEvents(params?: any): Promise<ApiResponse<GroupMarriageEvent[]>> {
         return apiV1.get<ApiResponse<GroupMarriageEvent[]>>('/group-marriages', { params });
     }

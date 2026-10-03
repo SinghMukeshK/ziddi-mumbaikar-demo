@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
 import { ArrowLeft, Loader2, Plus, Trash2, Heart, Users, Home, FileText, AlertCircle, CheckCircle2, ChevronRight, Calendar, MapPin } from 'lucide-react'
-import { groupMarriageService, GroupMarriageEvent } from '@/services/group-marriage.service'
-import { eventService } from '@/services/event.service'
+import { groupMarriageService, GroupMarriageEvent, GroupMarriageWitnessInput, GroupMarriageApplicationResult } from '@/services/group-marriage.service'
 import { fundraiserService } from '@/services/fundraiser.service'
 import { fixImageUrl } from '@/lib/image-utils'
 
@@ -21,12 +20,13 @@ type ValidationErrors = Record<string, string>
 const RELIGIONS = ['Hindu', 'Muslim', 'Christian', 'Sikh', 'Buddhist', 'Jain', 'Other']
 const EDUCATIONS = ['No Formal Education', 'Primary', 'Secondary', '12th Pass', 'Diploma', 'Graduate', 'Post Graduate', 'Other']
 
-type Tab = 'groom' | 'bride' | 'family' | 'notes'
+type Tab = 'groom' | 'bride' | 'family' | 'witnesses' | 'notes'
 
 const TABS: { key: Tab; label: string; icon: React.ElementType; color: string }[] = [
     { key: 'groom',     label: 'Groom',         icon: Heart,    color: 'text-blue-500' },
     { key: 'bride',     label: 'Bride',          icon: Heart,    color: 'text-rose-500' },
     { key: 'family',    label: 'Family Contact', icon: Home,     color: 'text-primary-500' },
+    { key: 'witnesses', label: 'Witnesses',      icon: Users,    color: 'text-primary-500' },
     { key: 'notes',     label: 'Notes',          icon: FileText, color: 'text-gray-400' },
 ]
 
@@ -55,6 +55,122 @@ function SectionHeader({ title }: { title: string }) {
 
 const SUB_TABS = ['personal', 'address', 'employment', 'verification', 'documents'] as const
 type SubTabType = typeof SUB_TABS[number]
+
+type UploadedDoc = { doc_type: string; url: string; original_filename: string }
+
+/** Documents each of the bride and groom must upload; the rest are optional. */
+const REQUIRED_DOCS = (prefix: 'groom' | 'bride') => [
+    { type: `aadhaar_${prefix}`, title: 'Aadhaar Card' },
+    { type: `birth_cert_${prefix}`, title: 'Birth Certificate / Age Proof' },
+]
+const missingDocs = (prefix: 'groom' | 'bride', documents: UploadedDoc[]) =>
+    REQUIRED_DOCS(prefix).filter(d => !documents.some(u => u.doc_type === d.type))
+
+/** At least two witnesses, each with a name and a 10-digit mobile number. */
+const MIN_WITNESSES = 2
+const emptyWitness = (role: 'primary' | 'secondary' | 'other' = 'other'): GroupMarriageWitnessInput => ({ name: '', phone: '', aadhaar: '', relationship: '', role, id_proof_url: '' })
+function witnessErrors(witnesses: GroupMarriageWitnessInput[]): Record<string, string> {
+    const e: Record<string, string> = {}
+    witnesses.forEach((w, i) => {
+        const named = !!w.name?.trim()
+        if (i < MIN_WITNESSES && !named) e[`w${i}_name`] = 'Witness name is required'
+        if ((named || i < MIN_WITNESSES) && !/^\d{10}$/.test(w.phone || '')) e[`w${i}_phone`] = 'Enter a 10-digit mobile number'
+        if (w.aadhaar && !/^\d{12}$/.test(w.aadhaar)) e[`w${i}_aadhaar`] = 'Aadhaar has 12 digits'
+    })
+    return e
+}
+
+function WitnessesTab({ witnesses, setWitnesses, errors, showErrors }: {
+    witnesses: GroupMarriageWitnessInput[]
+    setWitnesses: React.Dispatch<React.SetStateAction<GroupMarriageWitnessInput[]>>
+    errors: Record<string, string>
+    showErrors: boolean
+}) {
+    const [uploading, setUploading] = useState<number | null>(null)
+    const setW = (i: number, field: keyof GroupMarriageWitnessInput, value: string) =>
+        setWitnesses(prev => prev.map((w, idx) => idx === i ? { ...w, [field]: value } : w))
+    const err = (k: string) => showErrors ? errors[k] : undefined
+
+    return (
+        <div className="space-y-4">
+            <p className="text-xs text-gray-500 font-medium">
+                Two adult witnesses are needed for the marriage registration (for example a parent, relative or neighbour).
+                Their ID proof helps our volunteers verify them faster.
+            </p>
+            {witnesses.map((w, i) => (
+                <div key={i} className="bg-gray-50/60 border border-gray-100 rounded-2xl p-4 sm:p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-navy-900">Witness {i + 1}{i < MIN_WITNESSES ? ' *' : ''}</span>
+                        {i >= MIN_WITNESSES && (
+                            <button type="button" onClick={() => setWitnesses(prev => prev.filter((_, idx) => idx !== i))}
+                                className="flex items-center gap-1 text-[10px] font-bold text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg">
+                                <Trash2 size={11} /> Remove
+                            </button>
+                        )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <Field label={`Full Name${i < MIN_WITNESSES ? ' *' : ''}`} error={err(`w${i}_name`)}>
+                            <input value={w.name} onChange={e => setW(i, 'name', e.target.value)} placeholder="Full name" className={err(`w${i}_name`) ? inputErrCls : inputCls} />
+                        </Field>
+                        <Field label={`Mobile${i < MIN_WITNESSES ? ' *' : ''}`} error={err(`w${i}_phone`)}>
+                            <input value={w.phone} inputMode="numeric" maxLength={10} onChange={e => setW(i, 'phone', e.target.value.replace(/\D/g, ''))} placeholder="10-digit mobile" className={err(`w${i}_phone`) ? inputErrCls : inputCls} />
+                        </Field>
+                        <Field label="Relationship">
+                            <input value={w.relationship} onChange={e => setW(i, 'relationship', e.target.value)} placeholder="e.g. Uncle, Neighbour" className={inputCls} />
+                        </Field>
+                        <Field label="Aadhaar Number" error={err(`w${i}_aadhaar`)}>
+                            <input value={w.aadhaar} inputMode="numeric" maxLength={12} onChange={e => setW(i, 'aadhaar', e.target.value.replace(/\D/g, ''))} placeholder="12-digit Aadhaar" className={err(`w${i}_aadhaar`) ? inputErrCls : inputCls} />
+                        </Field>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            id={`witness-id-${i}`}
+                            className="hidden"
+                            onChange={async (e) => {
+                                const file = e.target.files?.[0]
+                                e.target.value = ''
+                                if (!file) return
+                                if (file.size > 5 * 1024 * 1024) { alert('Please upload a file under 5 MB.'); return }
+                                setUploading(i)
+                                try {
+                                    const res = await fundraiserService.uploadMedia(file, 'group_marriages')
+                                    if (res.success && res.data?.url) setW(i, 'id_proof_url', res.data.url)
+                                    else alert('Upload failed. Please try again.')
+                                } catch {
+                                    alert('Upload failed due to a network error.')
+                                } finally {
+                                    setUploading(null)
+                                }
+                            }}
+                        />
+                        {w.id_proof_url ? (
+                            <span className="flex items-center gap-2 text-[11px] font-bold text-emerald-700">
+                                <CheckCircle2 size={13} />
+                                <a href={fixImageUrl(w.id_proof_url)} target="_blank" rel="noopener noreferrer" className="hover:underline">ID proof uploaded</a>
+                                <button type="button" onClick={() => document.getElementById(`witness-id-${i}`)?.click()} className="text-gray-500 hover:text-navy-900 font-bold">Replace</button>
+                                <button type="button" onClick={() => setW(i, 'id_proof_url', '')} className="text-rose-600 font-bold">Remove</button>
+                            </span>
+                        ) : (
+                            <button type="button" disabled={uploading === i} onClick={() => document.getElementById(`witness-id-${i}`)?.click()}
+                                className="px-3 py-2 bg-white border border-gray-200 text-navy-900 font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-gray-50 disabled:opacity-50 flex items-center gap-1.5">
+                                {uploading === i ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                                {uploading === i ? 'Uploading…' : 'Upload ID proof (Aadhaar / photo ID)'}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            ))}
+            {witnesses.length < 5 && (
+                <button type="button" onClick={() => setWitnesses(prev => [...prev, emptyWitness()])}
+                    className="flex items-center gap-1.5 text-[11px] font-black text-primary-600 hover:underline">
+                    <Plus size={12} /> Add another witness
+                </button>
+            )}
+        </div>
+    )
+}
 
 function PersonTab({ prefix, form, set, countries, states, handleCountryChange, documents, setDocuments, uploadingTypes, setUploadingTypes, subTab, setSubTab, errors, touched, onBlur }: {
     prefix: 'groom' | 'bride'
@@ -389,9 +505,9 @@ function PersonTab({ prefix, form, set, countries, states, handleCountryChange, 
                             <SectionHeader title="Required Documents" />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                                 {[
-                                    { type: `aadhaar_${prefix}`, title: 'Aadhaar Card', desc: 'UIDAI Aadhaar Card PDF or Image (max 5MB)' },
-                                    { type: `birth_cert_${prefix}`, title: 'Birth Certificate / Age Proof', desc: 'School leaving, birth cert or age proof' },
-                                    { type: `caste_cert_${prefix}`, title: 'Caste Certificate', desc: 'Caste certificate document if applicable' },
+                                    { type: `aadhaar_${prefix}`, title: 'Aadhaar Card', desc: 'UIDAI Aadhaar Card PDF or Image (max 5MB)', required: true },
+                                    { type: `birth_cert_${prefix}`, title: 'Birth Certificate / Age Proof', desc: 'School leaving, birth cert or age proof', required: true },
+                                    { type: `caste_cert_${prefix}`, title: 'Caste Certificate', desc: 'Caste certificate document if applicable', required: false },
                                 ].map((docDef) => {
                                     const docType = docDef.type
                                     const actualDocType = docType
@@ -399,9 +515,14 @@ function PersonTab({ prefix, form, set, countries, states, handleCountryChange, 
                                     const uploading = uploadingTypes[actualDocType]
 
                                     return (
-                                        <div key={docDef.type} className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
+                                        <div key={docDef.type} className={`bg-white border rounded-2xl p-4 flex flex-col justify-between shadow-sm ${docDef.required && !uploaded && touched[`${prefix}_documents`] ? 'border-rose-300' : 'border-gray-100'}`}>
                                             <div>
-                                                <h5 className="font-bold text-navy-900 text-xs">{docDef.title}</h5>
+                                                <h5 className="font-bold text-navy-900 text-xs flex items-center gap-1.5">
+                                                    {docDef.title}
+                                                    {docDef.required
+                                                        ? <span className="text-[9px] font-black text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">Required</span>
+                                                        : <span className="text-[9px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">Optional</span>}
+                                                </h5>
                                                 <p className="text-[10px] text-gray-400 font-medium mt-0.5">{docDef.desc}</p>
                                             </div>
 
@@ -576,6 +697,11 @@ function PersonTab({ prefix, form, set, countries, states, handleCountryChange, 
 export default function GroupMarriageRegisterPage() {
     const router = useRouter()
     const [event, setEvent] = useState<GroupMarriageEvent | null>(null)
+    const [events, setEvents] = useState<GroupMarriageEvent[]>([])
+    const [result, setResult] = useState<GroupMarriageApplicationResult | null>(null)
+    const [witnesses, setWitnesses] = useState<GroupMarriageWitnessInput[]>([emptyWitness('primary'), emptyWitness('secondary')])
+    const [showWitnessErrors, setShowWitnessErrors] = useState(false)
+    const wErrors = witnessErrors(witnesses)
     const [loadingEvent, setLoadingEvent] = useState(true)
     const [activeTab, setActiveTab] = useState<Tab>('groom')
     const [loading, setLoading] = useState(false)
@@ -707,9 +833,10 @@ export default function GroupMarriageRegisterPage() {
     // Helper: does a given main tab have any errors (touched or not)?
     const tabHasErrors = (tab: Tab): boolean => {
         const allErrors = validateAll(form)
+        if (tab === 'witnesses') return showWitnessErrors && Object.keys(wErrors).length > 0
         const prefix = tab === 'groom' ? 'groom' : tab === 'bride' ? 'bride' : null
         if (!prefix) return false
-        return Object.keys(allErrors).some(k => k.startsWith(prefix))
+        return Object.keys(allErrors).some(k => k.startsWith(prefix)) || (!!touched[`${prefix}_documents`] && missingDocs(prefix, documents).length > 0)
     }
 
 
@@ -874,31 +1001,11 @@ export default function GroupMarriageRegisterPage() {
     useEffect(() => {
         const loadEvent = async () => {
             try {
-                // Fetch group marriage events from service
-                const res = await groupMarriageService.listEvents({ status: 'published' })
-                if (res.data && res.data.length > 0) {
-                    setEvent(res.data[0])
-                } else {
-                    // Fallback to searching general events if endpoint returns empty list
-                    const genEvents = await eventService.getEvents({ status: 'published' })
-                    const massMarriage = genEvents.data?.find(e => 
-                        e.event_type?.toLowerCase() === 'group_marriage' || 
-                        e.slug.includes('marriage') ||
-                        e.title.toLowerCase().includes('marriage')
-                    )
-                    if (massMarriage) {
-                        setEvent({
-                            id: massMarriage.id,
-                            title: massMarriage.title,
-                            slug: massMarriage.slug,
-                            location: massMarriage.location,
-                            start_datetime: massMarriage.start_datetime,
-                            end_datetime: massMarriage.end_datetime,
-                            event_type: 'group_marriage',
-                            status: massMarriage.status
-                        })
-                    }
-                }
+                // Events open for applications (published, not yet held), soonest first.
+                const res = await groupMarriageService.listOpenEvents()
+                const open = Array.isArray(res.data) ? res.data : []
+                setEvents(open)
+                if (open.length > 0) setEvent(open[0])
             } catch (err) {
                 console.error('Failed to load group marriage events:', err)
             } finally {
@@ -946,6 +1053,23 @@ export default function GroupMarriageRegisterPage() {
             setError('Please fix the highlighted errors before submitting.')
             return
         }
+        // Required documents for both, then the witnesses.
+        for (const who of ['groom', 'bride'] as const) {
+            const missing = missingDocs(who, documents)
+            if (missing.length) {
+                onBlur(`${who}_documents`)
+                setActiveTab(who)
+                if (who === 'groom') setGroomSubTab('documents'); else setBrideSubTab('documents')
+                setError(`Please upload the ${who}'s ${missing.map(m => m.title).join(' and ')}.`)
+                return
+            }
+        }
+        if (Object.keys(wErrors).length > 0) {
+            setShowWitnessErrors(true)
+            setActiveTab('witnesses')
+            setError(`Please add at least ${MIN_WITNESSES} witnesses with their name and mobile number.`)
+            return
+        }
         setLoading(true)
         setError(null)
         try {
@@ -959,10 +1083,13 @@ export default function GroupMarriageRegisterPage() {
                 bride_dob:  form.bride_dob  || undefined,
                 application_date: form.application_date || undefined,
                 documents: documents,
+                witnesses: witnesses.filter(w => w.name?.trim()),
             }
-            const res = await groupMarriageService.registerCouple(event.id, payload)
+            const res = await groupMarriageService.applyPublic(event.id, payload)
             if (res.success) {
+                setResult(res.data)
                 setSuccess(true)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
             } else {
                 setError(res.message || 'Failed to submit registration')
             }
@@ -989,6 +1116,7 @@ export default function GroupMarriageRegisterPage() {
             }
             const currentSubTabErrors = subTabFields[groomSubTab].filter(f => currentErrors[f])
             if (currentSubTabErrors.length > 0) return // stay on current sub-tab
+            if (groomSubTab === 'documents' && missingDocs('groom', documents).length) { onBlur('groom_documents'); return }
 
             const idx = SUB_TABS.indexOf(groomSubTab)
             if (idx < SUB_TABS.length - 1) {
@@ -1010,6 +1138,7 @@ export default function GroupMarriageRegisterPage() {
             }
             const currentSubTabErrors = subTabFields[brideSubTab].filter(f => currentErrors[f])
             if (currentSubTabErrors.length > 0) return // stay on current sub-tab
+            if (brideSubTab === 'documents' && missingDocs('bride', documents).length) { onBlur('bride_documents'); return }
 
             const idx = SUB_TABS.indexOf(brideSubTab)
             if (idx < SUB_TABS.length - 1) {
@@ -1017,6 +1146,8 @@ export default function GroupMarriageRegisterPage() {
             } else {
                 setActiveTab('family')
             }
+        } else if (activeTab === 'witnesses' && Object.keys(wErrors).length > 0) {
+            setShowWitnessErrors(true)
         } else {
             const nextIdx = tabIdx + 1
             if (nextIdx < TABS.length) {
@@ -1042,8 +1173,10 @@ export default function GroupMarriageRegisterPage() {
         } else if (activeTab === 'family') {
             setActiveTab('bride')
             setBrideSubTab('documents')
-        } else if (activeTab === 'notes') {
+        } else if (activeTab === 'witnesses') {
             setActiveTab('family')
+        } else if (activeTab === 'notes') {
+            setActiveTab('witnesses')
         }
     }
 
@@ -1080,11 +1213,18 @@ export default function GroupMarriageRegisterPage() {
                         </div>
                         <div>
                             <h3 className="text-xl font-black text-navy-900">Application Submitted Successfully</h3>
-                            <p className="text-gray-500 text-xs mt-2 max-w-md mx-auto">Thank you for registering under the **&ldquo;{event.title}&rdquo;** event. Our community desk will review your details and reach out on the registered phone numbers.</p>
+                            {result && (
+                                <div className="mt-4 inline-flex flex-col items-center bg-primary-50 border border-primary-100 rounded-2xl px-6 py-3">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-primary-600">Your application number</span>
+                                    <span className="text-2xl font-black text-navy-900 tracking-wide">{result.reference}</span>
+                                    <span className="text-[10px] text-gray-500 mt-0.5">Please note it down and quote it when you contact us.</span>
+                                </div>
+                            )}
+                            <p className="text-gray-500 text-xs mt-2 max-w-md mx-auto">Thank you for registering for <strong className="text-navy-900">{event.title}</strong>. Our community desk will review your details and reach out on the registered phone numbers.</p>
                         </div>
                         <div className="bg-gray-50 rounded-2xl p-6 text-left border border-gray-100 max-w-md mx-auto space-y-3">
                             <h4 className="text-[10px] font-black uppercase tracking-widest text-navy-900 border-b border-gray-200 pb-1.5">Next Steps &amp; Required Documents</h4>
-                            <p className="text-gray-500 text-[10px] leading-relaxed">Please ensure you have physical copies of the following ready for our volunteers during verification:</p>
+                            <p className="text-gray-500 text-[10px] leading-relaxed">Our volunteers will first verify the documents you uploaded, then the committee reviews the application. Please keep the originals of the following ready, along with your two witnesses:</p>
                             <ul className="list-disc list-inside text-gray-700 text-[10px] font-bold space-y-1">
                                 <li>Aadhaar Card (both Groom and Bride)</li>
                                 <li>Birth Certificate or School Leaving Certificate (Age Proof)</li>
@@ -1108,8 +1248,27 @@ export default function GroupMarriageRegisterPage() {
                                     <Heart size={18} className="fill-current" />
                                 </div>
                                 <div>
-                                    <div className="text-[9px] text-primary-600 font-black uppercase tracking-widest">Active Mass Marriage Event</div>
-                                    <div className="text-sm font-bold text-navy-900">{event.title}</div>
+                                    <div className="text-[9px] text-primary-600 font-black uppercase tracking-widest">{events.length > 1 ? 'Choose the event' : 'Active Mass Marriage Event'}</div>
+                                    {events.length > 1 ? (
+                                        <select
+                                            value={event.id}
+                                            onChange={e => setEvent(events.find(ev => ev.id === e.target.value) || event)}
+                                            className="mt-1 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-navy-900 outline-none focus:border-primary-500"
+                                        >
+                                            {events.map(ev => (
+                                                <option key={ev.id} value={ev.id}>
+                                                    {ev.title} · {new Date(ev.start_datetime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <div className="text-sm font-bold text-navy-900">{event.title}</div>
+                                    )}
+                                    {event.seats_left != null && (
+                                        <div className={`text-[10px] font-bold mt-0.5 ${event.seats_left > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                            {event.seats_left > 0 ? `${event.seats_left} places left` : 'All places are taken'}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="flex flex-col text-left sm:text-right gap-1 font-semibold text-[10px] text-gray-500">
@@ -1208,6 +1367,10 @@ export default function GroupMarriageRegisterPage() {
                                             </Field>
                                         </div>
                                     </div>
+                                )}
+
+                                {activeTab === 'witnesses' && (
+                                    <WitnessesTab witnesses={witnesses} setWitnesses={setWitnesses} errors={wErrors} showErrors={showWitnessErrors} />
                                 )}
 
                                 {activeTab === 'notes' && (
