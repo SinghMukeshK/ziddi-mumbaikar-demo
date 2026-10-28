@@ -17,6 +17,8 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
+    // Optional: only needed for the 80G receipt.
+    const [pan, setPan] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const [lastSubscriptionId, setLastSubscriptionId] = useState<string | null>(null)
@@ -67,6 +69,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         if (!name.trim()) return 'Name is required'
         if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Valid email is required'
         if (!phone.trim() || !/^[6-9]\d{9}$/.test(phone.replace(/\s/g, ''))) return 'Valid 10-digit phone is required'
+        if (pan.trim() && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan.trim().toUpperCase())) return 'Invalid PAN format (e.g. ABCDE1234F)'
         return null
     }
 
@@ -101,6 +104,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                     donor_name: name,
                     donor_email: email,
                     donor_phone: phone,
+                    donor_pan: pan.trim().toUpperCase() || undefined,
                     currency: 'INR',
                     donation_type: 'general',
                     payment_method: 'card'
@@ -143,6 +147,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                     donor_name: name,
                     donor_email: email,
                     donor_phone: phone,
+                    donor_pan: pan.trim().toUpperCase() || undefined,
                     currency: 'INR'
                 })
 
@@ -196,6 +201,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 donor_name: name,
                 donor_email: email,
                 donor_phone: phone,
+                donor_pan: pan.trim().toUpperCase() || undefined,
                 currency: 'INR',
                 donation_type: 'general',
                 payment_method: 'card',
@@ -350,6 +356,14 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                                             className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-primary-500 outline-none font-bold text-navy-900 text-sm"
                                         />
                                     </div>
+                                    <input
+                                        type="text"
+                                        placeholder="PAN (optional, for the 80G receipt)"
+                                        value={pan}
+                                        maxLength={10}
+                                        onChange={(e) => setPan(e.target.value.toUpperCase())}
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-primary-500 outline-none font-bold text-navy-900 text-sm uppercase"
+                                    />
                                 </div>
 
                                 {error && (
